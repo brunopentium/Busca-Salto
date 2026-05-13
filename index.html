@@ -39,6 +39,23 @@
       padding: 28px 0 16px;
     }
 
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 6px;
+    }
+
+    .brand-logo {
+      width: clamp(72px, 11vw, 110px);
+      height: clamp(72px, 11vw, 110px);
+      object-fit: cover;
+      border-radius: 20px;
+      border: 1px solid #c9d6e8;
+      box-shadow: 0 10px 20px rgba(11, 42, 74, 0.15);
+      background: #fff;
+    }
+
     h1 {
       margin: 0;
       color: var(--azul);
@@ -257,7 +274,10 @@
 </head>
 <body>
   <header class="container">
-    <h1>Busca Salto</h1>
+    <div class="brand">
+      <img class="brand-logo" src="imagens/logo.png" alt="Logo Busca Salto" />
+      <h1>Busca Salto</h1>
+    </div>
     <p class="subtitle">Encontre comércios, serviços e profissionais de Salto em um só lugar.</p>
   </header>
 
