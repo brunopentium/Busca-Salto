@@ -1,1 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Busca Salto — Buscador do Comércio Local</title>
+  <meta name="description" content="Encontre comércios, serviços e profissionais de Salto/SP no Busca Salto." />
+  <meta name="theme-color" content="#0B2A4A" />
+  <style>
+    :root {
+      --azul: #0b2a4a;
+      --azul-claro: #184c7d;
+      --dourado: #d9a401;
+      --fundo: #f5f7fb;
+      --texto: #152132;
+      --muted: #5e6b7b;
+      --card: #ffffff;
+      --borda: #dfe7f1;
+      --sucesso: #167d4f;
+      --sombra: 0 10px 24px rgba(7, 26, 44, 0.08);
+      --radius: 16px;
+    }
 
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--texto);
+      background: linear-gradient(180deg, #fdfefe 0%, var(--fundo) 35%);
+    }
+
+    .container {
+      width: min(1100px, 94%);
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 28px 0 16px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--azul);
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.45;
+      max-width: 60ch;
+    }
+
+    .search-panel {
+      margin: 20px 0 14px;
+      background: var(--card);
+      border: 1px solid var(--borda);
+      border-radius: var(--radius);
+      box-shadow: var(--sombra);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .search-input, select, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #c9d6e8;
+      padding: 14px;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--texto);
+    }
+
+    .search-input:focus, select:focus, button:focus {
+      outline: 2px solid #bdd9ff;
+      border-color: var(--azul-claro);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .btn-clear {
+      background: #eef3fa;
+      border-color: #d0dceb;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .status {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin: 12px 2px;
+      min-height: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      padding-bottom: 28px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--borda);
+      border-radius: var(--radius);
+      box-shadow: var(--sombra);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-top {
+      position: relative;
+      min-height: 138px;
+      background: linear-gradient(145deg, #dae8f8, #eef4fb);
+    }
+
+    .card-top img {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .no-photo {
+      height: 170px;
+      display: grid;
+      place-content: center;
+      color: #315379;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      background:
+        radial-gradient(circle at 20% 20%, #c2d8f2 0 18%, transparent 19%),
+        radial-gradient(circle at 80% 80%, #dce8f7 0 16%, transparent 17%),
+        linear-gradient(135deg, #eaf2fc, #d7e7fa);
+    }
+
+    .card-body { padding: 14px; }
+
+    .title-row {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      color: #0f2f52;
+    }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .tag {
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .tag.parceiro { background: #ebf3ff; color: #184c7d; border-color: #cadff7; }
+    .tag.destaque { background: #fff5d9; color: #8a6500; border-color: #f0d37e; }
+    .tag.top { background: #ffe9b8; color: #6f4a00; border-color: #f1c765; }
+    .tag.verificado { background: #e7f7ef; color: #166442; border-color: #bde6d2; }
+
+    .meta, .desc, .offer {
+      margin: 6px 0;
+      font-size: 0.93rem;
+      line-height: 1.45;
+      color: #32465f;
+    }
+
+    .offer {
+      background: #fff8e3;
+      border: 1px dashed #e7c15c;
+      border-radius: 10px;
+      padding: 8px;
+      color: #7a5905;
+      font-weight: 600;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 11px;
+      padding: 11px 8px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #eaf1fb;
+      color: #1b4068;
+    }
+
+    .btn.whatsapp { background: #dcf8e6; color: #146a43; }
+    .btn.instagram { background: #f6e5f2; color: #7a2b67; }
+    .btn.site { background: #e7eef9; color: #1e3f66; }
+
+    .btn-claim {
+      margin-top: 10px;
+      width: 100%;
+      background: var(--azul);
+      color: white;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .plan-destaque { border: 2px solid #f4d67f; }
+    .plan-top { border: 2px solid #e9bc4f; box-shadow: 0 16px 30px rgba(113, 81, 0, 0.18); }
+
+    .empty {
+      background: #fff;
+      border: 1px dashed #c9d6e8;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      color: #5c6a7a;
+      font-size: 0.92rem;
+      padding: 20px 0 28px;
+    }
+
+    @media (min-width: 680px) {
+      .actions { grid-template-columns: 2fr 1fr 1fr auto; }
+      .btn-clear { min-width: 150px; }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 1020px) {
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <h1>Busca Salto</h1>
+    <p class="subtitle">Encontre comércios, serviços e profissionais de Salto em um só lugar.</p>
+  </header>
+
+  <main class="container">
+    <section class="search-panel">
+      <div class="actions">
+        <input id="searchInput" class="search-input" type="search" placeholder="O que você procura em Salto?" aria-label="Buscar comércios" />
+        <select id="categoryFilter" aria-label="Filtrar por categoria">
+          <option value="">Todas as categorias</option>
+        </select>
+        <select id="bairroFilter" aria-label="Filtrar por bairro">
+          <option value="">Todos os bairros</option>
+        </select>
+        <button id="clearFilters" class="btn-clear" type="button">Limpar filtros</button>
+      </div>
+    </section>
+
+    <p id="status" class="status">Carregando comércios...</p>
+    <section id="results" class="grid" aria-live="polite"></section>
+  </main>
+
+  <footer class="container">Busca Salto — o buscador local da cidade.</footer>
+
+  <script>
+    // ===== CONFIGURAÇÕES PRINCIPAIS =====
+    // 1) Cole aqui o link CSV publicado da sua planilha Google Sheets.
+    const CSV_URL = "COLE_AQUI_O_LINK_CSV_DO_GOOGLE_SHEETS";
+
+    // 2) Coloque aqui o WhatsApp administrativo do Busca Salto (somente números com DDI+DDD).
+    const BUSCA_SALTO_WHATSAPP = "5511999999999";
+
+    // 3) Textos principais fáceis de alterar.
+    const UI_TEXTS = {
+      loading: "Carregando comércios...",
+      loadError: "Não foi possível carregar os dados agora. Tente novamente em instantes.",
+      emptyInitial: "Digite o que você procura ou explore as categorias e bairros.",
+      emptyResult: "Nenhum resultado encontrado para os filtros selecionados."
+    };
+
+    const dom = {
+      searchInput: document.getElementById("searchInput"),
+      categoryFilter: document.getElementById("categoryFilter"),
+      bairroFilter: document.getElementById("bairroFilter"),
+      clearFilters: document.getElementById("clearFilters"),
+      status: document.getElementById("status"),
+      results: document.getElementById("results")
+    };
+
+    let allItems = [];
+
+    const normalize = (value = "") =>
+      value
+        .toString()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+    // Parser CSV robusto: respeita campos com aspas e vírgulas internas.
+    function parseCSV(csvText) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < csvText.length; i++) {
+        const char = csvText[i];
+        const next = csvText[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            field += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          row.push(field);
+          field = "";
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && next === '\n') i++;
+          row.push(field);
+          if (row.some(cell => cell !== "")) rows.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+
+      row.push(field);
+      if (row.some(cell => cell !== "")) rows.push(row);
+
+      const headers = rows.shift().map(h => normalize(h));
+      return rows.map(cols => {
+        const obj = {};
+        headers.forEach((h, idx) => {
+          obj[h] = (cols[idx] || "").trim();
+        });
+        return obj;
+      });
+    }
+
+    function sanitizeWhatsApp(value = "") {
+      return value.replace(/\D/g, "");
+    }
+
+    function toInstagramUrl(value = "") {
+      const v = value.trim();
+      if (!v) return "";
+      if (v.startsWith("http://") || v.startsWith("https://")) return v;
+      if (v.startsWith("@")) return `https://instagram.com/${v.slice(1)}`;
+      return `https://instagram.com/${v}`;
+    }
+
+    function planWeight(plan = "") {
+      const p = normalize(plan);
+      if (p === "parceiro") return 80;
+      if (p === "destaque") return 140;
+      if (p === "top") return 220;
+      return 0;
+    }
+
+    // Ranking:
+    // - Soma pontos por campo encontrado para cada termo da busca.
+    // - Aplica bônus de plano apenas quando existe relevância de busca (>0).
+    function computeScore(item, terms) {
+      const f = {
+        nome: normalize(item.nome),
+        categoria: normalize(item.categoria),
+        subcategoria: normalize(item.subcategoria),
+        bairro: normalize(item.bairro),
+        descricao: normalize(item.descricao),
+        palavras: normalize(item.palavras_chave)
+      };
+
+      let relevance = 0;
+      for (const term of terms) {
+        if (f.nome.includes(term)) relevance += 60;
+        if (f.categoria.includes(term)) relevance += 50;
+        if (f.subcategoria.includes(term)) relevance += 40;
+        if (f.palavras.includes(term)) relevance += 35;
+        if (f.descricao.includes(term)) relevance += 20;
+        if (f.bairro.includes(term)) relevance += 10;
+      }
+
+      if (terms.length === 0) {
+        const base = planWeight(item.plano) + (Number(item.prioridade) || 0) * 20 + (normalize(item.verificado) === "sim" ? 30 : 0);
+        return base;
+      }
+
+      if (relevance === 0) return 0;
+
+      let extra = 0;
+      extra += planWeight(item.plano);
+      extra += normalize(item.verificado) === "sim" ? 30 : 0;
+      extra += item.oferta?.trim() ? 20 : 0;
+      extra += item.foto_url?.trim() ? 15 : 0;
+      extra += (Number(item.prioridade) || 0) * 20;
+      return relevance + extra;
+    }
+
+    function renderFilters(items) {
+      const categories = [...new Set(items.map(i => i.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+      const bairros = [...new Set(items.map(i => i.bairro).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+      dom.categoryFilter.innerHTML = '<option value="">Todas as categorias</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join("");
+      dom.bairroFilter.innerHTML = '<option value="">Todos os bairros</option>' + bairros.map(b => `<option value="${b}">${b}</option>`).join("");
+    }
+
+    function badgeHTML(item) {
+      const plan = normalize(item.plano);
+      const tags = [];
+      if (plan === "parceiro") tags.push('<span class="tag parceiro">Parceiro Busca Salto</span>');
+      if (plan === "destaque") tags.push('<span class="tag destaque">Destaque Busca Salto</span>');
+      if (plan === "top") tags.push('<span class="tag top">Top Categoria</span>');
+      if (normalize(item.verificado) === "sim") tags.push('<span class="tag verificado">Verificado</span>');
+      return tags.join("");
+    }
+
+    function cardClassByPlan(plan = "") {
+      const p = normalize(plan);
+      if (p === "top") return "plan-top";
+      if (p === "destaque") return "plan-destaque";
+      return "";
+    }
+
+    function renderCards(items, hasInteraction) {
+      if (!hasInteraction) {
+        dom.results.innerHTML = `<div class="empty">${UI_TEXTS.emptyInitial}</div>`;
+        dom.status.textContent = "0 resultados";
+        return;
+      }
+
+      if (!items.length) {
+        dom.results.innerHTML = `<div class="empty">${UI_TEXTS.emptyResult}</div>`;
+        dom.status.textContent = "0 resultados";
+        return;
+      }
+
+      dom.status.textContent = `${items.length} resultado${items.length > 1 ? "s" : ""} encontrado${items.length > 1 ? "s" : ""}.`;
+
+      dom.results.innerHTML = items.map(item => {
+        const wa = sanitizeWhatsApp(item.whatsapp);
+        const ig = toInstagramUrl(item.instagram);
+        const site = item.site?.trim();
+        const claimMessage = encodeURIComponent(`Olá, sou responsável pelo comércio ${item.nome} e gostaria de corrigir ou melhorar este cadastro no Busca Salto.`);
+
+        return `
+          <article class="card ${cardClassByPlan(item.plano)}">
+            <div class="card-top">
+              ${item.foto_url?.trim()
+                ? `<img src="${item.foto_url}" alt="Foto de ${item.nome}" loading="lazy" />`
+                : `<div class="no-photo">Busca Salto</div>`}
+            </div>
+            <div class="card-body">
+              <div class="title-row"><h2>${item.nome || "Sem nome"}</h2></div>
+              <div class="tags">${badgeHTML(item)}</div>
+              <p class="meta"><strong>${item.categoria || "Categoria não informada"}</strong>${item.subcategoria ? ` • ${item.subcategoria}` : ""}</p>
+              <p class="meta">📍 ${item.bairro || "Bairro não informado"}</p>
+              ${item.endereco ? `<p class="meta">${item.endereco}</p>` : ""}
+              ${item.descricao ? `<p class="desc">${item.descricao}</p>` : ""}
+              ${item.oferta ? `<p class="offer">🎁 ${item.oferta}</p>` : ""}
+
+              <div class="buttons">
+                ${wa ? `<a class="btn whatsapp" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}
+                ${ig ? `<a class="btn instagram" href="${ig}" target="_blank" rel="noopener">Instagram</a>` : ""}
+                ${site ? `<a class="btn site" href="${site}" target="_blank" rel="noopener">Site</a>` : ""}
+              </div>
+
+              <a class="btn-claim" href="https://wa.me/${BUSCA_SALTO_WHATSAPP}?text=${claimMessage}" target="_blank" rel="noopener">Sou responsável por este comércio</a>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function applyFiltersAndRender() {
+      const q = normalize(dom.searchInput.value);
+      const terms = q.split(/\s+/).filter(Boolean);
+      const category = dom.categoryFilter.value;
+      const bairro = dom.bairroFilter.value;
+
+      let filtered = allItems.filter(item => {
+        const okCategory = !category || item.categoria === category;
+        const okBairro = !bairro || item.bairro === bairro;
+        return okCategory && okBairro;
+      });
+
+      const scored = filtered
+        .map(item => ({ item, score: computeScore(item, terms) }))
+        .filter(({ score }) => terms.length === 0 || score > 0)
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          return (a.item.nome || "").localeCompare(b.item.nome || "", "pt-BR");
+        })
+        .map(x => x.item);
+
+      const hasInteraction = Boolean(q || category || bairro);
+      renderCards(scored, hasInteraction || terms.length === 0);
+    }
+
+    async function loadData() {
+      try {
+        dom.status.textContent = UI_TEXTS.loading;
+        const res = await fetch(CSV_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("Falha de rede");
+        const csvText = await res.text();
+        const data = parseCSV(csvText);
+
+        allItems = data
+          .filter(item => normalize(item.status) === "ativo")
+          .map(item => ({ ...item }));
+
+        renderFilters(allItems);
+        applyFiltersAndRender();
+      } catch (error) {
+        dom.results.innerHTML = `<div class="empty">${UI_TEXTS.loadError}</div>`;
+        dom.status.textContent = UI_TEXTS.loadError;
+      }
+    }
+
+    dom.searchInput.addEventListener("input", applyFiltersAndRender);
+    dom.categoryFilter.addEventListener("change", applyFiltersAndRender);
+    dom.bairroFilter.addEventListener("change", applyFiltersAndRender);
+    dom.clearFilters.addEventListener("click", () => {
+      dom.searchInput.value = "";
+      dom.categoryFilter.value = "";
+      dom.bairroFilter.value = "";
+      applyFiltersAndRender();
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
