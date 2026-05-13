@@ -119,9 +119,14 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr;
       gap: 14px;
       padding-bottom: 28px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
     }
 
     .card {
@@ -322,11 +327,11 @@
     @media (min-width: 680px) {
       .actions { grid-template-columns: 2fr 1fr 1fr auto; }
       .btn-clear { min-width: 150px; }
-      .grid { grid-template-columns: repeat(2, 1fr); }
+      .card-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (min-width: 1020px) {
-      .grid { grid-template-columns: repeat(3, 1fr); }
+      .card-grid { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
@@ -552,7 +557,7 @@
 
       dom.status.textContent = `${items.length} resultado${items.length > 1 ? "s" : ""} encontrado${items.length > 1 ? "s" : ""}.`;
 
-      dom.results.innerHTML = items.map(item => {
+      const renderCard = (item) => {
         const plano = normalizarPlano(item.plano);
         const wa = sanitizeWhatsApp(item.whatsapp);
         const ig = plano !== "gratuito" ? toInstagramUrl(item.instagram) : "";
@@ -590,7 +595,16 @@
             </div>
           </article>
         `;
-      }).join("");
+      };
+
+      const parceiros = items.filter(item => normalizarPlano(item.plano) !== "gratuito");
+      const gratuitos = items.filter(item => normalizarPlano(item.plano) === "gratuito");
+      const grupos = [];
+
+      if (parceiros.length) grupos.push(`<div class="card-grid">${parceiros.map(renderCard).join("")}</div>`);
+      if (gratuitos.length) grupos.push(`<div class="card-grid">${gratuitos.map(renderCard).join("")}</div>`);
+
+      dom.results.innerHTML = grupos.join("");
     }
 
     function applyFiltersAndRender() {
