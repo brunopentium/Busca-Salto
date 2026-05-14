@@ -129,6 +129,12 @@
       gap: 14px;
     }
 
+    .group-title {
+      margin: 10px 2px 8px;
+      font-size: 1rem;
+      color: #375373;
+    }
+
     .card {
       background: var(--card);
       border: 1px solid var(--borda);
@@ -601,8 +607,12 @@
       const gratuitos = items.filter(item => normalizarPlano(item.plano) === "gratuito");
       const grupos = [];
 
-      if (parceiros.length) grupos.push(`<div class="card-grid">${parceiros.map(renderCard).join("")}</div>`);
-      if (gratuitos.length) grupos.push(`<div class="card-grid">${gratuitos.map(renderCard).join("")}</div>`);
+      if (parceiros.length) {
+        grupos.push(`<section><h3 class="group-title">Comércios parceiros</h3><div class="card-grid">${parceiros.map(renderCard).join("")}</div></section>`);
+      }
+      if (gratuitos.length) {
+        grupos.push(`<section><h3 class="group-title">Cadastro gratuito</h3><div class="card-grid">${gratuitos.map(renderCard).join("")}</div></section>`);
+      }
 
       dom.results.innerHTML = grupos.join("");
     }
