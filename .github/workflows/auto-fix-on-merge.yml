@@ -1,0 +1,36 @@
+name: Auto-fix on merge
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Format HTML/CSS/JS with Prettier
+        run: npx --yes prettier@3.3.3 --write "index.html" "docs/**/*.md"
+
+      - name: Validate formatting
+        run: npx --yes prettier@3.3.3 --check "index.html" "docs/**/*.md"
+
+      - name: Commit automatic fixes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: aplicar correções automáticas pós-merge"
+          file_pattern: index.html docs/**/*.md
