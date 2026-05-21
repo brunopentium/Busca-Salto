@@ -224,7 +224,7 @@
 
     .buttons {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
       margin-top: 12px;
     }
@@ -243,7 +243,10 @@
     }
 
     .btn.whatsapp { background: #dcf8e6; color: #146a43; }
+    .btn.telefone { background: #e8f0ff; color: #1d4f91; }
     .btn.instagram { background: #f6e5f2; color: #7a2b67; }
+    .btn.facebook { background: #e4edff; color: #244f9e; }
+    .btn.endereco { background: #fff2d8; color: #7a5400; }
     .btn.site { background: #e7eef9; color: #1e3f66; }
 
     .btn-claim {
@@ -278,9 +281,7 @@
 
     .card-plano-gratuito .card-top,
     .card-plano-gratuito .offer,
-    .card-plano-gratuito .tag.plano,
-    .card-plano-gratuito .btn.instagram,
-    .card-plano-gratuito .btn.site {
+    .card-plano-gratuito .tag.plano {
       display: none;
     }
 
@@ -389,6 +390,7 @@
       .actions { grid-template-columns: 2fr 1fr 1fr auto; }
       .btn-clear { min-width: 150px; }
       .card-grid { grid-template-columns: repeat(2, 1fr); }
+      .buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
 
     @media (min-width: 1020px) {
@@ -520,6 +522,33 @@
       return `https://instagram.com/${v}`;
     }
 
+    function toFacebookUrl(value = "") {
+      const v = value.trim();
+      if (!v) return "";
+      if (v.startsWith("http://") || v.startsWith("https://")) return v;
+      return `https://facebook.com/${encodeURIComponent(v.replace(/^@/, ""))}`;
+    }
+
+    function toSiteUrl(value = "") {
+      const v = value.trim();
+      if (!v) return "";
+      if (v.startsWith("http://") || v.startsWith("https://")) return v;
+      return `https://${v}`;
+    }
+
+    function toPhoneUrl(value = "") {
+      const digits = value.replace(/\D/g, "");
+      if (!digits) return "";
+      return `tel:${digits}`;
+    }
+
+    function toMapsUrl(value = "", city = "") {
+      const address = value.trim();
+      if (!address) return "";
+      const query = city ? `${address}, ${city}, Salto/SP` : `${address}, Salto/SP`;
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    }
+
     function planWeight(plan = "") {
       const p = normalizarPlano(plan);
       if (p === "parceiro") return 80;
@@ -621,14 +650,25 @@
       const renderCard = (item) => {
         const plano = normalizarPlano(item.plano);
         const wa = sanitizeWhatsApp(item.whatsapp);
-        const ig = plano !== "gratuito" ? toInstagramUrl(item.instagram) : "";
-        const site = plano !== "gratuito" ? item.site?.trim() : "";
+        const telefone = toPhoneUrl(item.telefone || "");
+        const ig = toInstagramUrl(item.instagram || "");
+        const facebook = toFacebookUrl(item.facebook || "");
+        const enderecoUrl = toMapsUrl(item.endereco || "", item.bairro || "");
+        const site = toSiteUrl(item.site || "");
         const mostrarImagemGrande = plano !== "gratuito";
         const mostrarOferta = plano === "top" || plano === "destaque";
         const mostrarClaim = plano !== "gratuito";
         const descricao = item.descricao?.trim();
         const descricaoCurta = descricao && plano === "gratuito" ? `${descricao.slice(0, 120)}${descricao.length > 120 ? "..." : ""}` : descricao;
         const claimMessage = encodeURIComponent(`Olá, sou responsável pelo comércio ${item.nome} e gostaria de corrigir ou melhorar este cadastro no Busca Salto.`);
+        const buttons = [
+          wa ? `<a class="btn whatsapp" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>` : "",
+          telefone ? `<a class="btn telefone" href="${telefone}">Telefone</a>` : "",
+          ig ? `<a class="btn instagram" href="${ig}" target="_blank" rel="noopener">Instagram</a>` : "",
+          facebook ? `<a class="btn facebook" href="${facebook}" target="_blank" rel="noopener">Facebook</a>` : "",
+          enderecoUrl ? `<a class="btn endereco" href="${enderecoUrl}" target="_blank" rel="noopener">Endereço</a>` : "",
+          site ? `<a class="btn site" href="${site}" target="_blank" rel="noopener">Site</a>` : ""
+        ].filter(Boolean).join("");
 
         return `
           <article class="card ${cardClassByPlan(plano)}">
@@ -646,11 +686,7 @@
               ${descricaoCurta ? `<p class="desc">${descricaoCurta}</p>` : ""}
               ${mostrarOferta && item.oferta ? `<p class="offer">🎁 ${item.oferta}</p>` : ""}
 
-              <div class="buttons">
-                ${wa ? `<a class="btn whatsapp" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}
-                ${ig ? `<a class="btn instagram" href="${ig}" target="_blank" rel="noopener">Instagram</a>` : ""}
-                ${site ? `<a class="btn site" href="${site}" target="_blank" rel="noopener">Site</a>` : ""}
-              </div>
+              ${buttons ? `<div class="buttons">${buttons}</div>` : ""}
 
               ${mostrarClaim ? `<a class="btn-claim" href="https://wa.me/${BUSCA_SALTO_WHATSAPP}?text=${claimMessage}" target="_blank" rel="noopener">Sou responsável por este comércio</a>` : ""}
             </div>
