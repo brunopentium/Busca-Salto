@@ -51,13 +51,13 @@ async function getSheetsClient() {
   return google.sheets({ version: "v4", auth });
 }
 
-function rowToObject(headers, row) {
+function rowToObject(headers, row, index) {
   const raw = {};
   headers.forEach((header, index) => {
     raw[normalizeHeader(header)] = String(row[index] || "").trim();
   });
   return {
-    id: raw.id,
+    id: raw.id || String(index + 1),
     nome: raw.nome,
     categoria: raw.categoria,
     subcategoria: raw.subcategoria,
@@ -94,7 +94,7 @@ async function loadRows() {
   const headers = values[0] || [];
   const rows = values
     .slice(1)
-    .map((row) => rowToObject(headers, row))
+    .map((row, index) => rowToObject(headers, row, index))
     .filter((row) => row.nome && normalize(row.status) === "ativo");
 
   cache = { loadedAt: now, rows };
