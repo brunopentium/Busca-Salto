@@ -1,6 +1,7 @@
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 30;
+const CONTACT_TYPES = new Set(["whatsapp", "telefone", "instagram", "facebook", "site"]);
 const SPREADSHEET_ID = (process.env.GOOGLE_SHEETS_ID || "1s-Wi8ej_y5YisIg2GWh7LlwyLsCpf_YwefotX1ct3dA").trim();
 const SHEET_NAME = (process.env.GOOGLE_SHEETS_TAB || "base_interna").trim();
 const RANGE = `${SHEET_NAME}!A1:T`;
@@ -108,16 +109,16 @@ function publicItem(item) {
     subcategoria: item.subcategoria,
     bairro: item.bairro,
     endereco: item.endereco,
-    whatsapp: item.whatsapp,
-    instagram: item.instagram,
-    site: item.site,
     descricao: item.descricao,
     palavras_chave: item.palavras_chave,
-    facebook: item.facebook,
-    telefone: item.telefone,
     tipo_exibicao: item.tipo_exibicao,
     oferta: item.oferta,
     foto_url: item.foto_url,
+    has_whatsapp: Boolean(item.whatsapp),
+    has_telefone: Boolean(item.telefone),
+    has_instagram: Boolean(item.instagram),
+    has_facebook: Boolean(item.facebook),
+    has_site: Boolean(item.site),
   };
 }
 
@@ -170,15 +171,33 @@ function buildFilters(rows) {
   };
 }
 
+function contactValue(item, type) {
+  if (type === "whatsapp") return item.whatsapp;
+  if (type === "telefone") return item.telefone;
+  if (type === "instagram") return item.instagram;
+  if (type === "facebook") return item.facebook;
+  if (type === "site") return item.site;
+  return "";
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") return json(res, 405, { error: "Metodo nao permitido." });
 
   try {
     const mode = cleanParam(req.query.mode, 20);
-
     const rows = await loadRows();
+
     if (mode === "filters") {
       return json(res, 200, { filters: buildFilters(rows), updatedAt: new Date(cache.loadedAt).toISOString() });
+    }
+
+    if (mode === "contact") {
+      const id = cleanParam(req.query.id, 30);
+      const type = normalize(cleanParam(req.query.tipo, 20));
+      if (!id || !CONTACT_TYPES.has(type)) return json(res, 400, { error: "Contato invalido." });
+      const item = rows.find((row) => String(row.id) === id);
+      if (!item) return json(res, 404, { error: "Comercio nao encontrado." });
+      return json(res, 200, { id: item.id, tipo: type, valor: contactValue(item, type) || "" });
     }
 
     const busca = cleanParam(req.query.busca, 80);
@@ -187,14 +206,23 @@ module.exports = async function handler(req, res) {
     const page = parsePositiveInt(req.query.page, 1, 1000);
     const limit = parsePositiveInt(req.query.limit, DEFAULT_LIMIT, MAX_LIMIT);
     const terms = normalize(busca).split(/\s+/).filter(Boolean);
+    const hasRefinement = Boolean(busca || categoria || bairro);
+    const effectivePage = hasRefinement ? page : 1;
 
     let filtered = rows.filter((item) => (!categoria || item.categoria === categoria) && (!bairro || item.bairro === bairro));
     filtered = sortItems(filtered, terms);
 
     const total = filtered.length;
-    const start = (page - 1) * limit;
+    const start = (effectivePage - 1) * limit;
     const items = filtered.slice(start, start + limit).map(publicItem);
-    return json(res, 200, { items, total, page, limit, hasMore: start + limit < total, updatedAt: new Date(cache.loadedAt).toISOString() });
+    return json(res, 200, {
+      items,
+      total,
+      page: effectivePage,
+      limit,
+      hasMore: hasRefinement && start + limit < total,
+      updatedAt: new Date(cache.loadedAt).toISOString(),
+    });
   } catch (error) {
     console.error(error);
     return json(res, 500, { error: "Nao foi possivel carregar os dados agora." });
