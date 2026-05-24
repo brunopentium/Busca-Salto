@@ -32,15 +32,6 @@ function parsePositiveInt(value, fallback, max) {
   return Math.min(number, max);
 }
 
-function envStatus() {
-  return {
-    hasEmail: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL),
-    hasPrivateKey: Boolean(process.env.GOOGLE_PRIVATE_KEY),
-    hasSheetId: Boolean(SPREADSHEET_ID),
-    sheetName: SHEET_NAME,
-  };
-}
-
 function requireEnv() {
   const email = String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "").trim();
   const key = process.env.GOOGLE_PRIVATE_KEY;
@@ -184,7 +175,6 @@ module.exports = async function handler(req, res) {
 
   try {
     const mode = cleanParam(req.query.mode, 20);
-    if (mode === "health") return json(res, 200, { ok: true, env: envStatus(), cacheRows: cache.rows.length });
 
     const rows = await loadRows();
     if (mode === "filters") {
@@ -207,6 +197,6 @@ module.exports = async function handler(req, res) {
     return json(res, 200, { items, total, page, limit, hasMore: start + limit < total, updatedAt: new Date(cache.loadedAt).toISOString() });
   } catch (error) {
     console.error(error);
-    return json(res, 500, { error: "Nao foi possivel carregar os dados agora.", detail: error.message });
+    return json(res, 500, { error: "Nao foi possivel carregar os dados agora." });
   }
 };
