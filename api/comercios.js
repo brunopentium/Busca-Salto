@@ -1,8 +1,8 @@
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 30;
-const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID || "1s-Wi8ej_y5YisIg2GWh7LlwyLsCpf_YwefotX1ct3dA";
-const SHEET_NAME = process.env.GOOGLE_SHEETS_TAB || "base_interna";
+const SPREADSHEET_ID = (process.env.GOOGLE_SHEETS_ID || "1s-Wi8ej_y5YisIg2GWh7LlwyLsCpf_YwefotX1ct3dA").trim();
+const SHEET_NAME = (process.env.GOOGLE_SHEETS_TAB || "base_interna").trim();
 const RANGE = `${SHEET_NAME}!A1:T`;
 
 let cache = { loadedAt: 0, rows: [] };
@@ -42,7 +42,7 @@ function envStatus() {
 }
 
 function requireEnv() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const email = String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "").trim();
   const key = process.env.GOOGLE_PRIVATE_KEY;
   if (!email || !key) throw new Error("Google credentials are not configured.");
   return { email, key: key.replace(/\\n/g, "\n") };
