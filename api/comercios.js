@@ -1,5 +1,3 @@
-import { google } from "googleapis";
-
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 30;
@@ -7,23 +5,17 @@ const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID || "1s-Wi8ej_y5YisIg2GWh7Llw
 const SHEET_NAME = process.env.GOOGLE_SHEETS_TAB || "base_interna";
 const RANGE = `${SHEET_NAME}!A1:T`;
 
-let cache = {
-  loadedAt: 0,
-  rows: [],
-};
+let cache = { loadedAt: 0, rows: [] };
 
 function json(res, status, body) {
-  res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "private, max-age=60");
   res.end(JSON.stringify(body));
 }
 
 function normalize(value = "") {
-  return String(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
+  return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
 function normalizeHeader(value = "") {
@@ -40,19 +32,24 @@ function parsePositiveInt(value, fallback, max) {
   return Math.min(number, max);
 }
 
-function requireEnv() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const key = process.env.GOOGLE_PRIVATE_KEY;
-  if (!email || !key) {
-    throw new Error("Google credentials are not configured.");
-  }
+function envStatus() {
   return {
-    email,
-    key: key.replace(/\\n/g, "\n"),
+    hasEmail: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL),
+    hasPrivateKey: Boolean(process.env.GOOGLE_PRIVATE_KEY),
+    hasSheetId: Boolean(SPREADSHEET_ID),
+    sheetName: SHEET_NAME,
   };
 }
 
+function requireEnv() {
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const key = process.env.GOOGLE_PRIVATE_KEY;
+  if (!email || !key) throw new Error("Google credentials are not configured.");
+  return { email, key: key.replace(/\\n/g, "\n") };
+}
+
 async function getSheetsClient() {
+  const { google } = require("googleapis");
   const credentials = requireEnv();
   const auth = new google.auth.JWT({
     email: credentials.email,
@@ -67,7 +64,6 @@ function rowToObject(headers, row) {
   headers.forEach((header, index) => {
     raw[normalizeHeader(header)] = String(row[index] || "").trim();
   });
-
   return {
     id: raw.id,
     nome: raw.nome,
@@ -93,9 +89,7 @@ function rowToObject(headers, row) {
 
 async function loadRows() {
   const now = Date.now();
-  if (cache.rows.length && now - cache.loadedAt < CACHE_TTL_MS) {
-    return cache.rows;
-  }
+  if (cache.rows.length && now - cache.loadedAt < CACHE_TTL_MS) return cache.rows;
 
   const sheets = await getSheetsClient();
   const response = await sheets.spreadsheets.values.get({
@@ -153,7 +147,6 @@ function computeScore(item, terms) {
     descricao: normalize(item.descricao),
     palavras: normalize(item.palavras_chave),
   };
-
   let relevance = 0;
   for (const term of terms) {
     if (fields.nome.includes(term)) relevance += 60;
@@ -163,7 +156,6 @@ function computeScore(item, terms) {
     if (fields.descricao.includes(term)) relevance += 20;
     if (fields.bairro.includes(term)) relevance += 10;
   }
-
   const base = planWeight(item.tipo_exibicao) + item.prioridade * 20 + (normalize(item.verificado) === "sim" ? 30 : 0);
   if (!terms.length) return base;
   return relevance ? relevance + base + (item.oferta ? 20 : 0) + (item.foto_url ? 15 : 0) : 0;
@@ -187,22 +179,16 @@ function buildFilters(rows) {
   };
 }
 
-export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    json(res, 405, { error: "Metodo nao permitido." });
-    return;
-  }
+module.exports = async function handler(req, res) {
+  if (req.method !== "GET") return json(res, 405, { error: "Metodo nao permitido." });
 
   try {
-    const rows = await loadRows();
     const mode = cleanParam(req.query.mode, 20);
+    if (mode === "health") return json(res, 200, { ok: true, env: envStatus(), cacheRows: cache.rows.length });
 
+    const rows = await loadRows();
     if (mode === "filters") {
-      json(res, 200, {
-        filters: buildFilters(rows),
-        updatedAt: new Date(cache.loadedAt).toISOString(),
-      });
-      return;
+      return json(res, 200, { filters: buildFilters(rows), updatedAt: new Date(cache.loadedAt).toISOString() });
     }
 
     const busca = cleanParam(req.query.busca, 80);
@@ -212,27 +198,15 @@ export default async function handler(req, res) {
     const limit = parsePositiveInt(req.query.limit, DEFAULT_LIMIT, MAX_LIMIT);
     const terms = normalize(busca).split(/\s+/).filter(Boolean);
 
-    let filtered = rows.filter((item) => {
-      return (!categoria || item.categoria === categoria) && (!bairro || item.bairro === bairro);
-    });
-
+    let filtered = rows.filter((item) => (!categoria || item.categoria === categoria) && (!bairro || item.bairro === bairro));
     filtered = sortItems(filtered, terms);
+
     const total = filtered.length;
     const start = (page - 1) * limit;
     const items = filtered.slice(start, start + limit).map(publicItem);
-
-    json(res, 200, {
-      items,
-      total,
-      page,
-      limit,
-      hasMore: start + limit < total,
-      updatedAt: new Date(cache.loadedAt).toISOString(),
-    });
+    return json(res, 200, { items, total, page, limit, hasMore: start + limit < total, updatedAt: new Date(cache.loadedAt).toISOString() });
   } catch (error) {
     console.error(error);
-    json(res, 500, {
-      error: "Nao foi possivel carregar os dados agora.",
-    });
+    return json(res, 500, { error: "Nao foi possivel carregar os dados agora.", detail: error.message });
   }
-}
+};
