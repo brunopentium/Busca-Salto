@@ -139,6 +139,26 @@ function searchTerms(value = "") {
   return normalizeSearchText(value).split(" ").filter((term) => term.length >= 2);
 }
 
+function splitSubcategories(value = "") {
+  return String(value || "")
+    .split(/[;,/|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function categoryMatches(item, selectedCategory = "") {
+  if (!selectedCategory) return true;
+  const selected = normalizeSearchText(selectedCategory);
+  if (!selected) return true;
+  if (normalizeSearchText(item.categoria) === selected) return true;
+  return splitSubcategories(item.subcategoria).some((subcategoria) => normalizeSearchText(subcategoria) === selected);
+}
+
+function bairroMatches(item, selectedBairro = "") {
+  if (!selectedBairro) return true;
+  return normalizeSearchText(item.bairro) === normalizeSearchText(selectedBairro);
+}
+
 function normalizeHeader(value = "") {
   return normalize(value).replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
@@ -404,8 +424,17 @@ function sortItems(items, terms, seed) {
 }
 
 function buildFilters(rows) {
+  const categoryOptions = new Map();
+  for (const row of rows) {
+    for (const option of [row.categoria, ...splitSubcategories(row.subcategoria)]) {
+      const cleanOption = String(option || "").trim();
+      if (!cleanOption) continue;
+      categoryOptions.set(normalizeSearchText(cleanOption), cleanOption);
+    }
+  }
+
   return {
-    categorias: [...new Set(rows.map((row) => row.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    categorias: [...categoryOptions.values()].sort((a, b) => a.localeCompare(b, "pt-BR")),
     bairros: [...new Set(rows.map((row) => row.bairro).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")),
   };
 }
@@ -468,7 +497,7 @@ module.exports = async function handler(req, res) {
     const effectivePage = hasRefinement ? page : 1;
     const pagePolicy = paginationPolicy({ busca, categoria, bairro });
 
-    let filtered = rows.filter((item) => (!categoria || item.categoria === categoria) && (!bairro || item.bairro === bairro));
+    let filtered = rows.filter((item) => categoryMatches(item, categoria) && bairroMatches(item, bairro));
     filtered = sortItems(filtered, terms, seed);
 
     const publicTotal = Math.min(filtered.length, pagePolicy.maxPage * limit);
