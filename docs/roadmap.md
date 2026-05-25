@@ -24,6 +24,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Rotina de backup e processo de restauracao inicial documentados.
 - Planilha de controle de solicitacoes criada no Google Drive.
 - Processo operacional de cadastro, correcao, reclamacao e validacao de responsavel documentado.
+- Processo de atualizacao segura da base principal documentado no Documento Mestre.
 - Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
 - Regras iniciais por plano implementadas na API e nos cards do site.
 - Ordenacao inicial implementada com plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
@@ -48,6 +49,8 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A qualidade do cadastro deve valorizar dados essenciais e evitar injustica com segmentos que naturalmente nao usam site, Facebook ou outras redes.
 - Solicitacoes de alteracao, cadastro, reclamacao e disputa devem ser registradas em planilha propria antes de qualquer alteracao sensivel na base.
 - Alteracoes sensiveis exigem prova razoavel de vinculo com o comercio.
+- A base principal deve preservar nomes de cabecalhos, ordem das colunas, IDs e integridade de linhas.
+- Para ocultar temporariamente um comercio, preferir alterar `status` em vez de apagar a linha.
 - O Documento Mestre e a fonte de decisao; este roadmap e a trilha tecnica de execucao.
 
 ## Sequencia mestre de execucao
@@ -75,7 +78,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 ### P3 - Operacao e governanca
 
-- [ ] 11. Documentar como atualizar a planilha sem quebrar o site. Area: Operacao. Pontuacao: 6.
+- [x] 11. Documentar como atualizar a planilha sem quebrar o site. Area: Operacao. Pontuacao: 6. Concluido: processo operacional registrado no Documento Mestre.
 - [ ] 12. Criar checklist antes de publicar mudancas. Area: Operacao. Pontuacao: 6.
 
 ### P4 - Publicacao e dominio
@@ -166,6 +169,50 @@ Mensagem padrao de validacao:
 
 `Ola! Para proteger o cadastro do comercio no Busca Salto, preciso confirmar que voce e responsavel por ele. Pode enviar uma confirmacao, como WhatsApp oficial do comercio, print de administracao do Instagram/Facebook, foto da fachada/cartao/cardapio, CNPJ/MEI ou e-mail do dominio do comercio? Apos validar, faco a correcao ou melhoria do cadastro.`
 
+## Processo de atualizacao segura da base principal
+
+A base principal deve ser atualizada com cuidado, pois a API le a aba `base_interna` da planilha privada configurada na Vercel. A planilha deve preservar a ordem dos cabecalhos, os nomes das colunas e a integridade de cada linha.
+
+Campos tecnicos relevantes para o site:
+
+- `ID`: identificador unico do comercio. Nao deve ser duplicado nem trocado entre linhas.
+- `nome`: nome exibido no card e usado na busca.
+- `categoria`, `subcategoria`, `bairro`, `endereco` e `descricao`: usados para exibicao, filtros, busca e qualidade do cadastro.
+- `telefone`, `whatsapp`, `instagram`, `facebook` e `site`: usados pelos botoes, mas retornados pela API apenas sob demanda.
+- `palavras_chave`: usadas para busca e relevancia.
+- `plano` ou `tipo_exibicao`: controla gratuito, parceiro, destaque e top.
+- `status`: somente linhas com status `ativo` aparecem no site.
+- `prioridade`, `foto_url`, `oferta` e `verificado`: afetam exibicao, ordenacao e beneficios comerciais.
+
+Procedimento antes de editar:
+
+1. Confirmar que a edicao sera feita na planilha principal usada pela API e na aba correta, `base_interna`.
+2. Criar backup quando a alteracao envolver muitas linhas, estrutura, cabecalhos, colunas, formulas, importacao em massa ou restauracao.
+3. Nao alterar a ordem das colunas e nao renomear cabecalhos sem avaliar impacto na API.
+4. Nao apagar o ID de uma linha existente e nao reutilizar ID de outro comercio.
+5. Para solicitacoes externas, conferir se existe registro na planilha de solicitacoes e se a validacao do responsavel foi feita quando necessaria.
+
+Procedimento durante a edicao:
+
+1. Editar uma linha por comercio, preservando a correspondencia entre nome, endereco, contatos, categoria, descricao, plano e demais campos.
+2. Quando uma informacao nao estiver confirmada, preferir manter vazio ou seguir o padrao operacional definido para aquele campo, evitando inventar dados.
+3. Para remover temporariamente um comercio do site, alterar `status` para `inativo` ou outro valor diferente de `ativo`, em vez de apagar a linha.
+4. Para alterar plano comercial, usar somente os valores padronizados: `gratuito`, `parceiro`, `destaque` ou `top`.
+5. Em alteracoes grandes, trabalhar em blocos pequenos e revisar amostras antes de continuar.
+
+Validacao apos editar:
+
+1. Conferir se os cabecalhos continuam na mesma ordem e com os mesmos nomes essenciais.
+2. Conferir se nao ha IDs duplicados, linhas deslocadas ou contatos em empresas erradas.
+3. Testar a API em listagem, filtros e contato individual.
+4. Testar o site em uma busca ou categoria afetada pela alteracao.
+5. Considerar o cache de ate 15 minutos antes de concluir que a alteracao nao apareceu.
+6. Registrar mudancas relevantes no Documento Mestre, roadmap tecnico ou planilha de solicitacoes, conforme o caso.
+
+Regra de seguranca operacional:
+
+Se houver duvida, disputa, erro em massa, alteracao sensivel ou risco de prejudicar um comercio, interromper a edicao, preservar a base atual e pedir validacao antes de seguir.
+
 ## Rotina inicial de backup
 
 Backup inicial criado em 24/05/2026:
@@ -222,6 +269,7 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Configurado o WhatsApp oficial do Busca Salto no fluxo `Sou responsavel por este comercio`.
 - Criada planilha de controle de solicitacoes de cadastro e alteracao.
 - Documentado processo operacional de validacao de responsavel, alteracao, reclamacao e disputa.
+- Documentado processo seguro de atualizacao da base principal.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
