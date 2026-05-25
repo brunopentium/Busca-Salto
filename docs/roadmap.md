@@ -23,6 +23,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Rotina de backup e processo de restauracao inicial documentados.
 - Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
 - Regras iniciais por plano implementadas na API e nos cards do site.
+- Ordenacao inicial implementada com plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
 - A API le a planilha privada via service account e variaveis de ambiente da Vercel.
 - A listagem nao entrega contatos diretamente (`whatsapp`, `telefone`, `instagram`, `facebook`, `site`).
 - A listagem entrega apenas flags `has_whatsapp`, `has_telefone`, `has_instagram`, `has_facebook`, `has_site`.
@@ -57,8 +58,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 - [x] 4. Definir planos: gratuito, parceiro, destaque e top. Area: Comercial. Pontuacao: 8. Concluido: nomenclatura e funcao dos planos registradas neste roadmap e no Documento Mestre.
 - [x] 5. Definir beneficios de cada plano. Area: Comercial. Pontuacao: 8. Concluido: beneficios iniciais registrados neste roadmap e no Documento Mestre.
 - [x] 6. Implementar regras por plano no site/API. Area: Comercial/Site. Pontuacao: 6. Concluido: API e cards aplicam regras iniciais por plano.
-- [ ] 7. Definir e implementar regra de ordenacao dos cards, considerando plano, qualidade/completude do cadastro, relevancia da busca e aleatoriedade controlada dos gratuitos. Area: Site. Pontuacao: 5.
-  - Observacao: a regra deve evitar injustica com segmentos que naturalmente nao usam site, Facebook ou outras redes. A pontuacao de qualidade deve valorizar dados essenciais, como nome, categoria, bairro, endereco, WhatsApp/telefone e descricao, tratando presenca digital como complemento, nao como obrigacao.
+- [x] 7. Definir e implementar regra de ordenacao dos cards, considerando plano, qualidade/completude do cadastro, relevancia da busca e aleatoriedade controlada dos gratuitos. Area: Site. Pontuacao: 5. Concluido: regra registrada e implementada na API.
 
 ### P2 - Validacao da experiencia do usuario
 
@@ -125,6 +125,19 @@ A regra comercial inicial preserva telefone e WhatsApp tambem para gratuitos, po
 - O site agrupa parceiros acima dos gratuitos e renderiza selos conforme o plano.
 - A prioridade tecnica inicial segue a ordem Top, Destaque, Parceiro e Gratuito.
 
+## Regra de ordenacao implementada
+
+A ordenacao inicial segue quatro blocos:
+
+1. Plano: Top, Destaque, Parceiro e Gratuito.
+2. Relevancia da busca: nome, categoria, subcategoria, palavras-chave, descricao e bairro.
+3. Qualidade/completude do cadastro: identificacao, localizacao, contato essencial, conteudo util e sinais digitais como complemento.
+4. Aleatoriedade controlada: variacao entre cadastros gratuitos de pontuacao semelhante.
+
+A qualidade do cadastro nao e uma simples contagem de campos preenchidos. A regra valoriza nome, categoria, subcategoria, bairro, endereco, WhatsApp/telefone, descricao e palavras-chave. Instagram, Facebook e site contam como complemento para nao prejudicar segmentos que normalmente nao usam esses canais.
+
+A API aceita uma `seed` opcional e tambem usa uma janela de variacao padrao. Isso permite variar a ordem dos gratuitos sem prejudicar a prioridade dos planos pagos nem a relevancia da busca.
+
 ## Rotina inicial de backup
 
 Backup inicial criado em 24/05/2026:
@@ -158,26 +171,6 @@ Observacao: a copia de backup nao deve ser editada diretamente. Ela deve permane
 
 ## Notas tecnicas para proximas implementacoes
 
-### Ordenacao
-
-A ordenacao desejada deve considerar quatro blocos:
-
-1. Plano: Top > Destaque > Parceiro > Gratuito.
-2. Relevancia da busca: correspondencia com nome, categoria, subcategoria, palavras-chave, bairro e descricao.
-3. Qualidade/completude do cadastro: dados essenciais preenchidos e confiaveis.
-4. Aleatoriedade controlada: variacao entre gratuitos ou entre cadastros de qualidade semelhante.
-
-A qualidade do cadastro nao deve ser uma simples contagem de campos preenchidos. Para evitar injustica, a regra deve priorizar blocos de informacao:
-
-- Identificacao: nome, categoria e subcategoria.
-- Localizacao: bairro e endereco.
-- Contato essencial: WhatsApp ou telefone.
-- Conteudo util: descricao e palavras-chave.
-- Presenca digital: Instagram, Facebook ou site como complemento, nao obrigacao.
-- Recursos comerciais/visuais: imagem e oferta conforme plano.
-
-Dentro dos gratuitos, a ordem deve variar a cada nova busca ou carregamento, sem prejudicar a prioridade dos planos pagos e sem premiar artificialmente apenas quem tem mais redes sociais.
-
 ### Seguranca da API
 
 A API ja evita expor contatos na listagem. Proximos passos tecnicos:
@@ -197,6 +190,7 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Corrigido comportamento de popup para contatos abrirem com URL correta.
 - Adicionado fallback de ID na API quando a coluna `ID` nao estiver disponivel.
 - Aplicadas regras iniciais por plano no retorno publico da API.
+- Implementada ordenacao por plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
