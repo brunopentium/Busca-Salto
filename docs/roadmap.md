@@ -22,6 +22,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Primeira copia de seguranca da base principal criada em 24/05/2026 no Google Drive.
 - Rotina de backup e processo de restauracao inicial documentados.
 - Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
+- Regras iniciais por plano implementadas na API e nos cards do site.
 - A API le a planilha privada via service account e variaveis de ambiente da Vercel.
 - A listagem nao entrega contatos diretamente (`whatsapp`, `telefone`, `instagram`, `facebook`, `site`).
 - A listagem entrega apenas flags `has_whatsapp`, `has_telefone`, `has_instagram`, `has_facebook`, `has_site`.
@@ -55,7 +56,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 - [x] 4. Definir planos: gratuito, parceiro, destaque e top. Area: Comercial. Pontuacao: 8. Concluido: nomenclatura e funcao dos planos registradas neste roadmap e no Documento Mestre.
 - [x] 5. Definir beneficios de cada plano. Area: Comercial. Pontuacao: 8. Concluido: beneficios iniciais registrados neste roadmap e no Documento Mestre.
-- [ ] 6. Implementar regras por plano no site/API. Area: Comercial/Site. Pontuacao: 6.
+- [x] 6. Implementar regras por plano no site/API. Area: Comercial/Site. Pontuacao: 6. Concluido: API e cards aplicam regras iniciais por plano.
 - [ ] 7. Definir e implementar regra de ordenacao dos cards, considerando plano, qualidade/completude do cadastro, relevancia da busca e aleatoriedade controlada dos gratuitos. Area: Site. Pontuacao: 5.
   - Observacao: a regra deve evitar injustica com segmentos que naturalmente nao usam site, Facebook ou outras redes. A pontuacao de qualidade deve valorizar dados essenciais, como nome, categoria, bairro, endereco, WhatsApp/telefone e descricao, tratando presenca digital como complemento, nao como obrigacao.
 
@@ -113,6 +114,17 @@ Beneficios iniciais:
 
 A regra comercial inicial preserva telefone e WhatsApp tambem para gratuitos, pois a utilidade do site para o usuario final e prioridade na fase de adocao.
 
+## Regras por plano implementadas
+
+- A API aplica controle por plano no retorno publico da listagem.
+- Contatos nao sao enviados diretamente na listagem; apenas indicadores de disponibilidade sao enviados.
+- Telefone, WhatsApp, Instagram, Facebook e site continuam sendo buscados individualmente no clique do usuario.
+- Cadastros gratuitos nao recebem imagem nem oferta no JSON publico da listagem.
+- Parceiro, Destaque e Top podem receber imagem.
+- Oferta e liberada apenas para Destaque e Top.
+- O site agrupa parceiros acima dos gratuitos e renderiza selos conforme o plano.
+- A prioridade tecnica inicial segue a ordem Top, Destaque, Parceiro e Gratuito.
+
 ## Rotina inicial de backup
 
 Backup inicial criado em 24/05/2026:
@@ -145,17 +157,6 @@ Procedimento:
 Observacao: a copia de backup nao deve ser editada diretamente. Ela deve permanecer como ponto de retorno.
 
 ## Notas tecnicas para proximas implementacoes
-
-### Regras por plano
-
-A base deve continuar completa. A API deve decidir o que entregar e o frontend deve decidir o que renderizar conforme o campo `plano`.
-
-Diretriz inicial:
-
-- Gratuito: contatos basicos liberados quando existirem; sem imagem personalizada, sem oferta, sem destaque visual; ordem aleatoria entre gratuitos.
-- Parceiro: tudo do gratuito, imagem no card, descricao melhor, selo/diferenciacao e prioridade acima dos gratuitos.
-- Destaque: tudo do parceiro, oferta/promocao, visual mais forte e melhor posicao.
-- Top: tudo do destaque, posicao maxima e selo Top Categoria.
 
 ### Ordenacao
 
@@ -195,6 +196,7 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Ajustado frontend para renderizar botoes de contato sem expor dados na listagem.
 - Corrigido comportamento de popup para contatos abrirem com URL correta.
 - Adicionado fallback de ID na API quando a coluna `ID` nao estiver disponivel.
+- Aplicadas regras iniciais por plano no retorno publico da API.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
