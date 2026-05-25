@@ -5,6 +5,7 @@ const CONTACT_TYPES = new Set(["whatsapp", "telefone", "instagram", "facebook", 
 const SPREADSHEET_ID = (process.env.GOOGLE_SHEETS_ID || "1s-Wi8ej_y5YisIg2GWh7LlwyLsCpf_YwefotX1ct3dA").trim();
 const SHEET_NAME = (process.env.GOOGLE_SHEETS_TAB || "base_interna").trim();
 const RANGE = `${SHEET_NAME}!A1:T`;
+const RANDOM_BUCKET_MS = 5 * 60 * 1000;
 
 let cache = { loadedAt: 0, rows: [] };
 
@@ -72,6 +73,36 @@ function truncateText(value = "", maxLength = 160) {
   const text = String(value || "").trim();
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength).trim()}...`;
+}
+
+function seededRandom(input = "") {
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) / 4294967295;
+}
+
+function qualityScore(item) {
+  let score = 0;
+  if (item.nome) score += 10;
+  if (item.categoria) score += 8;
+  if (item.subcategoria) score += 6;
+  if (item.bairro) score += 8;
+  if (item.endereco) score += 8;
+  if (item.whatsapp) score += 10;
+  else if (item.telefone) score += 8;
+  if (item.descricao) score += 8;
+  if (item.palavras_chave) score += 6;
+
+  const digitalSignals = [item.instagram, item.facebook, item.site].filter(Boolean).length;
+  score += Math.min(digitalSignals * 2, 6);
+
+  if (allowsImage(item.tipo_exibicao) && item.foto_url) score += 6;
+  if (allowsOffer(item.tipo_exibicao) && item.oferta) score += 6;
+  if (normalize(item.verificado) === "sim") score += 8;
+  return score;
 }
 
 function rowToObject(headers, row, index) {
@@ -173,17 +204,22 @@ function computeScore(item, terms) {
     if (fields.descricao.includes(term)) relevance += 20;
     if (fields.bairro.includes(term)) relevance += 10;
   }
-  const base = planWeight(item.tipo_exibicao) + item.prioridade * 20 + (normalize(item.verificado) === "sim" ? 30 : 0);
+  const base = planWeight(item.tipo_exibicao) + item.prioridade * 20 + qualityScore(item);
   if (!terms.length) return base;
-  return relevance ? relevance + base + (allowsOffer(item.tipo_exibicao) && item.oferta ? 20 : 0) + (allowsImage(item.tipo_exibicao) && item.foto_url ? 15 : 0) : 0;
+  return relevance ? relevance + base : 0;
 }
 
-function sortItems(items, terms) {
+function sortItems(items, terms, seed) {
   return items
-    .map((item) => ({ item, score: computeScore(item, terms) }))
+    .map((item) => ({
+      item,
+      score: computeScore(item, terms),
+      random: normalizePlan(item.tipo_exibicao) === "gratuito" ? seededRandom(`${seed}:${item.id}:${item.nome}`) : 0,
+    }))
     .filter(({ score }) => !terms.length || score > 0)
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
+      if (b.random !== a.random) return b.random - a.random;
       return String(a.item.nome || "").localeCompare(String(b.item.nome || ""), "pt-BR");
     })
     .map(({ item }) => item);
@@ -228,6 +264,7 @@ module.exports = async function handler(req, res) {
     const busca = cleanParam(req.query.busca, 80);
     const categoria = cleanParam(req.query.categoria, 80);
     const bairro = cleanParam(req.query.bairro, 80);
+    const seed = cleanParam(req.query.seed, 80) || String(Math.floor(Date.now() / RANDOM_BUCKET_MS));
     const page = parsePositiveInt(req.query.page, 1, 1000);
     const limit = parsePositiveInt(req.query.limit, DEFAULT_LIMIT, MAX_LIMIT);
     const terms = normalize(busca).split(/\s+/).filter(Boolean);
@@ -235,7 +272,7 @@ module.exports = async function handler(req, res) {
     const effectivePage = hasRefinement ? page : 1;
 
     let filtered = rows.filter((item) => (!categoria || item.categoria === categoria) && (!bairro || item.bairro === bairro));
-    filtered = sortItems(filtered, terms);
+    filtered = sortItems(filtered, terms, seed);
 
     const total = filtered.length;
     const start = (effectivePage - 1) * limit;
@@ -246,6 +283,7 @@ module.exports = async function handler(req, res) {
       page: effectivePage,
       limit,
       hasMore: hasRefinement && start + limit < total,
+      seed,
       updatedAt: new Date(cache.loadedAt).toISOString(),
     });
   } catch (error) {
