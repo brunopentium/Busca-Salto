@@ -25,6 +25,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Planilha de controle de solicitacoes criada no Google Drive.
 - Processo operacional de cadastro, correcao, reclamacao e validacao de responsavel documentado.
 - Processo de atualizacao segura da base principal documentado no Documento Mestre.
+- Checklist antes de publicar mudancas documentado no Documento Mestre e neste roadmap.
 - Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
 - Regras iniciais por plano implementadas na API e nos cards do site.
 - Ordenacao inicial implementada com plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
@@ -79,7 +80,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 ### P3 - Operacao e governanca
 
 - [x] 11. Documentar como atualizar a planilha sem quebrar o site. Area: Operacao. Pontuacao: 6. Concluido: processo operacional registrado no Documento Mestre.
-- [ ] 12. Criar checklist antes de publicar mudancas. Area: Operacao. Pontuacao: 6.
+- [x] 12. Criar checklist antes de publicar mudancas. Area: Operacao. Pontuacao: 6. Concluido: checklist operacional registrado no Documento Mestre e neste roadmap.
 
 ### P4 - Publicacao e dominio
 
@@ -213,6 +214,26 @@ Regra de seguranca operacional:
 
 Se houver duvida, disputa, erro em massa, alteracao sensivel ou risco de prejudicar um comercio, interromper a edicao, preservar a base atual e pedir validacao antes de seguir.
 
+## Checklist antes de publicar mudancas
+
+Antes de publicar mudancas no site, API, Vercel ou base principal, deve-se executar este checklist.
+
+1. Identificar o tipo de mudanca: codigo/site, API, dados/base, dominio/Vercel ou regra comercial.
+2. Conferir se a mudanca tem solicitacao, decisao ou justificativa registrada quando afetar negocio, dados ou exibicao publica.
+3. Criar backup quando a mudanca envolver base, colunas, importacao em massa, restauracao ou alteracao estrutural.
+4. Verificar se a mudanca nao expoe a planilha privada, chaves, variaveis de ambiente ou contatos em massa.
+5. Testar API principal: listagem, filtros e contato individual.
+6. Testar site em desktop e celular quando houver alteracao visual ou de comportamento.
+7. Conferir que botoes de WhatsApp, telefone, Instagram, Facebook, site e endereco funcionam sem abrir links vazios.
+8. Conferir que planos gratuito, parceiro, destaque e top continuam respeitando as regras de exibicao.
+9. Conferir que busca, filtros e carregamento de mais resultados continuam funcionando.
+10. Validar HTTPS e dominio afetado quando houver alteracao de publicacao.
+11. Aguardar ou considerar cache de ate 15 minutos quando a mudanca envolver dados.
+12. Registrar mudanca relevante no Documento Mestre, roadmap tecnico ou planilha de solicitacoes.
+13. Se qualquer teste falhar, nao considerar a publicacao concluida ate corrigir ou reverter.
+
+Regra de bloqueio: mudancas que possam derrubar o site, expor base privada, trocar contatos entre comercios, quebrar a API ou gerar prejuizo a comercio devem ser interrompidas ate validacao.
+
 ## Rotina inicial de backup
 
 Backup inicial criado em 24/05/2026:
@@ -270,6 +291,7 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Criada planilha de controle de solicitacoes de cadastro e alteracao.
 - Documentado processo operacional de validacao de responsavel, alteracao, reclamacao e disputa.
 - Documentado processo seguro de atualizacao da base principal.
+- Documentado checklist antes de publicar mudancas.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
