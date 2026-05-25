@@ -56,6 +56,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Para ocultar temporariamente um comercio, preferir alterar `status` em vez de apagar a linha.
 - O limite simples da API e uma protecao best effort em ambiente serverless; protecoes mais fortes podem ser adicionadas depois se houver abuso real.
 - O bloco de dominio e publicacao final foi movido para fase posterior, para nao travar melhorias de operacao, seguranca e produto.
+- A pagina comercial para planos deve ser pensada como area para comerciantes, com acesso discreto, sem transformar a busca principal em uma vitrine explicita de compra de posicao.
 - O Documento Mestre e a fonte de decisao; este roadmap e a trilha tecnica de execucao.
 
 ## Sequencia mestre de execucao
@@ -102,14 +103,15 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 - [ ] 19. Criar processo para vender destaque por categoria. Area: Comercial. Pontuacao: 5.
 - [ ] 20. Definir exclusividade do Top Categoria. Area: Comercial. Pontuacao: 5.
+- [ ] 21. Avaliar e criar pagina para comerciantes conhecerem os planos e assinarem pelo Mercado Pago. Area: Comercial/Site. Pontuacao: 4.
 
 ### P7 - Publicacao e dominio, fase final
 
-- [ ] 21. Configurar dominio `buscasalto.com`. Area: Publicacao. Pontuacao: 6.
-- [ ] 22. Apontar dominio para Vercel. Area: Publicacao. Pontuacao: 6.
-- [ ] 23. Validar HTTPS no dominio final. Area: Publicacao. Pontuacao: 8.
-- [ ] 24. Configurar Google Search Console. Area: Publicacao. Pontuacao: 5.
-- [ ] 25. Configurar Analytics ou medicao de buscas e acessos. Area: Publicacao. Pontuacao: 4.
+- [ ] 22. Configurar dominio `buscasalto.com`. Area: Publicacao. Pontuacao: 6.
+- [ ] 23. Apontar dominio para Vercel. Area: Publicacao. Pontuacao: 6.
+- [ ] 24. Validar HTTPS no dominio final. Area: Publicacao. Pontuacao: 8.
+- [ ] 25. Configurar Google Search Console. Area: Publicacao. Pontuacao: 5.
+- [ ] 26. Configurar Analytics ou medicao de buscas e acessos. Area: Publicacao. Pontuacao: 4.
 
 ## Planos comerciais iniciais
 
@@ -128,6 +130,21 @@ Beneficios iniciais:
 - Top: inclui todos os recursos do destaque, posicao maxima na categoria e selo Top Categoria. A regra de exclusividade por categoria ainda sera definida.
 
 A regra comercial inicial preserva telefone e WhatsApp tambem para gratuitos, pois a utilidade do site para o usuario final e prioridade na fase de adocao.
+
+## Pagina comercial e pagamento
+
+Existe uma pendencia comercial para avaliar e criar uma pagina voltada a comerciantes interessados em planos pagos. A pagina deve explicar beneficios, apresentar planos, receber dados do comercio e direcionar assinatura ou pagamento pelo Mercado Pago.
+
+Diretriz inicial: a pagina deve ser discreta dentro da experiencia publica do site, preferencialmente acessada por links como `Para comerciantes`, `Divulgue seu comercio` ou pelo fluxo `Sou responsavel por este comercio`. Evitar chamadas ostensivas na busca principal como "pague para aparecer primeiro", para nao reduzir a confianca do usuario comum nos resultados.
+
+Antes de implementar pagamento, definir:
+
+- nomes finais dos planos e precos;
+- beneficios exatos por plano;
+- regra de exclusividade do Top Categoria;
+- se o pagamento sera assinatura recorrente, pagamento mensal avulso ou ambos;
+- como o pagamento confirmado atualiza o plano na base;
+- processo de cancelamento, renovacao e suporte.
 
 ## Regras por plano implementadas
 
