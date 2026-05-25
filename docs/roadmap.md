@@ -26,6 +26,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Processo operacional de cadastro, correcao, reclamacao e validacao de responsavel documentado.
 - Processo de atualizacao segura da base principal documentado no Documento Mestre.
 - Checklist antes de publicar mudancas documentado no Documento Mestre e neste roadmap.
+- Monitoramento inicial de erros na Vercel documentado e API ajustada com logs estruturados e `requestId`.
 - Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
 - Regras iniciais por plano implementadas na API e nos cards do site.
 - Ordenacao inicial implementada com plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
@@ -52,6 +53,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Alteracoes sensiveis exigem prova razoavel de vinculo com o comercio.
 - A base principal deve preservar nomes de cabecalhos, ordem das colunas, IDs e integridade de linhas.
 - Para ocultar temporariamente um comercio, preferir alterar `status` em vez de apagar a linha.
+- O bloco de dominio e publicacao final foi movido para fase posterior, para nao travar melhorias de operacao, seguranca e produto.
 - O Documento Mestre e a fonte de decisao; este roadmap e a trilha tecnica de execucao.
 
 ## Sequencia mestre de execucao
@@ -82,30 +84,30 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 - [x] 11. Documentar como atualizar a planilha sem quebrar o site. Area: Operacao. Pontuacao: 6. Concluido: processo operacional registrado no Documento Mestre.
 - [x] 12. Criar checklist antes de publicar mudancas. Area: Operacao. Pontuacao: 6. Concluido: checklist operacional registrado no Documento Mestre e neste roadmap.
 
-### P4 - Publicacao e dominio
+### P4 - Monitoramento e seguranca complementar
 
-- [ ] 13. Configurar dominio `buscasalto.com`. Area: Publicacao. Pontuacao: 6.
-- [ ] 14. Apontar dominio para Vercel. Area: Publicacao. Pontuacao: 6.
-- [ ] 15. Validar HTTPS no dominio final. Area: Publicacao. Pontuacao: 8.
-- [ ] 16. Configurar Google Search Console. Area: Publicacao. Pontuacao: 5.
-- [ ] 17. Configurar Analytics ou medicao de buscas e acessos. Area: Publicacao. Pontuacao: 4.
+- [x] 13. Monitorar erros na Vercel. Area: Operacao. Pontuacao: 5. Concluido: API passou a registrar erros com log estruturado e `requestId`; procedimento registrado no Documento Mestre e neste roadmap.
+- [ ] 14. Adicionar limite simples na API. Area: Seguranca. Pontuacao: 5.
+- [ ] 15. Reduzir raspagem massiva por paginacao. Area: Seguranca. Pontuacao: 3.
 
-### P5 - Monitoramento e seguranca complementar
+### P5 - Qualidade de busca, dados e interface
 
-- [ ] 18. Monitorar erros na Vercel. Area: Operacao. Pontuacao: 5.
-- [ ] 19. Adicionar limite simples na API. Area: Seguranca. Pontuacao: 5.
-- [ ] 20. Reduzir raspagem massiva por paginacao. Area: Seguranca. Pontuacao: 3.
+- [ ] 16. Melhorar busca por acentos, plurais e erros comuns. Area: Site. Pontuacao: 4.
+- [ ] 17. Revisar categorias e subcategorias. Area: Dados. Pontuacao: 3.
+- [ ] 18. Melhorar visual, layout e imagens do site. Area: Site. Pontuacao: 4.
 
-### P6 - Qualidade de busca, dados e interface
+### P6 - Comercializacao e expansao
 
-- [ ] 21. Melhorar busca por acentos, plurais e erros comuns. Area: Site. Pontuacao: 4.
-- [ ] 22. Revisar categorias e subcategorias. Area: Dados. Pontuacao: 3.
-- [ ] 23. Melhorar visual, layout e imagens do site. Area: Site. Pontuacao: 4.
+- [ ] 19. Criar processo para vender destaque por categoria. Area: Comercial. Pontuacao: 5.
+- [ ] 20. Definir exclusividade do Top Categoria. Area: Comercial. Pontuacao: 5.
 
-### P7 - Comercializacao e expansao
+### P7 - Publicacao e dominio, fase final
 
-- [ ] 24. Criar processo para vender destaque por categoria. Area: Comercial. Pontuacao: 5.
-- [ ] 25. Definir exclusividade do Top Categoria. Area: Comercial. Pontuacao: 5.
+- [ ] 21. Configurar dominio `buscasalto.com`. Area: Publicacao. Pontuacao: 6.
+- [ ] 22. Apontar dominio para Vercel. Area: Publicacao. Pontuacao: 6.
+- [ ] 23. Validar HTTPS no dominio final. Area: Publicacao. Pontuacao: 8.
+- [ ] 24. Configurar Google Search Console. Area: Publicacao. Pontuacao: 5.
+- [ ] 25. Configurar Analytics ou medicao de buscas e acessos. Area: Publicacao. Pontuacao: 4.
 
 ## Planos comerciais iniciais
 
@@ -234,6 +236,21 @@ Antes de publicar mudancas no site, API, Vercel ou base principal, deve-se execu
 
 Regra de bloqueio: mudancas que possam derrubar o site, expor base privada, trocar contatos entre comercios, quebrar a API ou gerar prejuizo a comercio devem ser interrompidas ate validacao.
 
+## Monitoramento de erros na Vercel
+
+A API registra erros com log estruturado nos logs da Vercel. Cada erro recebe um `requestId`, que tambem e devolvido ao usuario quando ocorre erro 500.
+
+Procedimento de acompanhamento:
+
+1. Acessar o projeto `busca-salto` na Vercel.
+2. Entrar em Logs ou Observability.
+3. Filtrar por `busca-salto-api`, `level:error` ou pelo `requestId` informado em uma falha.
+4. Verificar mensagem, modo da API, caminho da requisicao e horario do erro.
+5. Se o erro indicar falha de credencial, planilha, aba ou cabecalho, conferir variaveis de ambiente e a base principal.
+6. Se houver erro recorrente apos publicacao, aplicar o checklist de publicacao e considerar reversao ou correcao imediata.
+
+Regra operacional: nunca expor stack trace, chave, e-mail da service account ou dados sensiveis ao usuario final. O site deve mostrar mensagem generica e usar o `requestId` apenas para rastreamento interno.
+
 ## Rotina inicial de backup
 
 Backup inicial criado em 24/05/2026:
@@ -292,6 +309,7 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Documentado processo operacional de validacao de responsavel, alteracao, reclamacao e disputa.
 - Documentado processo seguro de atualizacao da base principal.
 - Documentado checklist antes de publicar mudancas.
+- Implementado `requestId` e log estruturado para monitoramento de erros da API na Vercel.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
