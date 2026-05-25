@@ -9,6 +9,24 @@ const RANDOM_BUCKET_MS = 5 * 60 * 1000;
 
 let cache = { loadedAt: 0, rows: [] };
 
+function createRequestId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function logApiError(error, context = {}) {
+  console.error(JSON.stringify({
+    level: "error",
+    service: "busca-salto-api",
+    requestId: context.requestId,
+    mode: context.mode || "list",
+    path: context.path,
+    method: context.method,
+    message: error?.message || "Erro desconhecido",
+    stack: error?.stack,
+    timestamp: new Date().toISOString(),
+  }));
+}
+
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -247,10 +265,14 @@ function contactValue(item, type) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== "GET") return json(res, 405, { error: "Metodo nao permitido." });
+  const requestId = createRequestId();
+  res.setHeader("X-Request-Id", requestId);
+
+  if (req.method !== "GET") return json(res, 405, { error: "Metodo nao permitido.", requestId });
+
+  const mode = cleanParam(req.query.mode, 20);
 
   try {
-    const mode = cleanParam(req.query.mode, 20);
     const rows = await loadRows();
 
     if (mode === "filters") {
@@ -260,9 +282,9 @@ module.exports = async function handler(req, res) {
     if (mode === "contact") {
       const id = cleanParam(req.query.id, 30);
       const type = normalize(cleanParam(req.query.tipo, 20));
-      if (!id || !CONTACT_TYPES.has(type)) return json(res, 400, { error: "Contato invalido." });
+      if (!id || !CONTACT_TYPES.has(type)) return json(res, 400, { error: "Contato invalido.", requestId });
       const item = rows.find((row) => String(row.id) === id);
-      if (!item) return json(res, 404, { error: "Comercio nao encontrado." });
+      if (!item) return json(res, 404, { error: "Comercio nao encontrado.", requestId });
       return json(res, 200, { id: item.id, tipo: type, valor: contactValue(item, type) || "" });
     }
 
@@ -292,7 +314,12 @@ module.exports = async function handler(req, res) {
       updatedAt: new Date(cache.loadedAt).toISOString(),
     });
   } catch (error) {
-    console.error(error);
-    return json(res, 500, { error: "Nao foi possivel carregar os dados agora." });
+    logApiError(error, {
+      requestId,
+      mode,
+      method: req.method,
+      path: req.url,
+    });
+    return json(res, 500, { error: "Nao foi possivel carregar os dados agora.", requestId });
   }
 };
