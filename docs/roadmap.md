@@ -17,6 +17,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - HTTPS ativo no dominio Vercel; HTTP redireciona para HTTPS.
 - A base principal esta em Google Sheets privado.
 - O site nao consulta mais CSV publico do Google Sheets.
+- A publicacao antiga da planilha via link CSV foi interrompida e passou a retornar 401.
 - A API le a planilha privada via service account e variaveis de ambiente da Vercel.
 - A listagem nao entrega contatos diretamente (`whatsapp`, `telefone`, `instagram`, `facebook`, `site`).
 - A listagem entrega apenas flags `has_whatsapp`, `has_telefone`, `has_instagram`, `has_facebook`, `has_site`.
@@ -42,7 +43,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 ### P0 - Protecao da base e operacao inicial
 
-- [ ] 1. Despublicar planilha antiga, se ainda estiver publica. Area: Seguranca. Pontuacao: 9.
+- [x] 1. Despublicar planilha antiga, se ainda estiver publica. Area: Seguranca. Pontuacao: 9. Concluido: link CSV publicado passou a retornar 401.
 - [ ] 2. Configurar backup da planilha/base. Area: Operacao. Pontuacao: 8.
 - [ ] 3. Criar processo de restauracao da base. Area: Operacao. Pontuacao: 6.
 
@@ -141,5 +142,6 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Ajustado frontend para renderizar botoes de contato sem expor dados na listagem.
 - Corrigido comportamento de popup para contatos abrirem com URL correta.
 - Adicionado fallback de ID na API quando a coluna `ID` nao estiver disponivel.
+- Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado Documento Mestre no Google Drive.
 - Criado este roadmap tecnico no GitHub.
