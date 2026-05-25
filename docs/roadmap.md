@@ -27,6 +27,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Processo de atualizacao segura da base principal documentado no Documento Mestre.
 - Checklist antes de publicar mudancas documentado no Documento Mestre e neste roadmap.
 - Monitoramento inicial de erros na Vercel documentado e API ajustada com logs estruturados e `requestId`.
+- Limite simples por IP implementado na API para reduzir rajadas excessivas e uso automatizado basico.
 - Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
 - Regras iniciais por plano implementadas na API e nos cards do site.
 - Ordenacao inicial implementada com plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
@@ -53,6 +54,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Alteracoes sensiveis exigem prova razoavel de vinculo com o comercio.
 - A base principal deve preservar nomes de cabecalhos, ordem das colunas, IDs e integridade de linhas.
 - Para ocultar temporariamente um comercio, preferir alterar `status` em vez de apagar a linha.
+- O limite simples da API e uma protecao best effort em ambiente serverless; protecoes mais fortes podem ser adicionadas depois se houver abuso real.
 - O bloco de dominio e publicacao final foi movido para fase posterior, para nao travar melhorias de operacao, seguranca e produto.
 - O Documento Mestre e a fonte de decisao; este roadmap e a trilha tecnica de execucao.
 
@@ -87,7 +89,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 ### P4 - Monitoramento e seguranca complementar
 
 - [x] 13. Monitorar erros na Vercel. Area: Operacao. Pontuacao: 5. Concluido: API passou a registrar erros com log estruturado e `requestId`; procedimento registrado no Documento Mestre e neste roadmap.
-- [ ] 14. Adicionar limite simples na API. Area: Seguranca. Pontuacao: 5.
+- [x] 14. Adicionar limite simples na API. Area: Seguranca. Pontuacao: 5. Concluido: limite por IP em janela curta implementado na API, com retorno 429 e cabecalhos de rate limit.
 - [ ] 15. Reduzir raspagem massiva por paginacao. Area: Seguranca. Pontuacao: 3.
 
 ### P5 - Qualidade de busca, dados e interface
@@ -251,6 +253,22 @@ Procedimento de acompanhamento:
 
 Regra operacional: nunca expor stack trace, chave, e-mail da service account ou dados sensiveis ao usuario final. O site deve mostrar mensagem generica e usar o `requestId` apenas para rastreamento interno.
 
+## Limite simples da API
+
+A API possui limite simples por IP para reduzir rajadas excessivas e uso automatizado basico.
+
+Regra inicial:
+
+- Janela: 60 segundos.
+- Limite: 120 requisicoes por IP por janela.
+- Excesso: retorno HTTP 429 com mensagem generica e `requestId`.
+- Cabecalhos: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` e, quando bloqueado, `Retry-After`.
+- Logs: eventos de excesso sao registrados como `rate_limit_exceeded` nos logs da Vercel.
+
+Limitacao: em ambiente serverless, o controle em memoria e best effort. Ele reduz abuso simples e chamadas em rajada, mas nao substitui uma protecao distribuida, firewall, WAF ou rate limit persistente.
+
+Regra operacional: se usuarios legitimos reclamarem de bloqueio, revisar logs antes de mudar o limite. Se houver raspagem coordenada, evoluir para protecao mais forte.
+
 ## Rotina inicial de backup
 
 Backup inicial criado em 24/05/2026:
@@ -288,10 +306,10 @@ Observacao: a copia de backup nao deve ser editada diretamente. Ela deve permane
 
 A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 
-- limitar chamadas por IP/janela de tempo quando viavel;
 - evitar extracao massiva facil por paginacao sequencial;
 - manter cache para reduzir chamadas ao Google Sheets;
-- revisar quais campos podem sair em cada modo da API.
+- revisar quais campos podem sair em cada modo da API;
+- avaliar WAF, firewall ou rate limit persistente se houver abuso real.
 
 ## Implementacoes feitas
 
@@ -310,6 +328,7 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Documentado processo seguro de atualizacao da base principal.
 - Documentado checklist antes de publicar mudancas.
 - Implementado `requestId` e log estruturado para monitoramento de erros da API na Vercel.
+- Implementado limite simples por IP na API, com resposta 429 e cabecalhos de rate limit.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
