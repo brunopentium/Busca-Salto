@@ -20,6 +20,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - O site nao consulta mais CSV publico do Google Sheets.
 - A publicacao antiga da planilha via link CSV foi interrompida e passou a retornar 401.
 - Primeira copia de seguranca da base principal criada em 24/05/2026 no Google Drive.
+- Rotina de backup e processo de restauracao inicial documentados.
 - A API le a planilha privada via service account e variaveis de ambiente da Vercel.
 - A listagem nao entrega contatos diretamente (`whatsapp`, `telefone`, `instagram`, `facebook`, `site`).
 - A listagem entrega apenas flags `has_whatsapp`, `has_telefone`, `has_instagram`, `has_facebook`, `has_site`.
@@ -47,7 +48,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 - [x] 1. Despublicar planilha antiga, se ainda estiver publica. Area: Seguranca. Pontuacao: 9. Concluido: link CSV publicado passou a retornar 401.
 - [x] 2. Configurar backup da planilha/base. Area: Operacao. Pontuacao: 8. Concluido: primeira copia criada em 24/05/2026 no Drive; rotina inicial registrada neste roadmap e no Documento Mestre.
-- [ ] 3. Criar processo de restauracao da base. Area: Operacao. Pontuacao: 6.
+- [x] 3. Criar processo de restauracao da base. Area: Operacao. Pontuacao: 6. Concluido: procedimento registrado neste roadmap e no Documento Mestre.
 
 ### P1 - Definicoes comerciais e regras de exibicao
 
@@ -108,6 +109,22 @@ Regras iniciais:
 - Nomear os backups com o padrao `Backup Busca Salto - base_interna - AAAA-MM-DD`.
 - Registrar no Documento Mestre e neste roadmap quando houver backup relevante ou mudanca no processo.
 
+## Processo inicial de restauracao
+
+A restauracao deve preservar o ID da planilha principal usada pela API. Como regra, nao se deve trocar a planilha configurada na Vercel sem necessidade; o caminho preferencial e restaurar os dados dentro da planilha principal.
+
+Procedimento:
+
+1. Antes de restaurar, criar uma copia emergencial da base atual, mesmo que esteja com erro.
+2. Identificar qual backup sera usado como fonte de recuperacao.
+3. Conferir se a aba de origem e `base_interna` e se os cabecalhos estao compativeis com a planilha principal.
+4. Copiar os dados do backup para a aba `base_interna` da planilha principal, preservando a ordem das colunas.
+5. Revisar amostras de linhas para confirmar que nome, categoria, subcategoria, contatos, endereco, palavras-chave, plano e demais campos nao foram deslocados.
+6. Testar a API em listagem, filtros e contato individual apos a restauracao, considerando o cache de ate 15 minutos.
+7. Registrar no Documento Mestre e no roadmap tecnico qual backup foi usado e o motivo da restauracao.
+
+Observacao: a copia de backup nao deve ser editada diretamente. Ela deve permanecer como ponto de retorno.
+
 ## Notas tecnicas para proximas implementacoes
 
 ### Regras por plano
@@ -161,5 +178,6 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Adicionado fallback de ID na API quando a coluna `ID` nao estiver disponivel.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
+- Documentado processo inicial de restauracao da base.
 - Criado Documento Mestre no Google Drive.
 - Criado este roadmap tecnico no GitHub.
