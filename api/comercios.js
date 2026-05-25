@@ -9,6 +9,12 @@ const RANDOM_BUCKET_MS = 5 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 120;
 const RATE_LIMIT_MAX_KEYS = 1000;
+const PAGINATION_LIMITS = {
+  NONE: 1,
+  BROAD_FILTER: 4,
+  COMBINED_FILTER: 5,
+  TEXT_SEARCH: 8,
+};
 
 let cache = { loadedAt: 0, rows: [] };
 const rateLimitStore = new Map();
@@ -64,6 +70,17 @@ function parsePositiveInt(value, fallback, max) {
   const number = Number.parseInt(value, 10);
   if (!Number.isFinite(number) || number < 1) return fallback;
   return Math.min(number, max);
+}
+
+function paginationPolicy({ busca, categoria, bairro }) {
+  const hasTextSearch = normalize(busca).length >= 3;
+  const hasCategory = Boolean(categoria);
+  const hasBairro = Boolean(bairro);
+
+  if (hasTextSearch) return { maxPage: PAGINATION_LIMITS.TEXT_SEARCH, reason: "text_search" };
+  if (hasCategory && hasBairro) return { maxPage: PAGINATION_LIMITS.COMBINED_FILTER, reason: "combined_filter" };
+  if (hasCategory || hasBairro) return { maxPage: PAGINATION_LIMITS.BROAD_FILTER, reason: "broad_filter" };
+  return { maxPage: PAGINATION_LIMITS.NONE, reason: "no_filter" };
 }
 
 function getClientIp(req) {
@@ -368,19 +385,34 @@ module.exports = async function handler(req, res) {
     const terms = normalize(busca).split(/\s+/).filter(Boolean);
     const hasRefinement = Boolean(busca || categoria || bairro);
     const effectivePage = hasRefinement ? page : 1;
+    const pagePolicy = paginationPolicy({ busca, categoria, bairro });
 
     let filtered = rows.filter((item) => (!categoria || item.categoria === categoria) && (!bairro || item.bairro === bairro));
     filtered = sortItems(filtered, terms, seed);
 
-    const total = filtered.length;
+    const publicTotal = Math.min(filtered.length, pagePolicy.maxPage * limit);
     const start = (effectivePage - 1) * limit;
-    const items = filtered.slice(start, start + limit).map(publicItem);
+    const items = filtered.slice(0, publicTotal).slice(start, start + limit).map(publicItem);
+    const paginationLimited = filtered.length > publicTotal;
+
+    if (page > pagePolicy.maxPage && hasRefinement) {
+      logApiEvent("warn", "pagination_limited", {
+        requestId,
+        mode,
+        method: req.method,
+        path: req.url,
+        ip: rateLimit.ip,
+        message: `Paginacao limitada para consulta ${pagePolicy.reason}.`,
+      });
+    }
+
     return json(res, 200, {
       items,
-      total,
+      total: publicTotal,
       page: effectivePage,
       limit,
-      hasMore: hasRefinement && start + limit < total,
+      hasMore: hasRefinement && start + limit < publicTotal,
+      paginationLimited,
       seed,
       updatedAt: new Date(cache.loadedAt).toISOString(),
     });
