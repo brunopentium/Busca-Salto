@@ -24,6 +24,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
 - Regras iniciais por plano implementadas na API e nos cards do site.
 - Ordenacao inicial implementada com plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
+- Botoes e layout dos cards foram validados em celular real em 24/05/2026, sem corte lateral visivel.
 - A API le a planilha privada via service account e variaveis de ambiente da Vercel.
 - A listagem nao entrega contatos diretamente (`whatsapp`, `telefone`, `instagram`, `facebook`, `site`).
 - A listagem entrega apenas flags `has_whatsapp`, `has_telefone`, `has_instagram`, `has_facebook`, `has_site`.
@@ -62,7 +63,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 ### P2 - Validacao da experiencia do usuario
 
-- [ ] 8. Testar botoes e layout no celular. Area: Site. Pontuacao: 8.
+- [x] 8. Testar botoes e layout no celular. Area: Site. Pontuacao: 8. Concluido: validado em celular real em 24/05/2026; cards e botoes renderizaram corretamente, sem corte lateral visivel.
 - [ ] 9. Melhorar fluxo `Sou responsavel por este comercio`. Area: Site/Comercial. Pontuacao: 5.
 - [ ] 10. Criar processo para empresa solicitar alteracao/cadastro. Area: Comercial. Pontuacao: 6.
 
@@ -195,5 +196,6 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
 - Definidos planos comerciais iniciais e beneficios por plano.
+- Validado layout mobile dos cards e botoes em celular real em 24/05/2026.
 - Criado Documento Mestre no Google Drive.
 - Criado este roadmap tecnico no GitHub.
