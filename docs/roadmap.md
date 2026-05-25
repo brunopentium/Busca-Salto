@@ -10,6 +10,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - API principal: `api/comercios.js`
 - Documento Mestre: `Busca Salto - Documento Mestre do Projeto`, no Google Drive
 - Banco principal: Google Sheets privado lido via API
+- Backup inicial da base: https://docs.google.com/spreadsheets/d/1nE_0sRJf1bRdjAHjjtHsEZJVrH7AVKzRMeVso0HsIUc/edit
 
 ## Estado atual
 
@@ -18,6 +19,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A base principal esta em Google Sheets privado.
 - O site nao consulta mais CSV publico do Google Sheets.
 - A publicacao antiga da planilha via link CSV foi interrompida e passou a retornar 401.
+- Primeira copia de seguranca da base principal criada em 24/05/2026 no Google Drive.
 - A API le a planilha privada via service account e variaveis de ambiente da Vercel.
 - A listagem nao entrega contatos diretamente (`whatsapp`, `telefone`, `instagram`, `facebook`, `site`).
 - A listagem entrega apenas flags `has_whatsapp`, `has_telefone`, `has_instagram`, `has_facebook`, `has_site`.
@@ -44,7 +46,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 ### P0 - Protecao da base e operacao inicial
 
 - [x] 1. Despublicar planilha antiga, se ainda estiver publica. Area: Seguranca. Pontuacao: 9. Concluido: link CSV publicado passou a retornar 401.
-- [ ] 2. Configurar backup da planilha/base. Area: Operacao. Pontuacao: 8.
+- [x] 2. Configurar backup da planilha/base. Area: Operacao. Pontuacao: 8. Concluido: primeira copia criada em 24/05/2026 no Drive; rotina inicial registrada neste roadmap e no Documento Mestre.
 - [ ] 3. Criar processo de restauracao da base. Area: Operacao. Pontuacao: 6.
 
 ### P1 - Definicoes comerciais e regras de exibicao
@@ -90,6 +92,21 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 - [ ] 24. Criar processo para vender destaque por categoria. Area: Comercial. Pontuacao: 5.
 - [ ] 25. Definir exclusividade do Top Categoria. Area: Comercial. Pontuacao: 5.
+
+## Rotina inicial de backup
+
+Backup inicial criado em 24/05/2026:
+
+- Nome: `Backup Busca Salto - base_interna - 2026-05-24`
+- Link: https://docs.google.com/spreadsheets/d/1nE_0sRJf1bRdjAHjjtHsEZJVrH7AVKzRMeVso0HsIUc/edit
+
+Regras iniciais:
+
+- Criar backup antes de alteracoes estruturais na base, colunas, formulas ou regras de exibicao.
+- Criar backup periodico, preferencialmente semanal durante a fase de implantacao e mensal apos estabilizacao.
+- Manter versoes antigas ate existir historico suficiente para recuperacao segura.
+- Nomear os backups com o padrao `Backup Busca Salto - base_interna - AAAA-MM-DD`.
+- Registrar no Documento Mestre e neste roadmap quando houver backup relevante ou mudanca no processo.
 
 ## Notas tecnicas para proximas implementacoes
 
@@ -143,5 +160,6 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Corrigido comportamento de popup para contatos abrirem com URL correta.
 - Adicionado fallback de ID na API quando a coluna `ID` nao estiver disponivel.
 - Interrompida a publicacao antiga da planilha por CSV publico.
+- Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Criado Documento Mestre no Google Drive.
 - Criado este roadmap tecnico no GitHub.
