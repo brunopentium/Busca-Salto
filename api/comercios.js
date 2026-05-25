@@ -58,6 +58,87 @@ function normalize(value = "") {
   return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
+function normalizeSearchText(value = "") {
+  return normalize(value).replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function singularizeToken(token = "") {
+  if (token.length <= 3) return token;
+  if (token.endsWith("oes")) return `${token.slice(0, -3)}ao`;
+  if (token.endsWith("ais")) return `${token.slice(0, -3)}al`;
+  if (token.endsWith("eis")) return `${token.slice(0, -3)}el`;
+  if (token.endsWith("is")) return token.slice(0, -1);
+  if (token.endsWith("es") && token.length > 4) return token.slice(0, -2);
+  if (token.endsWith("s")) return token.slice(0, -1);
+  return token;
+}
+
+function searchVariants(term = "") {
+  const normalized = normalizeSearchText(term);
+  const singular = singularizeToken(normalized);
+  return [...new Set([normalized, singular].filter(Boolean))];
+}
+
+function levenshteinDistance(a = "", b = "", maxDistance = 2) {
+  if (Math.abs(a.length - b.length) > maxDistance) return maxDistance + 1;
+
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i += 1) {
+    const current = [i];
+    let rowMin = current[0];
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      const value = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + cost,
+      );
+      current[j] = value;
+      rowMin = Math.min(rowMin, value);
+    }
+    if (rowMin > maxDistance) return maxDistance + 1;
+    previous = current;
+  }
+  return previous[b.length];
+}
+
+function fuzzyLimit(term = "") {
+  if (term.length < 5) return 0;
+  if (term.length < 8) return 1;
+  return 2;
+}
+
+function prepareSearchField(value = "") {
+  const text = normalizeSearchText(value);
+  const tokens = text.split(" ").filter(Boolean);
+  return {
+    text,
+    tokens,
+    variants: new Set(tokens.flatMap(searchVariants)),
+  };
+}
+
+function fieldRelevance(field, rawTerm, weight) {
+  const terms = searchVariants(rawTerm);
+  if (!terms.length) return 0;
+
+  if (terms.some((term) => field.text.includes(term))) return weight;
+  if (terms.some((term) => field.variants.has(term))) return Math.round(weight * 0.85);
+
+  const limit = Math.max(...terms.map(fuzzyLimit));
+  if (!limit) return 0;
+
+  const hasFuzzyMatch = field.tokens.some((token) => {
+    if (token.length < 5) return false;
+    return terms.some((term) => levenshteinDistance(term, token, limit) <= limit);
+  });
+  return hasFuzzyMatch ? Math.round(weight * 0.55) : 0;
+}
+
+function searchTerms(value = "") {
+  return normalizeSearchText(value).split(" ").filter((term) => term.length >= 2);
+}
+
 function normalizeHeader(value = "") {
   return normalize(value).replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
@@ -280,21 +361,21 @@ function planWeight(plan = "") {
 
 function computeScore(item, terms) {
   const fields = {
-    nome: normalize(item.nome),
-    categoria: normalize(item.categoria),
-    subcategoria: normalize(item.subcategoria),
-    bairro: normalize(item.bairro),
-    descricao: normalize(item.descricao),
-    palavras: normalize(item.palavras_chave),
+    nome: prepareSearchField(item.nome),
+    categoria: prepareSearchField(item.categoria),
+    subcategoria: prepareSearchField(item.subcategoria),
+    bairro: prepareSearchField(item.bairro),
+    descricao: prepareSearchField(item.descricao),
+    palavras: prepareSearchField(item.palavras_chave),
   };
   let relevance = 0;
   for (const term of terms) {
-    if (fields.nome.includes(term)) relevance += 60;
-    if (fields.categoria.includes(term)) relevance += 50;
-    if (fields.subcategoria.includes(term)) relevance += 40;
-    if (fields.palavras.includes(term)) relevance += 35;
-    if (fields.descricao.includes(term)) relevance += 20;
-    if (fields.bairro.includes(term)) relevance += 10;
+    relevance += fieldRelevance(fields.nome, term, 60);
+    relevance += fieldRelevance(fields.categoria, term, 50);
+    relevance += fieldRelevance(fields.subcategoria, term, 40);
+    relevance += fieldRelevance(fields.palavras, term, 35);
+    relevance += fieldRelevance(fields.descricao, term, 20);
+    relevance += fieldRelevance(fields.bairro, term, 10);
   }
   const base = planWeight(item.tipo_exibicao) + item.prioridade * 20 + qualityScore(item);
   if (!terms.length) return base;
@@ -382,7 +463,7 @@ module.exports = async function handler(req, res) {
     const seed = cleanParam(req.query.seed, 80) || String(Math.floor(Date.now() / RANDOM_BUCKET_MS));
     const page = parsePositiveInt(req.query.page, 1, 1000);
     const limit = parsePositiveInt(req.query.limit, DEFAULT_LIMIT, MAX_LIMIT);
-    const terms = normalize(busca).split(/\s+/).filter(Boolean);
+    const terms = searchTerms(busca);
     const hasRefinement = Boolean(busca || categoria || bairro);
     const effectivePage = hasRefinement ? page : 1;
     const pagePolicy = paginationPolicy({ busca, categoria, bairro });
