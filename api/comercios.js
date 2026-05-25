@@ -51,11 +51,35 @@ async function getSheetsClient() {
   return google.sheets({ version: "v4", auth });
 }
 
+function normalizePlan(plan = "") {
+  const normalized = normalize(plan);
+  if (normalized === "top") return "top";
+  if (normalized === "destaque") return "destaque";
+  if (normalized === "parceiro") return "parceiro";
+  return "gratuito";
+}
+
+function allowsImage(plan) {
+  return normalizePlan(plan) !== "gratuito";
+}
+
+function allowsOffer(plan) {
+  const normalized = normalizePlan(plan);
+  return normalized === "destaque" || normalized === "top";
+}
+
+function truncateText(value = "", maxLength = 160) {
+  const text = String(value || "").trim();
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength).trim()}...`;
+}
+
 function rowToObject(headers, row, index) {
   const raw = {};
   headers.forEach((header, index) => {
     raw[normalizeHeader(header)] = String(row[index] || "").trim();
   });
+  const plan = normalizePlan(raw.plano || raw.tipo_exibicao);
   return {
     id: raw.id || String(index + 1),
     nome: raw.nome,
@@ -70,9 +94,9 @@ function rowToObject(headers, row, index) {
     palavras_chave: raw.palavras_chave,
     facebook: raw.facebook,
     telefone: raw.telefone,
-    tipo_exibicao: raw.plano || "gratuito",
+    tipo_exibicao: plan,
     oferta: raw.oferta,
-    foto_url: raw.foto_url,
+    foto_url: raw.foto_url || raw.imagem || raw.imagem_url,
     status: raw.status || "ativo",
     prioridade: Number.parseInt(raw.prioridade || "0", 10) || 0,
     verificado: raw.verificado,
@@ -102,6 +126,7 @@ async function loadRows() {
 }
 
 function publicItem(item) {
+  const plan = normalizePlan(item.tipo_exibicao);
   return {
     id: item.id,
     nome: item.nome,
@@ -109,11 +134,11 @@ function publicItem(item) {
     subcategoria: item.subcategoria,
     bairro: item.bairro,
     endereco: item.endereco,
-    descricao: item.descricao,
+    descricao: plan === "gratuito" ? truncateText(item.descricao) : item.descricao,
     palavras_chave: item.palavras_chave,
-    tipo_exibicao: item.tipo_exibicao,
-    oferta: item.oferta,
-    foto_url: item.foto_url,
+    tipo_exibicao: plan,
+    oferta: allowsOffer(plan) ? item.oferta : "",
+    foto_url: allowsImage(plan) ? item.foto_url : "",
     has_whatsapp: Boolean(item.whatsapp),
     has_telefone: Boolean(item.telefone),
     has_instagram: Boolean(item.instagram),
@@ -123,7 +148,7 @@ function publicItem(item) {
 }
 
 function planWeight(plan = "") {
-  const normalized = normalize(plan);
+  const normalized = normalizePlan(plan);
   if (normalized === "top") return 220;
   if (normalized === "destaque") return 140;
   if (normalized === "parceiro") return 80;
@@ -150,7 +175,7 @@ function computeScore(item, terms) {
   }
   const base = planWeight(item.tipo_exibicao) + item.prioridade * 20 + (normalize(item.verificado) === "sim" ? 30 : 0);
   if (!terms.length) return base;
-  return relevance ? relevance + base + (item.oferta ? 20 : 0) + (item.foto_url ? 15 : 0) : 0;
+  return relevance ? relevance + base + (allowsOffer(item.tipo_exibicao) && item.oferta ? 20 : 0) + (allowsImage(item.tipo_exibicao) && item.foto_url ? 15 : 0) : 0;
 }
 
 function sortItems(items, terms) {
