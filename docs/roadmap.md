@@ -11,6 +11,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Documento Mestre: `Busca Salto - Documento Mestre do Projeto`, no Google Drive
 - Banco principal: Google Sheets privado lido via API
 - Backup inicial da base: https://docs.google.com/spreadsheets/d/1nE_0sRJf1bRdjAHjjtHsEZJVrH7AVKzRMeVso0HsIUc/edit
+- Controle de solicitacoes: https://docs.google.com/spreadsheets/d/1syCpTPP-9MxF_kbPhvjcyFi3c3Vq9ZUWzYuW8yVbsXs/edit
 
 ## Estado atual
 
@@ -21,6 +22,8 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A publicacao antiga da planilha via link CSV foi interrompida e passou a retornar 401.
 - Primeira copia de seguranca da base principal criada em 24/05/2026 no Google Drive.
 - Rotina de backup e processo de restauracao inicial documentados.
+- Planilha de controle de solicitacoes criada no Google Drive.
+- Processo operacional de cadastro, correcao, reclamacao e validacao de responsavel documentado.
 - Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
 - Regras iniciais por plano implementadas na API e nos cards do site.
 - Ordenacao inicial implementada com plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
@@ -43,6 +46,8 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Gratuitos devem ter ordenacao aleatoria entre si a cada nova pesquisa/carregamento.
 - A ordenacao deve considerar plano, qualidade/completude do cadastro, relevancia da busca e aleatoriedade controlada.
 - A qualidade do cadastro deve valorizar dados essenciais e evitar injustica com segmentos que naturalmente nao usam site, Facebook ou outras redes.
+- Solicitacoes de alteracao, cadastro, reclamacao e disputa devem ser registradas em planilha propria antes de qualquer alteracao sensivel na base.
+- Alteracoes sensiveis exigem prova razoavel de vinculo com o comercio.
 - O Documento Mestre e a fonte de decisao; este roadmap e a trilha tecnica de execucao.
 
 ## Sequencia mestre de execucao
@@ -66,7 +71,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 - [x] 8. Testar botoes e layout no celular. Area: Site. Pontuacao: 8. Concluido: validado em celular real em 24/05/2026; cards e botoes renderizaram corretamente, sem corte lateral visivel.
 - [x] 9. Melhorar fluxo `Sou responsavel por este comercio`. Area: Site/Comercial. Pontuacao: 5. Concluido: botao configurado para abrir o WhatsApp oficial do Busca Salto com mensagem pronta identificando o comercio.
-- [ ] 10. Criar processo para empresa solicitar alteracao/cadastro. Area: Comercial. Pontuacao: 6.
+- [x] 10. Criar processo para empresa solicitar alteracao/cadastro. Area: Comercial. Pontuacao: 6. Concluido: criada planilha de controle e definido processo operacional no Documento Mestre.
 
 ### P3 - Operacao e governanca
 
@@ -140,6 +145,27 @@ A qualidade do cadastro nao e uma simples contagem de campos preenchidos. A regr
 
 A API aceita uma `seed` opcional e tambem usa uma janela de variacao padrao. Isso permite variar a ordem dos gratuitos sem prejudicar a prioridade dos planos pagos nem a relevancia da busca.
 
+## Processo de solicitacoes de cadastro e alteracao
+
+Planilha de controle:
+
+- Nome: `Busca Salto - Solicitacoes de Cadastro e Alteracao`
+- Link: https://docs.google.com/spreadsheets/d/1syCpTPP-9MxF_kbPhvjcyFi3c3Vq9ZUWzYuW8yVbsXs/edit
+
+Regras iniciais:
+
+1. Toda solicitacao recebida pelo WhatsApp ou outro canal deve virar uma linha na aba `solicitacoes`.
+2. Antes de alterar telefone, WhatsApp, endereco, redes, site, imagem, oferta ou plano, pedir prova razoavel de vinculo.
+3. Evidencias aceitas: WhatsApp oficial do cadastro, print de administracao de rede social, foto da fachada/cartao/cardapio, CNPJ/MEI ou e-mail do dominio do comercio.
+4. Em caso de duvida, disputa ou risco de dano, nao aplicar mudanca sensivel ate validar melhor.
+5. Acoes temporarias possiveis: ocultar contato incorreto, congelar alteracao ou manter ultima versao segura.
+6. Reclamos sobre dado incorreto ou exposicao indevida devem ter prioridade de analise.
+7. Encerrar cada solicitacao com status, decisao, data de conclusao, observacoes e link de evidencia quando houver.
+
+Mensagem padrao de validacao:
+
+`Ola! Para proteger o cadastro do comercio no Busca Salto, preciso confirmar que voce e responsavel por ele. Pode enviar uma confirmacao, como WhatsApp oficial do comercio, print de administracao do Instagram/Facebook, foto da fachada/cartao/cardapio, CNPJ/MEI ou e-mail do dominio do comercio? Apos validar, faco a correcao ou melhoria do cadastro.`
+
 ## Rotina inicial de backup
 
 Backup inicial criado em 24/05/2026:
@@ -194,6 +220,8 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Aplicadas regras iniciais por plano no retorno publico da API.
 - Implementada ordenacao por plano, relevancia, qualidade do cadastro e aleatoriedade controlada entre gratuitos comparaveis.
 - Configurado o WhatsApp oficial do Busca Salto no fluxo `Sou responsavel por este comercio`.
+- Criada planilha de controle de solicitacoes de cadastro e alteracao.
+- Documentado processo operacional de validacao de responsavel, alteracao, reclamacao e disputa.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
