@@ -21,6 +21,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A publicacao antiga da planilha via link CSV foi interrompida e passou a retornar 401.
 - Primeira copia de seguranca da base principal criada em 24/05/2026 no Google Drive.
 - Rotina de backup e processo de restauracao inicial documentados.
+- Planos comerciais iniciais definidos: gratuito, parceiro, destaque e top.
 - A API le a planilha privada via service account e variaveis de ambiente da Vercel.
 - A listagem nao entrega contatos diretamente (`whatsapp`, `telefone`, `instagram`, `facebook`, `site`).
 - A listagem entrega apenas flags `has_whatsapp`, `has_telefone`, `has_instagram`, `has_facebook`, `has_site`.
@@ -52,8 +53,8 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 ### P1 - Definicoes comerciais e regras de exibicao
 
-- [ ] 4. Definir planos: gratuito, parceiro, destaque e top. Area: Comercial. Pontuacao: 8.
-- [ ] 5. Definir beneficios de cada plano. Area: Comercial. Pontuacao: 8.
+- [x] 4. Definir planos: gratuito, parceiro, destaque e top. Area: Comercial. Pontuacao: 8. Concluido: nomenclatura e funcao dos planos registradas neste roadmap e no Documento Mestre.
+- [x] 5. Definir beneficios de cada plano. Area: Comercial. Pontuacao: 8. Concluido: beneficios iniciais registrados neste roadmap e no Documento Mestre.
 - [ ] 6. Implementar regras por plano no site/API. Area: Comercial/Site. Pontuacao: 6.
 - [ ] 7. Definir e implementar regra de ordenacao dos cards, considerando plano, qualidade/completude do cadastro, relevancia da busca e aleatoriedade controlada dos gratuitos. Area: Site. Pontuacao: 5.
   - Observacao: a regra deve evitar injustica com segmentos que naturalmente nao usam site, Facebook ou outras redes. A pontuacao de qualidade deve valorizar dados essenciais, como nome, categoria, bairro, endereco, WhatsApp/telefone e descricao, tratando presenca digital como complemento, nao como obrigacao.
@@ -93,6 +94,24 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 - [ ] 24. Criar processo para vender destaque por categoria. Area: Comercial. Pontuacao: 5.
 - [ ] 25. Definir exclusividade do Top Categoria. Area: Comercial. Pontuacao: 5.
+
+## Planos comerciais iniciais
+
+Para fins de planilha, API e site, os planos iniciais devem usar os valores padronizados:
+
+- `gratuito`
+- `parceiro`
+- `destaque`
+- `top`
+
+Beneficios iniciais:
+
+- Gratuito: cadastro basico ativo no site, com nome, categoria, subcategoria, bairro, endereco/mapa e contatos basicos quando existirem. Nao possui imagem personalizada, oferta, selo ou destaque visual.
+- Parceiro: inclui todos os recursos do gratuito, imagem no card, descricao revisada, selo de parceiro e prioridade acima dos gratuitos.
+- Destaque: inclui todos os recursos do parceiro, destaque visual mais forte, possibilidade de oferta/promocao e prioridade acima do parceiro.
+- Top: inclui todos os recursos do destaque, posicao maxima na categoria e selo Top Categoria. A regra de exclusividade por categoria ainda sera definida.
+
+A regra comercial inicial preserva telefone e WhatsApp tambem para gratuitos, pois a utilidade do site para o usuario final e prioridade na fase de adocao.
 
 ## Rotina inicial de backup
 
@@ -179,5 +198,6 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
+- Definidos planos comerciais iniciais e beneficios por plano.
 - Criado Documento Mestre no Google Drive.
 - Criado este roadmap tecnico no GitHub.
