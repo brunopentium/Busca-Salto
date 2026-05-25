@@ -6,25 +6,39 @@ const SPREADSHEET_ID = (process.env.GOOGLE_SHEETS_ID || "1s-Wi8ej_y5YisIg2GWh7Ll
 const SHEET_NAME = (process.env.GOOGLE_SHEETS_TAB || "base_interna").trim();
 const RANGE = `${SHEET_NAME}!A1:T`;
 const RANDOM_BUCKET_MS = 5 * 60 * 1000;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 120;
+const RATE_LIMIT_MAX_KEYS = 1000;
 
 let cache = { loadedAt: 0, rows: [] };
+const rateLimitStore = new Map();
 
 function createRequestId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function logApiError(error, context = {}) {
-  console.error(JSON.stringify({
-    level: "error",
+function logApiEvent(level, event, context = {}) {
+  console[level === "error" ? "error" : "warn"](JSON.stringify({
+    level,
     service: "busca-salto-api",
+    event,
     requestId: context.requestId,
     mode: context.mode || "list",
     path: context.path,
     method: context.method,
-    message: error?.message || "Erro desconhecido",
-    stack: error?.stack,
+    ip: context.ip,
+    message: context.message,
+    stack: context.stack,
     timestamp: new Date().toISOString(),
   }));
+}
+
+function logApiError(error, context = {}) {
+  logApiEvent("error", "api_error", {
+    ...context,
+    message: error?.message || "Erro desconhecido",
+    stack: error?.stack,
+  });
 }
 
 function json(res, status, body) {
@@ -50,6 +64,49 @@ function parsePositiveInt(value, fallback, max) {
   const number = Number.parseInt(value, 10);
   if (!Number.isFinite(number) || number < 1) return fallback;
   return Math.min(number, max);
+}
+
+function getClientIp(req) {
+  const forwardedFor = String(req.headers["x-forwarded-for"] || "");
+  const firstForwardedIp = forwardedFor.split(",")[0]?.trim();
+  return firstForwardedIp || String(req.headers["x-real-ip"] || req.socket?.remoteAddress || "unknown");
+}
+
+function pruneRateLimitStore(now) {
+  if (rateLimitStore.size <= RATE_LIMIT_MAX_KEYS) return;
+  for (const [key, bucket] of rateLimitStore.entries()) {
+    if (now - bucket.windowStart > RATE_LIMIT_WINDOW_MS) rateLimitStore.delete(key);
+    if (rateLimitStore.size <= RATE_LIMIT_MAX_KEYS) break;
+  }
+}
+
+function checkRateLimit(req) {
+  const now = Date.now();
+  const ip = getClientIp(req);
+  const key = ip || "unknown";
+  const current = rateLimitStore.get(key);
+
+  if (!current || now - current.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    rateLimitStore.set(key, { count: 1, windowStart: now });
+    pruneRateLimitStore(now);
+    return { allowed: true, ip, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetAfterSeconds: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) };
+  }
+
+  current.count += 1;
+  const resetAfterSeconds = Math.max(1, Math.ceil((RATE_LIMIT_WINDOW_MS - (now - current.windowStart)) / 1000));
+  return {
+    allowed: current.count <= RATE_LIMIT_MAX_REQUESTS,
+    ip,
+    remaining: Math.max(0, RATE_LIMIT_MAX_REQUESTS - current.count),
+    resetAfterSeconds,
+  };
+}
+
+function applyRateLimitHeaders(res, result) {
+  res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX_REQUESTS));
+  res.setHeader("X-RateLimit-Remaining", String(result.remaining));
+  res.setHeader("X-RateLimit-Reset", String(result.resetAfterSeconds));
+  if (!result.allowed) res.setHeader("Retry-After", String(result.resetAfterSeconds));
 }
 
 function requireEnv() {
@@ -271,6 +328,20 @@ module.exports = async function handler(req, res) {
   if (req.method !== "GET") return json(res, 405, { error: "Metodo nao permitido.", requestId });
 
   const mode = cleanParam(req.query.mode, 20);
+  const rateLimit = checkRateLimit(req);
+  applyRateLimitHeaders(res, rateLimit);
+
+  if (!rateLimit.allowed) {
+    logApiEvent("warn", "rate_limit_exceeded", {
+      requestId,
+      mode,
+      method: req.method,
+      path: req.url,
+      ip: rateLimit.ip,
+      message: "Limite simples da API excedido.",
+    });
+    return json(res, 429, { error: "Muitas requisicoes em pouco tempo. Tente novamente em instantes.", requestId });
+  }
 
   try {
     const rows = await loadRows();
@@ -319,6 +390,7 @@ module.exports = async function handler(req, res) {
       mode,
       method: req.method,
       path: req.url,
+      ip: rateLimit.ip,
     });
     return json(res, 500, { error: "Nao foi possivel carregar os dados agora.", requestId });
   }
