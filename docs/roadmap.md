@@ -38,7 +38,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A listagem entrega apenas flags `has_whatsapp`, `has_telefone`, `has_instagram`, `has_facebook`, `has_site`.
 - Contatos sao buscados sob demanda via `mode=contact` quando o usuario clica no botao.
 - A home retorna apenas a primeira pagina e nao libera carregamento infinito sem busca/filtro.
-- Com busca/filtro, a API ainda permite paginacao.
+- A paginacao publica foi limitada por tipo de consulta para reduzir extracao massiva sequencial.
 
 ## Decisoes tecnicas e comerciais ja assumidas
 
@@ -90,7 +90,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 - [x] 13. Monitorar erros na Vercel. Area: Operacao. Pontuacao: 5. Concluido: API passou a registrar erros com log estruturado e `requestId`; procedimento registrado no Documento Mestre e neste roadmap.
 - [x] 14. Adicionar limite simples na API. Area: Seguranca. Pontuacao: 5. Concluido: limite por IP em janela curta implementado na API, com retorno 429 e cabecalhos de rate limit.
-- [ ] 15. Reduzir raspagem massiva por paginacao. Area: Seguranca. Pontuacao: 3.
+- [x] 15. Reduzir raspagem massiva por paginacao. Area: Seguranca. Pontuacao: 3. Concluido: API passou a limitar profundidade de paginacao conforme tipo de consulta, mantendo buscas especificas mais amplas que filtros genericos.
 
 ### P5 - Qualidade de busca, dados e interface
 
@@ -269,6 +269,23 @@ Limitacao: em ambiente serverless, o controle em memoria e best effort. Ele redu
 
 Regra operacional: se usuarios legitimos reclamarem de bloqueio, revisar logs antes de mudar o limite. Se houver raspagem coordenada, evoluir para protecao mais forte.
 
+## Limite de paginacao publica
+
+A API limita a profundidade de paginacao conforme o tipo de consulta, para reduzir a extracao massiva por sequencia de paginas.
+
+Regra inicial:
+
+- Sem busca ou filtro: apenas a primeira pagina.
+- Filtro amplo, usando somente categoria ou somente bairro: ate 4 paginas, equivalente a ate 120 resultados com o limite atual.
+- Filtro combinado, usando categoria e bairro: ate 5 paginas, equivalente a ate 150 resultados.
+- Busca textual com 3 ou mais caracteres: ate 8 paginas, equivalente a ate 240 resultados.
+- Quando houver mais resultados internos que o limite publico, a API retorna apenas o total publico permitido e `paginationLimited: true`.
+- Tentativas de acessar paginas acima do limite sao registradas nos logs como `pagination_limited`.
+
+Objetivo: dificultar copia sequencial da base por automacao simples, sem impedir que usuarios encontrem comercios por busca, categoria, bairro ou combinacoes mais especificas.
+
+Limitacao: esta protecao reduz raspagem basica, mas nao impede totalmente coleta manual ou automacoes distribuidas. Se houver abuso real, avaliar protecoes adicionais na Vercel, WAF, bloqueio por padrao de uso e ajustes finos de limites.
+
 ## Rotina inicial de backup
 
 Backup inicial criado em 24/05/2026:
@@ -304,9 +321,8 @@ Observacao: a copia de backup nao deve ser editada diretamente. Ela deve permane
 
 ### Seguranca da API
 
-A API ja evita expor contatos na listagem. Proximos passos tecnicos:
+A API ja evita expor contatos na listagem, aplica limite simples por IP e limita paginacao publica. Proximos passos tecnicos:
 
-- evitar extracao massiva facil por paginacao sequencial;
 - manter cache para reduzir chamadas ao Google Sheets;
 - revisar quais campos podem sair em cada modo da API;
 - avaliar WAF, firewall ou rate limit persistente se houver abuso real.
@@ -329,6 +345,7 @@ A API ja evita expor contatos na listagem. Proximos passos tecnicos:
 - Documentado checklist antes de publicar mudancas.
 - Implementado `requestId` e log estruturado para monitoramento de erros da API na Vercel.
 - Implementado limite simples por IP na API, com resposta 429 e cabecalhos de rate limit.
+- Implementado limite de paginacao publica por tipo de consulta, com registro de tentativas acima do limite.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
