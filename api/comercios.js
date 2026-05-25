@@ -218,7 +218,12 @@ function sortItems(items, terms, seed) {
     }))
     .filter(({ score }) => !terms.length || score > 0)
     .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
+      const aPlan = normalizePlan(a.item.tipo_exibicao);
+      const bPlan = normalizePlan(b.item.tipo_exibicao);
+      const scoreDiff = b.score - a.score;
+      const comparableFree = aPlan === "gratuito" && bPlan === "gratuito" && Math.abs(scoreDiff) <= 20;
+      if (comparableFree && b.random !== a.random) return b.random - a.random;
+      if (scoreDiff !== 0) return scoreDiff;
       if (b.random !== a.random) return b.random - a.random;
       return String(a.item.nome || "").localeCompare(String(b.item.nome || ""), "pt-BR");
     })
