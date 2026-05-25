@@ -32,6 +32,8 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Monetizacao deve focar em prioridade, imagem, destaque visual, oferta, selo e posicao.
 - Parceiros devem poder ter imagem para melhorar o visual geral do site.
 - Gratuitos devem ter ordenacao aleatoria entre si a cada nova pesquisa/carregamento.
+- A ordenacao deve considerar plano, qualidade/completude do cadastro, relevancia da busca e aleatoriedade controlada.
+- A qualidade do cadastro deve valorizar dados essenciais e evitar injustica com segmentos que naturalmente nao usam site, Facebook ou outras redes.
 - O Documento Mestre e a fonte de decisao; este roadmap e a trilha tecnica de execucao.
 
 ## Sequencia mestre de execucao
@@ -49,7 +51,8 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 - [ ] 4. Definir planos: gratuito, parceiro, destaque e top. Area: Comercial. Pontuacao: 8.
 - [ ] 5. Definir beneficios de cada plano. Area: Comercial. Pontuacao: 8.
 - [ ] 6. Implementar regras por plano no site/API. Area: Comercial/Site. Pontuacao: 6.
-- [ ] 7. Corrigir ordem dos resultados: pagos primeiro e gratuitos aleatorios. Area: Site. Pontuacao: 5.
+- [ ] 7. Definir e implementar regra de ordenacao dos cards, considerando plano, qualidade/completude do cadastro, relevancia da busca e aleatoriedade controlada dos gratuitos. Area: Site. Pontuacao: 5.
+  - Observacao: a regra deve evitar injustica com segmentos que naturalmente nao usam site, Facebook ou outras redes. A pontuacao de qualidade deve valorizar dados essenciais, como nome, categoria, bairro, endereco, WhatsApp/telefone e descricao, tratando presenca digital como complemento, nao como obrigacao.
 
 ### P2 - Validacao da experiencia do usuario
 
@@ -102,14 +105,23 @@ Diretriz inicial:
 
 ### Ordenacao
 
-A ordenacao desejada e:
+A ordenacao desejada deve considerar quatro blocos:
 
-1. Top
-2. Destaque
-3. Parceiro
-4. Gratuito aleatorio
+1. Plano: Top > Destaque > Parceiro > Gratuito.
+2. Relevancia da busca: correspondencia com nome, categoria, subcategoria, palavras-chave, bairro e descricao.
+3. Qualidade/completude do cadastro: dados essenciais preenchidos e confiaveis.
+4. Aleatoriedade controlada: variacao entre gratuitos ou entre cadastros de qualidade semelhante.
 
-Dentro dos gratuitos, a ordem deve variar a cada nova busca ou carregamento, sem prejudicar os planos pagos.
+A qualidade do cadastro nao deve ser uma simples contagem de campos preenchidos. Para evitar injustica, a regra deve priorizar blocos de informacao:
+
+- Identificacao: nome, categoria e subcategoria.
+- Localizacao: bairro e endereco.
+- Contato essencial: WhatsApp ou telefone.
+- Conteudo util: descricao e palavras-chave.
+- Presenca digital: Instagram, Facebook ou site como complemento, nao obrigacao.
+- Recursos comerciais/visuais: imagem e oferta conforme plano.
+
+Dentro dos gratuitos, a ordem deve variar a cada nova busca ou carregamento, sem prejudicar a prioridade dos planos pagos e sem premiar artificialmente apenas quem tem mais redes sociais.
 
 ### Seguranca da API
 
