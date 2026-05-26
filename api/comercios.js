@@ -424,17 +424,38 @@ function sortItems(items, terms, seed) {
 }
 
 function buildFilters(rows) {
-  const categoryOptions = new Map();
+  const categoryGroups = new Map();
   for (const row of rows) {
-    for (const option of [row.categoria, ...splitSubcategories(row.subcategoria)]) {
-      const cleanOption = String(option || "").trim();
-      if (!cleanOption) continue;
-      categoryOptions.set(normalizeSearchText(cleanOption), cleanOption);
+    const categoria = String(row.categoria || "").trim();
+    if (!categoria) continue;
+
+    const categoryKey = normalizeSearchText(categoria);
+    if (!categoryGroups.has(categoryKey)) {
+      categoryGroups.set(categoryKey, { categoria, subcategorias: new Map() });
+    }
+
+    const group = categoryGroups.get(categoryKey);
+    for (const subcategoria of splitSubcategories(row.subcategoria)) {
+      const subKey = normalizeSearchText(subcategoria);
+      if (!subKey || subKey === categoryKey) continue;
+      group.subcategorias.set(subKey, subcategoria);
     }
   }
 
+  const categoriasAgrupadas = [...categoryGroups.values()]
+    .map((group) => ({
+      categoria: group.categoria,
+      subcategorias: [...group.subcategorias.values()].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    }))
+    .sort((a, b) => a.categoria.localeCompare(b.categoria, "pt-BR"));
+
+  const categorias = categoriasAgrupadas
+    .flatMap((group) => [`◆ ${group.categoria}`, ...group.subcategorias.map((subcategoria) => `  ${subcategoria}`)])
+    .filter(Boolean);
+
   return {
-    categorias: [...categoryOptions.values()].sort((a, b) => a.localeCompare(b, "pt-BR")),
+    categorias,
+    categoriasAgrupadas,
     bairros: [...new Set(rows.map((row) => row.bairro).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")),
   };
 }
