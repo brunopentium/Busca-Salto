@@ -39,6 +39,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Contatos sao buscados sob demanda via `mode=contact` quando o usuario clica no botao.
 - A home retorna apenas a primeira pagina e nao libera carregamento infinito sem busca/filtro.
 - A paginacao publica foi limitada por tipo de consulta para reduzir extracao massiva sequencial.
+- A busca textual foi melhorada para lidar com acentos, plurais, pequenos erros de digitacao, termos sem espaco e sinonimos comerciais comuns.
 
 ## Decisoes tecnicas e comerciais ja assumidas
 
@@ -95,7 +96,7 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 ### P5 - Qualidade de busca, dados e interface
 
-- [ ] 16. Melhorar busca por acentos, plurais e erros comuns. Area: Site. Pontuacao: 4.
+- [x] 16. Melhorar busca por acentos, plurais e erros comuns. Area: Site. Pontuacao: 4. Concluido: API normaliza acentos, reduz plural/singular, aplica tolerancia a pequenos erros, compara termos sem espaco e usa aliases controlados para buscas comerciais comuns.
 - [ ] 17. Revisar categorias e subcategorias. Area: Dados. Pontuacao: 3.
 - [ ] 18. Melhorar visual, layout e imagens do site. Area: Site. Pontuacao: 4.
 
@@ -363,6 +364,7 @@ A API ja evita expor contatos na listagem, aplica limite simples por IP e limita
 - Implementado `requestId` e log estruturado para monitoramento de erros da API na Vercel.
 - Implementado limite simples por IP na API, com resposta 429 e cabecalhos de rate limit.
 - Implementado limite de paginacao publica por tipo de consulta, com registro de tentativas acima do limite.
+- Melhorada a busca textual da API para acentos, plurais, pequenos erros de digitacao, termos sem espaco e aliases comerciais comuns.
 - Interrompida a publicacao antiga da planilha por CSV publico.
 - Criado primeiro backup da base principal no Google Drive e registrada a rotina inicial de backup.
 - Documentado processo inicial de restauracao da base.
