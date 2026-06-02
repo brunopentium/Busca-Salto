@@ -18,7 +18,7 @@ Objetivo: vender melhoria de exibicao sem prejudicar a utilidade da busca para o
 Fluxo operacional:
 
 1. Comerciante acessa `comerciantes.html` ou clica em `Sou responsavel por este comercio`.
-2. Comerciante escolhe plano ou chama no WhatsApp.
+2. Comerciante escolhe plano e inicia o pagamento pelo Mercado Pago.
 3. Solicitar nome do comercio, categoria/subcategoria desejada, responsavel, telefone e comprovacao de vinculo.
 4. Registrar a solicitacao na planilha de controle.
 5. Verificar se o comercio ja existe na base.
@@ -87,7 +87,7 @@ Exemplos:
 
 A API `/api/checkout` esta preparada para criar preferencia de pagamento quando a variavel `MERCADO_PAGO_ACCESS_TOKEN` estiver configurada na Vercel.
 
-Sem essa variavel, o fluxo direciona para WhatsApp. Isso evita quebrar a pagina enquanto a conta Mercado Pago nao estiver conectada.
+Sem essa variavel, a API informa que o checkout Mercado Pago ainda nao esta configurado. A pagina nao deve apresentar venda por WhatsApp como fluxo principal.
 
 Variaveis recomendadas:
 
