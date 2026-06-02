@@ -2,20 +2,19 @@
 
 ## Dominio `buscasalto.com`
 
-Status tecnico: o site esta preparado para rodar na Vercel. A configuracao final do dominio precisa ser feita no painel da Vercel e no registrador do dominio.
+Status tecnico: o site esta preparado para rodar na Vercel. Em 02/06/2026, os dominios `buscasalto.com` e `www.buscasalto.com` foram adicionados ao projeto `busca-salto` na Vercel. A configuracao ainda aparece como invalida porque depende dos registros DNS no registrador do dominio.
 
 Procedimento:
 
 1. Na Vercel, abrir o projeto `busca-salto`.
 2. Entrar em `Settings` > `Domains`.
-3. Adicionar `buscasalto.com`.
-4. Adicionar tambem `www.buscasalto.com`.
-5. No registrador do dominio, configurar os DNS conforme a Vercel indicar.
+3. Confirmar que `buscasalto.com` e `www.buscasalto.com` continuam listados.
+4. No registrador do dominio, configurar os DNS conforme a Vercel indicou.
 
-Configuracao usual:
+Configuracao exigida pela Vercel em 02/06/2026:
 
-- Apex/root `buscasalto.com`: registro `A` apontando para `76.76.21.21`.
-- `www.buscasalto.com`: registro `CNAME` apontando para `cname.vercel-dns.com`.
+- Apex/root `buscasalto.com`: registro `A`, nome `@`, valor `216.198.79.1`.
+- `www.buscasalto.com`: registro `CNAME`, nome `www`, valor `aa69eb81b66503f9.vercel-dns-017.com.`.
 
 Confirmar sempre no painel da Vercel, pois o valor exibido ali prevalece.
 
