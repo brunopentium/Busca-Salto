@@ -42,7 +42,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A busca textual foi melhorada para lidar com acentos, plurais, pequenos erros de digitacao, termos sem espaco e sinonimos comerciais comuns.
 - Categorias e subcategorias passaram a ter camada de padronizacao na API, reduzindo duplicidades sem alterar diretamente a planilha-base.
 - Criada pagina `comerciantes.html` para apresentacao discreta dos planos comerciais.
-- Criada API `/api/checkout` preparada para Mercado Pago, com fallback para WhatsApp quando credenciais nao estiverem configuradas.
+- Criada API `/api/checkout` preparada para Mercado Pago; quando as credenciais nao estiverem configuradas, a pagina informa que o checkout ainda esta em ativacao.
 - Criada API `/api/metricas` para registrar eventos basicos de uso nos logs da Vercel.
 - Criados `robots.txt`, `sitemap.xml`, `vercel.json` e documentacao de publicacao para dominio, HTTPS, Search Console e metricas.
 
@@ -139,7 +139,7 @@ A regra comercial inicial preserva telefone e WhatsApp tambem para gratuitos, po
 
 ## Pagina comercial e pagamento
 
-Existe uma pendencia comercial para avaliar e criar uma pagina voltada a comerciantes interessados em planos pagos. A pagina deve explicar beneficios, apresentar planos, receber dados do comercio e direcionar assinatura ou pagamento pelo Mercado Pago.
+Existe uma pagina voltada a comerciantes interessados em planos pagos. A pagina explica beneficios, apresenta planos, posiciona o plano Destaque como melhor equilibrio comercial e direciona assinatura/pagamento pelo Mercado Pago.
 
 Diretriz inicial: a pagina deve ser discreta dentro da experiencia publica do site, preferencialmente acessada por links como `Para comerciantes`, `Divulgue seu comercio` ou pelo fluxo `Sou responsavel por este comercio`. Evitar chamadas ostensivas na busca principal como "pague para aparecer primeiro", para nao reduzir a confianca do usuario comum nos resultados.
 
