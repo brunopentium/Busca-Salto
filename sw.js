@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v3";
+const CACHE_NAME = "busca-salto-pwa-v4";
 
 const STATIC_ASSETS = [
   "/",
@@ -73,7 +73,7 @@ async function prepareResponse(request, response) {
   let html = await response.text();
   if (!html.includes('id="installBanner"')) {
     const banner =
-      '<section id="installBanner" class="install-banner container" hidden aria-live="polite"><div><strong id="installTitle">Instale o Guia Salto</strong><p id="installText">Acesse o Busca Salto pela tela inicial, como um aplicativo.</p></div><div class="install-banner-actions"><button id="installButton" class="install-button" type="button">Instalar</button><button id="installDismiss" class="install-close" type="button">Agora nao</button></div></section>';
+      '<section id="installBanner" class="install-banner container" hidden aria-live="polite"><div><strong id="installTitle">Instale o app do Busca Salto</strong><p id="installText">Acesse o Busca Salto pela tela inicial, como um aplicativo.</p></div><div class="install-banner-actions"><button id="installButton" class="install-button" type="button">Instalar</button><button id="installDismiss" class="install-close" type="button">Agora nao</button></div></section>';
     html = html.replace("</header>", `</header>\n  ${banner}`);
   }
 
@@ -91,7 +91,7 @@ async function prepareResponse(request, response) {
           const button = document.getElementById("installButton");
           if (!banner || !title || !text || !button || !banner.hidden) return;
           if (window.localStorage.getItem("buscaSaltoInstallDismissed") === "1") return;
-          title.textContent = "Instale o Guia Salto no Chrome";
+          title.textContent = "Instale o app do Busca Salto";
           text.textContent = "Se o botao instalar nao aparecer, toque nos tres pontos do Chrome e escolha Adicionar a tela inicial ou Instalar app.";
           button.textContent = "Entendi";
           banner.dataset.installMode = "android-help";
