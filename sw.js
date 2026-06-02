@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v4";
+const CACHE_NAME = "busca-salto-pwa-v5";
 
 const STATIC_ASSETS = [
   "/",
@@ -71,6 +71,11 @@ async function prepareResponse(request, response) {
   }
 
   let html = await response.text();
+  html = html.replace(
+    /<meta name="apple-mobile-web-app-title" content="[^"]*"\s*\/>/,
+    '<meta name="apple-mobile-web-app-title" content="Busca Salto" />'
+  );
+
   if (!html.includes('id="installBanner"')) {
     const banner =
       '<section id="installBanner" class="install-banner container" hidden aria-live="polite"><div><strong id="installTitle">Instale o app do Busca Salto</strong><p id="installText">Acesse o Busca Salto pela tela inicial, como um aplicativo.</p></div><div class="install-banner-actions"><button id="installButton" class="install-button" type="button">Instalar</button><button id="installDismiss" class="install-close" type="button">Agora nao</button></div></section>';
