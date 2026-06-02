@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v2";
+const CACHE_NAME = "busca-salto-pwa-v3";
 
 const STATIC_ASSETS = [
   "/",
@@ -75,6 +75,38 @@ async function prepareResponse(request, response) {
     const banner =
       '<section id="installBanner" class="install-banner container" hidden aria-live="polite"><div><strong id="installTitle">Instale o Guia Salto</strong><p id="installText">Acesse o Busca Salto pela tela inicial, como um aplicativo.</p></div><div class="install-banner-actions"><button id="installButton" class="install-button" type="button">Instalar</button><button id="installDismiss" class="install-close" type="button">Agora nao</button></div></section>';
     html = html.replace("</header>", `</header>\n  ${banner}`);
+  }
+
+  if (!html.includes("buscaSaltoPwaAndroidFallback")) {
+    const fallbackScript = `<script>
+      (() => {
+        window.buscaSaltoPwaAndroidFallback = true;
+        const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+        const isAndroid = /android/i.test(window.navigator.userAgent);
+        if (isStandalone || !isAndroid) return;
+        window.setTimeout(() => {
+          const banner = document.getElementById("installBanner");
+          const title = document.getElementById("installTitle");
+          const text = document.getElementById("installText");
+          const button = document.getElementById("installButton");
+          if (!banner || !title || !text || !button || !banner.hidden) return;
+          if (window.localStorage.getItem("buscaSaltoInstallDismissed") === "1") return;
+          title.textContent = "Instale o Guia Salto no Chrome";
+          text.textContent = "Se o botao instalar nao aparecer, toque nos tres pontos do Chrome e escolha Adicionar a tela inicial ou Instalar app.";
+          button.textContent = "Entendi";
+          banner.dataset.installMode = "android-help";
+          banner.hidden = false;
+        }, 3000);
+        document.addEventListener("click", (event) => {
+          const button = event.target.closest("#installButton");
+          const banner = document.getElementById("installBanner");
+          if (!button || banner?.dataset.installMode !== "android-help") return;
+          window.localStorage.setItem("buscaSaltoInstallDismissed", "1");
+          banner.hidden = true;
+        }, true);
+      })();
+    </script>`;
+    html = html.replace("</body>", `${fallbackScript}\n</body>`);
   }
 
   return new Response(html, {
