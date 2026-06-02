@@ -50,6 +50,46 @@ const SEARCH_ALIASES = {
   veterinario: ["veterinaria", "clinica veterinaria"],
   racao: ["racao", "racoes"],
 };
+const CATEGORY_CANONICAL = {
+  "servicos automotivos": "Automotivo",
+};
+const SUBCATEGORY_CANONICAL = {
+  "acougues boutique": "Açougue Boutique",
+  "assistencia tecnica": "Assistência Técnica",
+  "auto eletrica": "Autoelétrica",
+  autoeletrica: "Autoelétrica",
+  borracharias: "Borracharia",
+  churrascarias: "Churrascaria",
+  "clinicas de imagem": "Clínica de Imagem",
+  "clinicas medicas": "Clínica Médica",
+  "clinicas veterinarias": "Clínica Veterinária",
+  "comunidades religiosas": "Comunidade Religiosa",
+  conveniencias: "Conveniência",
+  "corretoras de seguros": "Corretora de Seguros",
+  "corretores de imoveis": "Corretor de Imóveis",
+  "cuidadores de idosos": "Cuidador de Idosos",
+  "distribuidoras de bebidas": "Distribuidora de Bebidas",
+  "escolas infantis": "Escola Infantil",
+  "escolas particulares": "Escola Particular",
+  "faculdades": "Faculdade",
+  "hortifrutis": "Hortifrúti",
+  "laboratorios de exames": "Laboratório de Exames",
+  "loja de pneus": "Loja de Pneus",
+  "lojas de moveis": "Loja de Móveis",
+  "lojas de presentes": "Loja de Presentes",
+  "materiais graficos": "Material Gráfico",
+  "musicos": "Músicos",
+  djs: "DJs",
+  epis: "EPIs",
+  ongs: "ONGs",
+  "nutricionistas": "Nutricionista",
+  "otica": "Ótica",
+  "pneus e mecanica": "Pneus e Mecânica",
+  "produtores locais": "Produtores Locais",
+  "racoes": "Rações",
+  "restaurantes por quilo": "Restaurante por Quilo",
+  "universidades": "Universidade",
+};
 
 let cache = { loadedAt: 0, rows: [] };
 const rateLimitStore = new Map();
@@ -95,6 +135,29 @@ function normalize(value = "") {
 
 function normalizeSearchText(value = "") {
   return normalize(value).replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function titleCase(value = "") {
+  const lowerWords = new Set(["a", "ao", "aos", "as", "com", "da", "de", "do", "dos", "e", "em", "para", "por"]);
+  return String(value || "")
+    .trim()
+    .toLocaleLowerCase("pt-BR")
+    .replace(/\S+/g, (word, index) => {
+      if (index > 0 && lowerWords.has(word)) return word;
+      return word.charAt(0).toLocaleUpperCase("pt-BR") + word.slice(1);
+    });
+}
+
+function canonicalCategory(value = "") {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+  return CATEGORY_CANONICAL[normalizeSearchText(trimmed)] || titleCase(trimmed);
+}
+
+function canonicalSubcategory(value = "") {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+  return SUBCATEGORY_CANONICAL[normalizeSearchText(trimmed)] || titleCase(trimmed);
 }
 
 function compactSearchText(value = "") {
@@ -197,8 +260,18 @@ function categoryMatches(item, selectedCategory = "") {
   if (!selectedCategory) return true;
   const selected = normalizeSearchText(selectedCategory);
   if (!selected) return true;
-  if (normalizeSearchText(item.categoria) === selected) return true;
-  return splitSubcategories(item.subcategoria).some((subcategoria) => normalizeSearchText(subcategoria) === selected);
+  const categoryValues = [
+    item.categoria,
+    canonicalCategory(item.categoria),
+  ].map(normalizeSearchText);
+  if (categoryValues.includes(selected)) return true;
+  return splitSubcategories(item.subcategoria).some((subcategoria) => {
+    const subcategoryValues = [
+      subcategoria,
+      canonicalSubcategory(subcategoria),
+    ].map(normalizeSearchText);
+    return subcategoryValues.includes(selected);
+  });
 }
 
 function bairroMatches(item, selectedBairro = "") {
@@ -398,11 +471,12 @@ async function loadRows() {
 
 function publicItem(item) {
   const plan = normalizePlan(item.tipo_exibicao);
+  const subcategorias = [...new Set(splitSubcategories(item.subcategoria).map(canonicalSubcategory).filter(Boolean))];
   return {
     id: item.id,
     nome: item.nome,
-    categoria: item.categoria,
-    subcategoria: item.subcategoria,
+    categoria: canonicalCategory(item.categoria),
+    subcategoria: subcategorias.join("; "),
     bairro: item.bairro,
     endereco: item.endereco,
     descricao: plan === "gratuito" ? truncateText(item.descricao) : item.descricao,
@@ -473,7 +547,7 @@ function sortItems(items, terms, seed) {
 function buildFilters(rows) {
   const categoryGroups = new Map();
   for (const row of rows) {
-    const categoria = String(row.categoria || "").trim();
+    const categoria = canonicalCategory(row.categoria);
     if (!categoria) continue;
 
     const categoryKey = normalizeSearchText(categoria);
@@ -482,7 +556,7 @@ function buildFilters(rows) {
     }
 
     const group = categoryGroups.get(categoryKey);
-    for (const subcategoria of splitSubcategories(row.subcategoria)) {
+    for (const subcategoria of splitSubcategories(row.subcategoria).map(canonicalSubcategory)) {
       const subKey = normalizeSearchText(subcategoria);
       if (!subKey || subKey === categoryKey) continue;
       group.subcategorias.set(subKey, subcategoria);
