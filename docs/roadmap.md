@@ -113,8 +113,8 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 
 ### P7 - Publicacao e dominio, fase final
 
-- [ ] 22. Configurar dominio `buscasalto.com`. Area: Publicacao. Pontuacao: 6. Preparado: documentacao criada; depende de acesso ao painel do dominio/Vercel para ativacao real.
-- [ ] 23. Apontar dominio para Vercel. Area: Publicacao. Pontuacao: 6. Preparado: instrucoes DNS registradas em `docs/publicacao-dominio.md`; depende de alteracao no registrador.
+- [ ] 22. Configurar dominio `buscasalto.com`. Area: Publicacao. Pontuacao: 6. Parcialmente concluido: `buscasalto.com` e `www.buscasalto.com` foram adicionados ao projeto na Vercel em 02/06/2026; ainda dependem do DNS no registrador para ficar com configuracao valida.
+- [ ] 23. Apontar dominio para Vercel. Area: Publicacao. Pontuacao: 6. Preparado: DNS real gerado pela Vercel registrado em `docs/publicacao-dominio.md`; depende de alteracao no registrador do dominio.
 - [ ] 24. Validar HTTPS no dominio final. Area: Publicacao. Pontuacao: 8. Preparado: checklist criado; validacao real depende do dominio apontado.
 - [ ] 25. Configurar Google Search Console. Area: Publicacao. Pontuacao: 5. Preparado: `sitemap.xml`, `robots.txt` e procedimento documentados; verificacao real depende do token DNS/conta Google.
 - [x] 26. Configurar Analytics ou medicao de buscas e acessos. Area: Publicacao. Pontuacao: 4. Concluido: API `/api/metricas` registra eventos em logs da Vercel.
