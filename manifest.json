@@ -1,7 +1,7 @@
 {
   "id": "/index.html",
-  "name": "Guia de Comércios Salto",
-  "short_name": "Guia Salto",
+  "name": "Busca Salto",
+  "short_name": "Busca Salto",
   "description": "Guia local para encontrar comércios, serviços e profissionais em Salto/SP.",
   "start_url": "/index.html",
   "scope": "/",
