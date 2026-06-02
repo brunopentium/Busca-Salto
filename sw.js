@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v1";
+const CACHE_NAME = "busca-salto-pwa-v2";
 
 const STATIC_ASSETS = [
   "/",
@@ -45,7 +45,9 @@ async function networkFirst(request) {
   try {
     const response = await fetch(request);
     if (response.ok) {
-      cache.put(request, response.clone());
+      const preparedResponse = await prepareResponse(request, response.clone());
+      cache.put(request, preparedResponse.clone());
+      return preparedResponse;
     }
     return response;
   } catch (error) {
@@ -55,6 +57,31 @@ async function networkFirst(request) {
     }
     return cache.match("/index.html");
   }
+}
+
+async function prepareResponse(request, response) {
+  const url = new URL(request.url);
+  const isHtml =
+    request.mode === "navigate" ||
+    url.pathname === "/" ||
+    url.pathname.endsWith("/index.html");
+
+  if (!isHtml || !response.headers.get("content-type")?.includes("text/html")) {
+    return response;
+  }
+
+  let html = await response.text();
+  if (!html.includes('id="installBanner"')) {
+    const banner =
+      '<section id="installBanner" class="install-banner container" hidden aria-live="polite"><div><strong id="installTitle">Instale o Guia Salto</strong><p id="installText">Acesse o Busca Salto pela tela inicial, como um aplicativo.</p></div><div class="install-banner-actions"><button id="installButton" class="install-button" type="button">Instalar</button><button id="installDismiss" class="install-close" type="button">Agora nao</button></div></section>';
+    html = html.replace("</header>", `</header>\n  ${banner}`);
+  }
+
+  return new Response(html, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers
+  });
 }
 
 self.addEventListener("fetch", (event) => {
