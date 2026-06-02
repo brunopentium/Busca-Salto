@@ -1,0 +1,26 @@
+{
+  "id": "/index.html",
+  "name": "Guia de Comércios Salto",
+  "short_name": "Guia Salto",
+  "description": "Guia local para encontrar comércios, serviços e profissionais em Salto/SP.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#002f6c",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/imagens/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/imagens/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
