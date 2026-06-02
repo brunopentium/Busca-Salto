@@ -1,6 +1,6 @@
-const WHATSAPP_NUMBER = "5511953116573";
 const SITE_URL = (process.env.SITE_URL || process.env.VERCEL_URL || "https://busca-salto.vercel.app").replace(/\/+$/, "");
 const MERCADO_PAGO_ACCESS_TOKEN = String(process.env.MERCADO_PAGO_ACCESS_TOKEN || "").trim();
+
 const PLANS = {
   gratuito: {
     title: "Busca Salto - Cadastro Gratuito",
@@ -34,11 +34,6 @@ function json(res, status, body) {
 function normalizePlan(value = "") {
   const plan = String(value || "").trim().toLowerCase();
   return PLANS[plan] ? plan : "";
-}
-
-function whatsappUrl(plan) {
-  const text = encodeURIComponent(`Olá, quero saber mais sobre o plano ${plan || "comercial"} do Busca Salto para meu comércio.`);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
 }
 
 async function createMercadoPagoPreference(planKey, plan) {
@@ -87,14 +82,21 @@ module.exports = async function handler(req, res) {
     for await (const chunk of req) chunks.push(chunk);
     const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString("utf8")) : {};
     const planKey = normalizePlan(body.plan);
-    if (!planKey) return json(res, 400, { error: "Plano invalido.", url: whatsappUrl("") });
+    if (!planKey) return json(res, 400, { error: "Plano invalido." });
 
     const plan = PLANS[planKey];
-    if (planKey === "gratuito" || plan.price <= 0 || !MERCADO_PAGO_ACCESS_TOKEN) {
+    if (planKey === "gratuito" || plan.price <= 0) {
       return json(res, 200, {
-        mode: "whatsapp",
+        mode: "free_request",
         plan: planKey,
-        url: whatsappUrl(planKey),
+      });
+    }
+
+    if (!MERCADO_PAGO_ACCESS_TOKEN) {
+      return json(res, 503, {
+        mode: "mercado_pago_unavailable",
+        plan: planKey,
+        error: "Mercado Pago ainda nao configurado.",
       });
     }
 
@@ -103,7 +105,7 @@ module.exports = async function handler(req, res) {
       mode: "mercado_pago",
       plan: planKey,
       preferenceId: preference.id,
-      url: preference.init_point || preference.sandbox_init_point || whatsappUrl(planKey),
+      url: preference.init_point || preference.sandbox_init_point || "",
     });
   } catch (error) {
     console.error(JSON.stringify({
@@ -112,10 +114,9 @@ module.exports = async function handler(req, res) {
       message: error?.message || "Erro desconhecido",
       timestamp: new Date().toISOString(),
     }));
-    return json(res, 200, {
-      mode: "whatsapp",
-      error: "checkout_fallback",
-      url: whatsappUrl("comercial"),
+    return json(res, 500, {
+      mode: "checkout_error",
+      error: "Nao foi possivel iniciar o checkout Mercado Pago.",
     });
   }
 };
