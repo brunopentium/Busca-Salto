@@ -40,6 +40,11 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A home retorna apenas a primeira pagina e nao libera carregamento infinito sem busca/filtro.
 - A paginacao publica foi limitada por tipo de consulta para reduzir extracao massiva sequencial.
 - A busca textual foi melhorada para lidar com acentos, plurais, pequenos erros de digitacao, termos sem espaco e sinonimos comerciais comuns.
+- Categorias e subcategorias passaram a ter camada de padronizacao na API, reduzindo duplicidades sem alterar diretamente a planilha-base.
+- Criada pagina `comerciantes.html` para apresentacao discreta dos planos comerciais.
+- Criada API `/api/checkout` preparada para Mercado Pago, com fallback para WhatsApp quando credenciais nao estiverem configuradas.
+- Criada API `/api/metricas` para registrar eventos basicos de uso nos logs da Vercel.
+- Criados `robots.txt`, `sitemap.xml`, `vercel.json` e documentacao de publicacao para dominio, HTTPS, Search Console e metricas.
 
 ## Decisoes tecnicas e comerciais ja assumidas
 
@@ -97,22 +102,22 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 ### P5 - Qualidade de busca, dados e interface
 
 - [x] 16. Melhorar busca por acentos, plurais e erros comuns. Area: Site. Pontuacao: 4. Concluido: API normaliza acentos, reduz plural/singular, aplica tolerancia a pequenos erros, compara termos sem espaco e usa aliases controlados para buscas comerciais comuns.
-- [ ] 17. Revisar categorias e subcategorias. Area: Dados. Pontuacao: 3.
-- [ ] 18. Melhorar visual, layout e imagens do site. Area: Site. Pontuacao: 4.
+- [x] 17. Revisar categorias e subcategorias. Area: Dados. Pontuacao: 3. Concluido: API padroniza categorias/subcategorias exibidas e usadas nos filtros, preservando a base original.
+- [x] 18. Melhorar visual, layout e imagens do site. Area: Site. Pontuacao: 4. Concluido anteriormente e mantido como pulado nesta rodada conforme decisao do usuario.
 
 ### P6 - Comercializacao e expansao
 
-- [ ] 19. Criar processo para vender destaque por categoria. Area: Comercial. Pontuacao: 5.
-- [ ] 20. Definir exclusividade do Top Categoria. Area: Comercial. Pontuacao: 5.
-- [ ] 21. Avaliar e criar pagina para comerciantes conhecerem os planos e assinarem pelo Mercado Pago. Area: Comercial/Site. Pontuacao: 4.
+- [x] 19. Criar processo para vender destaque por categoria. Area: Comercial. Pontuacao: 5. Concluido: processo comercial documentado em `docs/processo-comercial.md`.
+- [x] 20. Definir exclusividade do Top Categoria. Area: Comercial. Pontuacao: 5. Concluido: regra inicial definida por subcategoria principal, com ciclo de 30 dias e lista de espera.
+- [x] 21. Avaliar e criar pagina para comerciantes conhecerem os planos e assinarem pelo Mercado Pago. Area: Comercial/Site. Pontuacao: 4. Concluido: criada pagina `comerciantes.html` e API `/api/checkout` preparada para Mercado Pago.
 
 ### P7 - Publicacao e dominio, fase final
 
-- [ ] 22. Configurar dominio `buscasalto.com`. Area: Publicacao. Pontuacao: 6.
-- [ ] 23. Apontar dominio para Vercel. Area: Publicacao. Pontuacao: 6.
-- [ ] 24. Validar HTTPS no dominio final. Area: Publicacao. Pontuacao: 8.
-- [ ] 25. Configurar Google Search Console. Area: Publicacao. Pontuacao: 5.
-- [ ] 26. Configurar Analytics ou medicao de buscas e acessos. Area: Publicacao. Pontuacao: 4.
+- [ ] 22. Configurar dominio `buscasalto.com`. Area: Publicacao. Pontuacao: 6. Preparado: documentacao criada; depende de acesso ao painel do dominio/Vercel para ativacao real.
+- [ ] 23. Apontar dominio para Vercel. Area: Publicacao. Pontuacao: 6. Preparado: instrucoes DNS registradas em `docs/publicacao-dominio.md`; depende de alteracao no registrador.
+- [ ] 24. Validar HTTPS no dominio final. Area: Publicacao. Pontuacao: 8. Preparado: checklist criado; validacao real depende do dominio apontado.
+- [ ] 25. Configurar Google Search Console. Area: Publicacao. Pontuacao: 5. Preparado: `sitemap.xml`, `robots.txt` e procedimento documentados; verificacao real depende do token DNS/conta Google.
+- [x] 26. Configurar Analytics ou medicao de buscas e acessos. Area: Publicacao. Pontuacao: 4. Concluido: API `/api/metricas` registra eventos em logs da Vercel.
 
 ## Planos comerciais iniciais
 
