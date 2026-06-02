@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v5";
+const CACHE_NAME = "busca-salto-pwa-v6";
 
 const STATIC_ASSETS = [
   "/",
@@ -61,6 +61,8 @@ async function networkFirst(request) {
 
 async function prepareResponse(request, response) {
   const url = new URL(request.url);
+  const userAgent = request.headers.get("user-agent") || "";
+  const isSamsungInternet = /SamsungBrowser/i.test(userAgent);
   const isHtml =
     request.mode === "navigate" ||
     url.pathname === "/" ||
@@ -75,6 +77,35 @@ async function prepareResponse(request, response) {
     /<meta name="apple-mobile-web-app-title" content="[^"]*"\s*\/>/,
     '<meta name="apple-mobile-web-app-title" content="Busca Salto" />'
   );
+
+  if (isSamsungInternet) {
+    html = html
+      .replace(/<link rel="manifest" href="[^"]*"\s*\/>/g, "")
+      .replace(/<link rel="manifest" href="[^"]*">/g, "");
+
+    if (!html.includes("buscaSaltoSamsungInstallBlock")) {
+      const samsungInstallBlock = `<script>
+        (() => {
+          window.buscaSaltoSamsungInstallBlock = true;
+          window.localStorage.setItem("buscaSaltoInstallDismissed", "1");
+          window.addEventListener("beforeinstallprompt", (event) => {
+            event.preventDefault();
+          }, true);
+          document.addEventListener("DOMContentLoaded", () => {
+            const banner = document.getElementById("installBanner");
+            if (banner) banner.hidden = true;
+          });
+        })();
+      </script>`;
+      html = html.replace("</head>", `${samsungInstallBlock}\n</head>`);
+    }
+
+    return new Response(html, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers
+    });
+  }
 
   if (!html.includes('id="installBanner"')) {
     const banner =
