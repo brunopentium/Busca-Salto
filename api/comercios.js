@@ -15,6 +15,41 @@ const PAGINATION_LIMITS = {
   COMBINED_FILTER: 5,
   TEXT_SEARCH: 8,
 };
+const SEARCH_ALIASES = {
+  acai: ["acaiteria", "sorveteria"],
+  lanche: ["lanchonete", "lanches", "hamburgueria"],
+  lanches: ["lanchonete", "lanche", "hamburgueria"],
+  hamburguer: ["hamburgueria", "hamburguerias"],
+  burger: ["hamburgueria", "hamburguer"],
+  comida: ["restaurante", "marmitaria", "rotisseria", "lanchonete"],
+  marmita: ["marmitaria", "restaurante"],
+  pizza: ["pizzaria"],
+  doce: ["doceria", "confeitaria", "bolos"],
+  doces: ["doceria", "confeitaria", "bolos"],
+  bolo: ["bolos", "doceria", "confeitaria"],
+  pao: ["padaria", "panificadora"],
+  farmacia: ["farmacia", "drogaria"],
+  remedio: ["farmacia", "drogaria"],
+  dentista: ["odontologia", "odontologico", "odontologica"],
+  dental: ["odontologia", "odontologico", "odontologica"],
+  medico: ["clinica medica", "clinicas medicas", "hospital"],
+  academia: ["fitness", "musculacao"],
+  musculacao: ["academia", "fitness"],
+  mecanico: ["mecanica", "oficina"],
+  mecanica: ["mecanico", "oficina"],
+  autoeletrica: ["auto eletrica", "auto eletrico"],
+  autoeletrico: ["auto eletrica", "autoeletrica"],
+  borracharia: ["pneu", "pneus"],
+  pneus: ["pneu", "borracharia"],
+  lavajato: ["lava rapido", "lava rapidos"],
+  "lava rapido": ["lavajato", "lava rapidos"],
+  chave: ["chaveiro"],
+  chaveiro: ["chaves"],
+  pet: ["petshop", "pet shop", "veterinario", "racao"],
+  petshop: ["pet shop", "banho e tosa"],
+  veterinario: ["veterinaria", "clinica veterinaria"],
+  racao: ["racao", "racoes"],
+};
 
 let cache = { loadedAt: 0, rows: [] };
 const rateLimitStore = new Map();
@@ -62,6 +97,10 @@ function normalizeSearchText(value = "") {
   return normalize(value).replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function compactSearchText(value = "") {
+  return normalizeSearchText(value).replace(/\s+/g, "");
+}
+
 function singularizeToken(token = "") {
   if (token.length <= 3) return token;
   if (token.endsWith("oes")) return `${token.slice(0, -3)}ao`;
@@ -76,7 +115,11 @@ function singularizeToken(token = "") {
 function searchVariants(term = "") {
   const normalized = normalizeSearchText(term);
   const singular = singularizeToken(normalized);
-  return [...new Set([normalized, singular].filter(Boolean))];
+  const aliases = [
+    ...(SEARCH_ALIASES[normalized] || []),
+    ...(SEARCH_ALIASES[singular] || []),
+  ].flatMap((alias) => [normalizeSearchText(alias), singularizeToken(normalizeSearchText(alias))]);
+  return [...new Set([normalized, singular, ...aliases].filter(Boolean))];
 }
 
 function levenshteinDistance(a = "", b = "", maxDistance = 2) {
@@ -113,8 +156,10 @@ function prepareSearchField(value = "") {
   const tokens = text.split(" ").filter(Boolean);
   return {
     text,
+    compact: compactSearchText(text),
     tokens,
     variants: new Set(tokens.flatMap(searchVariants)),
+    compactVariants: new Set(tokens.flatMap(searchVariants).map(compactSearchText).filter(Boolean)),
   };
 }
 
@@ -124,6 +169,8 @@ function fieldRelevance(field, rawTerm, weight) {
 
   if (terms.some((term) => field.text.includes(term))) return weight;
   if (terms.some((term) => field.variants.has(term))) return Math.round(weight * 0.85);
+  if (terms.some((term) => field.compact.includes(compactSearchText(term)))) return Math.round(weight * 0.8);
+  if (terms.some((term) => field.compactVariants.has(compactSearchText(term)))) return Math.round(weight * 0.75);
 
   const limit = Math.max(...terms.map(fuzzyLimit));
   if (!limit) return 0;
