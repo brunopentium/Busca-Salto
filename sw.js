@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v6";
+const CACHE_NAME = "busca-salto-pwa-v7";
 
 const STATIC_ASSETS = [
   "/",
@@ -73,10 +73,14 @@ async function prepareResponse(request, response) {
   }
 
   let html = await response.text();
-  html = html.replace(
-    /<meta name="apple-mobile-web-app-title" content="[^"]*"\s*\/>/,
-    '<meta name="apple-mobile-web-app-title" content="Busca Salto" />'
-  );
+  html = html
+    .replace(/Guia de Comércios Salto/g, "Busca Salto")
+    .replace(/Guia de Comercios Salto/g, "Busca Salto")
+    .replace(/Guia Salto/g, "Busca Salto")
+    .replace(
+      /<meta name="apple-mobile-web-app-title" content="[^"]*"\s*\/>/,
+      '<meta name="apple-mobile-web-app-title" content="Busca Salto" />'
+    );
 
   if (isSamsungInternet) {
     html = html
