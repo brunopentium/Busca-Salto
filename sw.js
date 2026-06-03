@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v7";
+const CACHE_NAME = "busca-salto-pwa-v8";
 
 const STATIC_ASSETS = [
   "/",
@@ -63,12 +63,10 @@ async function prepareResponse(request, response) {
   const url = new URL(request.url);
   const userAgent = request.headers.get("user-agent") || "";
   const isSamsungInternet = /SamsungBrowser/i.test(userAgent);
-  const isHtml =
-    request.mode === "navigate" ||
-    url.pathname === "/" ||
-    url.pathname.endsWith("/index.html");
+  const isHtml = response.headers.get("content-type")?.includes("text/html");
+  const isHomePage = url.pathname === "/" || url.pathname === "/index.html";
 
-  if (!isHtml || !response.headers.get("content-type")?.includes("text/html")) {
+  if (!isHtml) {
     return response;
   }
 
@@ -111,13 +109,13 @@ async function prepareResponse(request, response) {
     });
   }
 
-  if (!html.includes('id="installBanner"')) {
+  if (isHomePage && !html.includes('id="installBanner"')) {
     const banner =
       '<section id="installBanner" class="install-banner container" hidden aria-live="polite"><div><strong id="installTitle">Instale o app do Busca Salto</strong><p id="installText">Acesse o Busca Salto pela tela inicial, como um aplicativo.</p></div><div class="install-banner-actions"><button id="installButton" class="install-button" type="button">Instalar</button><button id="installDismiss" class="install-close" type="button">Agora nao</button></div></section>';
     html = html.replace("</header>", `</header>\n  ${banner}`);
   }
 
-  if (!html.includes("buscaSaltoPwaAndroidFallback")) {
+  if (isHomePage && !html.includes("buscaSaltoPwaAndroidFallback")) {
     const fallbackScript = `<script>
       (() => {
         window.buscaSaltoPwaAndroidFallback = true;
