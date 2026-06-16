@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Busca Salto - Admin</title>
+  <style>
+    :root{--azul:#0b2a4a;--texto:#17324f;--muted:#60738c;--fundo:#f5f7fb;--card:#fff;--borda:#d8e1ec;--ok:#0f766e;--erro:#b42318}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--fundo);color:var(--texto);display:grid;place-items:center;padding:24px}
+    main{width:min(1100px,100%);background:var(--card);border:1px solid var(--borda);border-radius:8px;box-shadow:0 18px 42px rgba(11,42,74,.12);padding:22px}
+    h1{margin:0 0 6px;color:var(--azul);font-size:1.35rem;letter-spacing:0}
+    p{margin:0 0 18px;color:var(--muted);line-height:1.45}
+    form{display:grid;gap:12px}
+    .login{max-width:440px;margin:0 auto}
+    label{display:grid;gap:6px;font-weight:700;color:var(--azul)}
+    input,button{width:100%;border-radius:8px;border:1px solid var(--borda);padding:12px;font:inherit}
+    input:focus,button:focus{outline:2px solid #bdd9ff;border-color:#5fa3e6}
+    button{border:0;background:var(--azul);color:#fff;font-weight:800;cursor:pointer}
+    button.secondary{background:#e8eef6;color:var(--azul);border:1px solid var(--borda)}
+    button:disabled{opacity:.65;cursor:wait}
+    .status{min-height:22px;margin-top:12px;font-size:.94rem;color:var(--muted)}
+    .status.error{color:var(--erro)}
+    .status.ok{color:var(--ok)}
+    .panel{display:none;gap:12px}
+    .panel.active{display:grid}
+    .login.hidden{display:none}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .topbar h1{margin:0}
+    .filters{display:grid;grid-template-columns:minmax(220px,1fr) 160px 160px 120px;gap:10px;margin-top:8px}
+    .toolbar{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+    .toolbar button{width:auto;min-width:96px}
+    .content-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+    .table-wrap{overflow:auto;border:1px solid var(--borda);border-radius:8px}
+    table{width:100%;border-collapse:collapse;min-width:920px}
+    th,td{text-align:left;padding:10px;border-bottom:1px solid #edf1f6;font-size:.9rem;vertical-align:top}
+    th{background:#f6f8fb;color:var(--azul);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+    tr:last-child td{border-bottom:0}
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef3fa;color:#294866;font-size:.78rem;font-weight:700}
+    .empty{padding:16px;color:var(--muted)}
+    .editor{border:1px solid var(--borda);border-radius:8px;padding:12px;background:#fbfcfe}
+    .editor h2{margin:0 0 10px;color:var(--azul);font-size:1rem}
+    .editor-grid{display:grid;gap:9px}
+    .editor label{font-size:.82rem}
+    .editor input,.editor select,.editor textarea{padding:9px;border-radius:7px;border:1px solid var(--borda);font:inherit;width:100%}
+    .editor textarea{min-height:84px;resize:vertical}
+    .editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .upload-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+    .sponsor-panel{border:1px solid var(--borda);border-radius:8px;padding:12px;background:#fff}
+    .sponsor-panel h2{margin:0 0 10px;color:var(--azul);font-size:1rem}
+    .sponsor-grid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:14px;align-items:start}
+    .sponsor-form{display:grid;gap:9px}
+    .sponsor-form label{font-size:.82rem}
+    .sponsor-form input,.sponsor-form select{padding:9px;border-radius:7px;border:1px solid var(--borda);font:inherit;width:100%}
+    .row-action{width:auto;padding:7px 9px;background:#e8eef6;color:var(--azul);border:1px solid var(--borda);font-size:.8rem}
+    @media(max-width:960px){.content-grid,.sponsor-grid{grid-template-columns:1fr}}
+    @media(max-width:760px){body{place-items:start;padding:12px}main{padding:16px}.filters{grid-template-columns:1fr}.toolbar{justify-content:stretch}.toolbar button{width:100%}}
+  </style>
+</head>
+<body>
+  <main>
+    <section id="loginBox" class="login">
+      <h1>Busca Salto Admin</h1>
+      <p>Acesso privado para gestao do projeto.</p>
+      <form id="loginForm">
+        <label>
+          Senha
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button id="loginButton" type="submit">Entrar</button>
+      </form>
+      <div id="loginStatus" class="status" role="status"></div>
+    </section>
+
+    <section id="adminPanel" class="panel">
+      <div class="topbar">
+        <div>
+          <h1>Painel administrativo</h1>
+          <p id="summary">Carregando comercios...</p>
+        </div>
+        <div class="toolbar">
+          <button id="refreshButton" class="secondary" type="button">Atualizar</button>
+          <button id="logoutButton" class="secondary" type="button">Sair</button>
+        </div>
+      </div>
+      <form id="filtersForm" class="filters">
+        <input id="adminSearch" name="busca" type="search" placeholder="Buscar comercio, bairro, contato..." autocomplete="off" />
+        <select id="statusFilter" name="status">
+          <option value="">Status</option>
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+          <option value="pendente">Pendente</option>
+        </select>
+        <select id="planFilter" name="plano">
+          <option value="">Plano</option>
+          <option value="gratuito">Gratuito</option>
+          <option value="parceiro">Parceiro</option>
+          <option value="destaque">Destaque</option>
+          <option value="top">Top</option>
+        </select>
+        <button id="filterButton" type="submit">Filtrar</button>
+      </form>
+      <div class="content-grid">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Comercio</th>
+                <th>Categoria</th>
+                <th>Bairro</th>
+                <th>Contato</th>
+                <th>Plano</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="commerceRows"></tbody>
+          </table>
+        </div>
+        <aside class="editor">
+          <h2 id="editorTitle">Novo comercio</h2>
+          <form id="commerceForm" class="editor-grid">
+            <input id="commerceId" name="id" type="hidden" />
+            <label>Nome<input name="nome" required maxlength="140" /></label>
+            <label>Categoria<input name="categoria" maxlength="80" /></label>
+            <label>Subcategoria<input name="subcategoria" maxlength="180" /></label>
+            <label>Bairro<input name="bairro" maxlength="80" /></label>
+            <label>Endereco<input name="endereco" maxlength="180" /></label>
+            <label>WhatsApp<input name="whatsapp" maxlength="40" /></label>
+            <label>Telefone<input name="telefone" maxlength="40" /></label>
+            <label>Instagram<input name="instagram" maxlength="120" /></label>
+            <label>Facebook<input name="facebook" maxlength="180" /></label>
+            <label>Site<input name="site" maxlength="180" /></label>
+            <label>Plano<select name="plano"><option value="gratuito">gratuito</option><option value="parceiro">parceiro</option><option value="destaque">destaque</option><option value="top">top</option></select></label>
+            <label>Status<input name="status" maxlength="40" value="ativo" /></label>
+            <label>Prioridade<input name="prioridade" inputmode="numeric" maxlength="5" value="0" /></label>
+            <label>Verificado<input name="verificado" maxlength="20" /></label>
+            <label>Oferta<input name="oferta" maxlength="180" /></label>
+            <label>Foto URL<input id="fotoUrlInput" name="foto_url" maxlength="500" /></label>
+            <div class="upload-row">
+              <label>Arquivo de foto<input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+              <button id="uploadPhotoButton" class="secondary" type="button">Enviar</button>
+            </div>
+            <label>Descricao<textarea name="descricao" maxlength="700"></textarea></label>
+            <label>Palavras-chave<textarea name="palavras_chave" maxlength="400"></textarea></label>
+            <div class="editor-actions">
+              <button id="saveCommerceButton" type="submit">Salvar</button>
+              <button id="newCommerceButton" class="secondary" type="button">Novo</button>
+            </div>
+          </form>
+        </aside>
+      </div>
+      <section class="sponsor-panel">
+        <h2>Patrocinadores</h2>
+        <div class="sponsor-grid">
+          <form id="sponsorForm" class="sponsor-form">
+            <input id="sponsorId" name="id" type="hidden" />
+            <label>Nome<input name="nome" required maxlength="120" /></label>
+            <label>Imagem URL<input id="sponsorImageUrl" name="imagem_url" required maxlength="500" /></label>
+            <div class="upload-row">
+              <label>Arquivo do banner<input id="sponsorFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+              <button id="uploadSponsorButton" class="secondary" type="button">Enviar</button>
+            </div>
+            <label>Link<input name="link_url" maxlength="500" /></label>
+            <label>Status<select name="status"><option value="ativo">ativo</option><option value="inativo">inativo</option></select></label>
+            <label>Ordem<input name="ordem" inputmode="numeric" maxlength="5" value="0" /></label>
+            <label>Inicio<input name="inicio" type="date" /></label>
+            <label>Fim<input name="fim" type="date" /></label>
+            <label>Texto alternativo<input name="texto_alt" maxlength="160" /></label>
+            <div class="editor-actions">
+              <button id="saveSponsorButton" type="submit">Salvar</button>
+              <button id="newSponsorButton" class="secondary" type="button">Novo</button>
+            </div>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Nome</th><th>Status</th><th>Ordem</th><th>Periodo</th><th></th></tr></thead>
+              <tbody id="sponsorRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <div id="panelStatus" class="status" role="status"></div>
+    </section>
+  </main>
+
+  <script>
+    const loginBox = document.getElementById("loginBox");
+    const adminPanel = document.getElementById("adminPanel");
+    const loginForm = document.getElementById("loginForm");
+    const passwordInput = document.getElementById("password");
+    const loginButton = document.getElementById("loginButton");
+    const logoutButton = document.getElementById("logoutButton");
+    const refreshButton = document.getElementById("refreshButton");
+    const filtersForm = document.getElementById("filtersForm");
+    const commerceRows = document.getElementById("commerceRows");
+    const commerceForm = document.getElementById("commerceForm");
+    const commerceId = document.getElementById("commerceId");
+    const editorTitle = document.getElementById("editorTitle");
+    const newCommerceButton = document.getElementById("newCommerceButton");
+    const saveCommerceButton = document.getElementById("saveCommerceButton");
+    const photoFile = document.getElementById("photoFile");
+    const uploadPhotoButton = document.getElementById("uploadPhotoButton");
+    const fotoUrlInput = document.getElementById("fotoUrlInput");
+    const sponsorForm = document.getElementById("sponsorForm");
+    const sponsorId = document.getElementById("sponsorId");
+    const sponsorRows = document.getElementById("sponsorRows");
+    const sponsorFile = document.getElementById("sponsorFile");
+    const sponsorImageUrl = document.getElementById("sponsorImageUrl");
+    const uploadSponsorButton = document.getElementById("uploadSponsorButton");
+    const saveSponsorButton = document.getElementById("saveSponsorButton");
+    const newSponsorButton = document.getElementById("newSponsorButton");
+    const summary = document.getElementById("summary");
+    const loginStatus = document.getElementById("loginStatus");
+    const panelStatus = document.getElementById("panelStatus");
+    let filterTimer = null;
+
+    function showPanel() {
+      loginBox.classList.add("hidden");
+      adminPanel.classList.add("active");
+      panelStatus.textContent = "";
+      loadComercios();
+      loadSponsors();
+    }
+
+    function showLogin(message = "") {
+      adminPanel.classList.remove("active");
+      loginBox.classList.remove("hidden");
+      loginStatus.textContent = message;
+      loginStatus.className = message ? "status error" : "status";
+    }
+
+    async function checkSession() {
+      const response = await fetch("/api/admin/session", { cache: "no-store", credentials: "same-origin" });
+      const data = await response.json();
+      if (data.ok) return showPanel();
+      if (data.configured === false) return showLogin("Painel ainda nao configurado no servidor.");
+      return showLogin();
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      }[char]));
+    }
+
+    function contactSummary(item) {
+      const contacts = [
+        item.whatsapp && `WA ${item.whatsapp}`,
+        item.telefone && `Tel ${item.telefone}`,
+        item.instagram && `IG ${item.instagram}`,
+        item.site && "Site",
+      ].filter(Boolean);
+      return contacts.length ? contacts.join("<br>") : '<span class="muted">Sem contato</span>';
+    }
+
+    function renderComercios(data) {
+      summary.textContent = `${data.total} comercio${data.total === 1 ? "" : "s"} encontrado${data.total === 1 ? "" : "s"}.`;
+      if (!data.items.length) {
+        commerceRows.innerHTML = '<tr><td colspan="8" class="empty">Nenhum cadastro encontrado.</td></tr>';
+        window.currentComercios = [];
+        return;
+      }
+      commerceRows.innerHTML = data.items.map((item) => `
+        <tr data-id="${escapeHtml(item.id)}">
+          <td>${escapeHtml(item.id)}<br><span class="muted">Linha ${escapeHtml(item.rowNumber)}</span></td>
+          <td><strong>${escapeHtml(item.nome || "Sem nome")}</strong><br><span class="muted">${escapeHtml(item.endereco)}</span></td>
+          <td>${escapeHtml(item.categoria)}<br><span class="muted">${escapeHtml(item.subcategoria)}</span></td>
+          <td>${escapeHtml(item.bairro)}</td>
+          <td>${contactSummary(item)}</td>
+          <td><span class="pill">${escapeHtml(item.plano)}</span></td>
+          <td>${escapeHtml(item.status)}</td>
+          <td><button class="row-action" type="button" data-edit-id="${escapeHtml(item.id)}">Editar</button></td>
+        </tr>
+      `).join("");
+      window.currentComercios = data.items;
+    }
+
+    async function loadComercios() {
+      panelStatus.textContent = "Carregando...";
+      panelStatus.className = "status";
+      const params = new URLSearchParams(new FormData(filtersForm));
+      params.set("limit", "50");
+      try {
+        const response = await fetch(`/api/admin/comercios?${params}`, { cache: "no-store", credentials: "same-origin" });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || "Falha ao carregar.");
+        renderComercios(data);
+        panelStatus.textContent = data.hasMore ? "Mostrando os primeiros 50 resultados." : "";
+      } catch (error) {
+        panelStatus.textContent = error.message || "Nao foi possivel carregar.";
+        panelStatus.className = "status error";
+      }
+    }
+
+    function setFormItem(item = {}) {
+      editorTitle.textContent = item.id ? `Editar ${item.id}` : "Novo comercio";
+      commerceForm.reset();
+      commerceId.value = item.id || "";
+      for (const field of commerceForm.elements) {
+        if (!field.name || field.name === "id") continue;
+        field.value = item[field.name] || (field.name === "status" ? "ativo" : field.name === "prioridade" ? "0" : "");
+      }
+    }
+
+    function setSponsorItem(item = {}) {
+      sponsorForm.reset();
+      sponsorId.value = item.id || "";
+      for (const field of sponsorForm.elements) {
+        if (!field.name || field.name === "id") continue;
+        field.value = item[field.name] || (field.name === "status" ? "ativo" : field.name === "ordem" ? "0" : "");
+      }
+    }
+
+    function renderSponsors(data) {
+      if (!data.items.length) {
+        sponsorRows.innerHTML = '<tr><td colspan="6" class="empty">Nenhum patrocinador cadastrado.</td></tr>';
+        window.currentSponsors = [];
+        return;
+      }
+      sponsorRows.innerHTML = data.items.map((item) => `
+        <tr>
+          <td>${escapeHtml(item.id)}</td>
+          <td><strong>${escapeHtml(item.nome)}</strong><br><span class="muted">${escapeHtml(item.link_url)}</span></td>
+          <td>${escapeHtml(item.status)}</td>
+          <td>${escapeHtml(item.ordem)}</td>
+          <td>${escapeHtml(item.inicio)} ${item.fim ? `ate ${escapeHtml(item.fim)}` : ""}</td>
+          <td><button class="row-action" type="button" data-sponsor-id="${escapeHtml(item.id)}">Editar</button></td>
+        </tr>
+      `).join("");
+      window.currentSponsors = data.items;
+    }
+
+    async function loadSponsors() {
+      try {
+        const response = await fetch("/api/admin/patrocinadores", { cache: "no-store", credentials: "same-origin" });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || "Falha ao carregar patrocinadores.");
+        renderSponsors(data);
+      } catch (error) {
+        sponsorRows.innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(error.message || "Erro ao carregar.")}</td></tr>`;
+      }
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      loginButton.disabled = true;
+      loginStatus.textContent = "Validando...";
+      loginStatus.className = "status";
+
+      try {
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ password: passwordInput.value }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || "Falha no login.");
+        passwordInput.value = "";
+        showPanel();
+      } catch (error) {
+        loginStatus.textContent = error.message || "Nao foi possivel entrar.";
+        loginStatus.className = "status error";
+      } finally {
+        loginButton.disabled = false;
+      }
+    });
+
+    logoutButton.addEventListener("click", async () => {
+      await fetch("/api/admin/logout", { method: "POST", credentials: "same-origin" });
+      showLogin();
+    });
+
+    commerceRows.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-edit-id]");
+      if (!button) return;
+      const item = (window.currentComercios || []).find((entry) => String(entry.id) === String(button.dataset.editId));
+      if (item) setFormItem(item);
+    });
+
+    newCommerceButton.addEventListener("click", () => setFormItem());
+    newSponsorButton.addEventListener("click", () => setSponsorItem());
+
+    sponsorRows.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sponsor-id]");
+      if (!button) return;
+      const item = (window.currentSponsors || []).find((entry) => String(entry.id) === String(button.dataset.sponsorId));
+      if (item) setSponsorItem(item);
+    });
+
+    commerceForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      saveCommerceButton.disabled = true;
+      panelStatus.textContent = "Salvando...";
+      panelStatus.className = "status";
+      const data = Object.fromEntries(new FormData(commerceForm).entries());
+      const isEdit = Boolean(data.id);
+
+      try {
+        const response = await fetch(isEdit ? `/api/admin/comercios?id=${encodeURIComponent(data.id)}` : "/api/admin/comercios", {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar.");
+        panelStatus.textContent = "Cadastro salvo.";
+        panelStatus.className = "status ok";
+        setFormItem(result.item);
+        await loadComercios();
+      } catch (error) {
+        panelStatus.textContent = error.message || "Nao foi possivel salvar.";
+        panelStatus.className = "status error";
+      } finally {
+        saveCommerceButton.disabled = false;
+      }
+    });
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+        reader.onerror = () => reject(new Error("Nao foi possivel ler a imagem."));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    uploadPhotoButton.addEventListener("click", async () => {
+      const file = photoFile.files && photoFile.files[0];
+      if (!file) {
+        panelStatus.textContent = "Selecione uma imagem.";
+        panelStatus.className = "status error";
+        return;
+      }
+
+      uploadPhotoButton.disabled = true;
+      panelStatus.textContent = "Enviando imagem...";
+      panelStatus.className = "status";
+      try {
+        const formData = Object.fromEntries(new FormData(commerceForm).entries());
+        const response = await fetch("/api/admin/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            kind: "comercio",
+            commerceId: formData.id || "novo",
+            commerceName: formData.nome || file.name,
+            fileName: file.name,
+            contentType: file.type,
+            dataBase64: await fileToBase64(file),
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Falha no upload.");
+        fotoUrlInput.value = result.file.url;
+        panelStatus.textContent = "Imagem enviada.";
+        panelStatus.className = "status ok";
+      } catch (error) {
+        panelStatus.textContent = error.message || "Nao foi possivel enviar.";
+        panelStatus.className = "status error";
+      } finally {
+        uploadPhotoButton.disabled = false;
+      }
+    });
+
+    async function uploadImageFor(kind, file, extra) {
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          kind,
+          fileName: file.name,
+          contentType: file.type,
+          dataBase64: await fileToBase64(file),
+          ...extra,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "Falha no upload.");
+      return result.file.url;
+    }
+
+    uploadSponsorButton.addEventListener("click", async () => {
+      const file = sponsorFile.files && sponsorFile.files[0];
+      if (!file) {
+        panelStatus.textContent = "Selecione uma imagem.";
+        panelStatus.className = "status error";
+        return;
+      }
+      uploadSponsorButton.disabled = true;
+      panelStatus.textContent = "Enviando banner...";
+      panelStatus.className = "status";
+      try {
+        const formData = Object.fromEntries(new FormData(sponsorForm).entries());
+        sponsorImageUrl.value = await uploadImageFor("patrocinador", file, {
+          commerceId: formData.id || "patrocinador",
+          commerceName: formData.nome || file.name,
+        });
+        panelStatus.textContent = "Banner enviado.";
+        panelStatus.className = "status ok";
+      } catch (error) {
+        panelStatus.textContent = error.message || "Nao foi possivel enviar.";
+        panelStatus.className = "status error";
+      } finally {
+        uploadSponsorButton.disabled = false;
+      }
+    });
+
+    sponsorForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      saveSponsorButton.disabled = true;
+      panelStatus.textContent = "Salvando patrocinador...";
+      panelStatus.className = "status";
+      const data = Object.fromEntries(new FormData(sponsorForm).entries());
+      const isEdit = Boolean(data.id);
+      try {
+        const response = await fetch(isEdit ? `/api/admin/patrocinadores?id=${encodeURIComponent(data.id)}` : "/api/admin/patrocinadores", {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar patrocinador.");
+        panelStatus.textContent = "Patrocinador salvo.";
+        panelStatus.className = "status ok";
+        setSponsorItem(result.item);
+        await loadSponsors();
+      } catch (error) {
+        panelStatus.textContent = error.message || "Nao foi possivel salvar.";
+        panelStatus.className = "status error";
+      } finally {
+        saveSponsorButton.disabled = false;
+      }
+    });
+
+    refreshButton.addEventListener("click", loadComercios);
+    filtersForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadComercios();
+    });
+    filtersForm.addEventListener("input", () => {
+      clearTimeout(filterTimer);
+      filterTimer = setTimeout(loadComercios, 350);
+    });
+
+    checkSession().catch(() => showLogin("Nao foi possivel verificar a sessao."));
+    setFormItem();
+    setSponsorItem();
+  </script>
+</body>
+</html>

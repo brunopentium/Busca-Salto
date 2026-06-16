@@ -2,9 +2,9 @@ const CACHE_TTL_MS = 15 * 60 * 1000;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 30;
 const CONTACT_TYPES = new Set(["whatsapp", "telefone", "instagram", "facebook", "site"]);
-const SPREADSHEET_ID = (process.env.GOOGLE_SHEETS_ID || "1s-Wi8ej_y5YisIg2GWh7LlwyLsCpf_YwefotX1ct3dA").trim();
-const SHEET_NAME = (process.env.GOOGLE_SHEETS_TAB || "base_interna").trim();
-const RANGE = `${SHEET_NAME}!A1:T`;
+const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./_lib/google");
+const { spreadsheetId: SPREADSHEET_ID } = getSpreadsheetConfig();
+const RANGE = sheetRange("A1:T");
 const RANDOM_BUCKET_MS = 5 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 120;
@@ -347,24 +347,6 @@ function applyRateLimitHeaders(res, result) {
   if (!result.allowed) res.setHeader("Retry-After", String(result.resetAfterSeconds));
 }
 
-function requireEnv() {
-  const email = String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "").trim();
-  const key = process.env.GOOGLE_PRIVATE_KEY;
-  if (!email || !key) throw new Error("Google credentials are not configured.");
-  return { email, key: key.replace(/\\n/g, "\n") };
-}
-
-async function getSheetsClient() {
-  const { google } = require("googleapis");
-  const credentials = requireEnv();
-  const auth = new google.auth.JWT({
-    email: credentials.email,
-    key: credentials.key,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
-  });
-  return google.sheets({ version: "v4", auth });
-}
-
 function normalizePlan(plan = "") {
   const normalized = normalize(plan);
   if (normalized === "top") return "top";
@@ -451,7 +433,7 @@ async function loadRows() {
   const now = Date.now();
   if (cache.rows.length && now - cache.loadedAt < CACHE_TTL_MS) return cache.rows;
 
-  const sheets = await getSheetsClient();
+  const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsRead]);
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range: RANGE,

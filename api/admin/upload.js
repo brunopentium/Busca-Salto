@@ -1,0 +1,104 @@
+const { Readable } = require("stream");
+const { requireAdminSession } = require("../_lib/admin-auth");
+const { GOOGLE_SCOPES, getDriveClient, getDriveFolderConfig } = require("../_lib/google");
+const { cleanText, json, readJsonBody } = require("../_lib/http");
+
+const ALLOWED_IMAGE_TYPES = new Map([
+  ["image/jpeg", "jpg"],
+  ["image/png", "png"],
+  ["image/webp", "webp"],
+]);
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+
+function safeFileBase(value = "") {
+  return cleanText(value, 120)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    || "imagem";
+}
+
+function folderForKind(kind) {
+  const folders = getDriveFolderConfig();
+  if (kind === "patrocinador") return folders.sponsors;
+  if (kind === "pendente") return folders.pending;
+  return folders.businesses;
+}
+
+function parseImagePayload(body = {}) {
+  const contentType = cleanText(body.contentType, 80).toLowerCase();
+  if (!ALLOWED_IMAGE_TYPES.has(contentType)) {
+    const error = new Error("Tipo de imagem nao permitido.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const base64 = String(body.dataBase64 || "").replace(/^data:[^;]+;base64,/, "");
+  const buffer = Buffer.from(base64, "base64");
+  if (!buffer.length || buffer.length > MAX_IMAGE_BYTES) {
+    const error = new Error("Imagem vazia ou maior que 3 MB.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return {
+    buffer,
+    contentType,
+    extension: ALLOWED_IMAGE_TYPES.get(contentType),
+    kind: cleanText(body.kind, 30).toLowerCase(),
+    commerceId: safeFileBase(body.commerceId || "sem-id"),
+    commerceName: safeFileBase(body.commerceName || body.fileName || "imagem"),
+  };
+}
+
+module.exports = async function handler(req, res) {
+  const session = requireAdminSession(req);
+  if (!session.ok) return json(res, session.status, { ok: false, error: session.error });
+  if (req.method !== "POST") return json(res, 405, { ok: false, error: "Metodo nao permitido." });
+
+  try {
+    const payload = parseImagePayload(await readJsonBody(req, { maxBytes: 5 * 1024 * 1024 }));
+    const drive = await getDriveClient([GOOGLE_SCOPES.driveFile]);
+    const folderId = folderForKind(payload.kind);
+    const name = `${payload.commerceId}-${payload.commerceName}-${Date.now()}.${payload.extension}`;
+
+    const created = await drive.files.create({
+      requestBody: { name, parents: [folderId] },
+      media: {
+        mimeType: payload.contentType,
+        body: Readable.from(payload.buffer),
+      },
+      fields: "id,name,webViewLink",
+    });
+
+    await drive.permissions.create({
+      fileId: created.data.id,
+      requestBody: { role: "reader", type: "anyone" },
+    });
+
+    const publicUrl = `https://drive.google.com/uc?export=view&id=${created.data.id}`;
+    return json(res, 201, {
+      ok: true,
+      file: {
+        id: created.data.id,
+        name: created.data.name,
+        url: publicUrl,
+        webViewLink: created.data.webViewLink,
+      },
+    });
+  } catch (error) {
+    console.error(JSON.stringify({
+      level: "error",
+      service: "busca-salto-admin",
+      event: "admin_upload_error",
+      message: error?.message || "Erro desconhecido",
+      timestamp: new Date().toISOString(),
+    }));
+    return json(res, error.statusCode || 500, {
+      ok: false,
+      error: error.statusCode ? error.message : "Nao foi possivel enviar a imagem.",
+    });
+  }
+};

@@ -45,6 +45,8 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Criada API `/api/checkout` preparada para Mercado Pago; quando as credenciais nao estiverem configuradas, a pagina informa que o checkout ainda esta em ativacao.
 - Criada API `/api/metricas` para registrar eventos basicos de uso nos logs da Vercel.
 - Criados `robots.txt`, `sitemap.xml`, `vercel.json` e documentacao de publicacao para dominio, HTTPS, Search Console e metricas.
+- Assets locais referenciados pelo site conferidos e restaurados em `imagens/`: `logo.png`, `MP.png` e `scallet.jpg`.
+- Em planejamento/implementacao: painel administrativo privado em `/admin`, com APIs autenticadas em `/api/admin/*`, para gerenciar comercios, imagens e patrocinadores sem editar a planilha manualmente.
 
 ## Decisoes tecnicas e comerciais ja assumidas
 
@@ -53,6 +55,8 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Contatos basicos devem continuar disponiveis tambem para gratuitos, para preservar a utilidade do site no inicio.
 - Monetizacao deve focar em prioridade, imagem, destaque visual, oferta, selo e posicao.
 - Parceiros devem poder ter imagem para melhorar o visual geral do site.
+- A busca publica nao deve exibir textos como `Comercios parceiros`, `Cadastro gratuito`, `Parceiro Busca Salto`, `Destaque Busca Salto` ou `Top Categoria`; os planos podem influenciar prioridade, imagem, oferta e tratamento visual sem expor explicitamente que ha pagamento.
+- A home inicial nao deve exibir contador como `30 de 30 resultados`, pois a primeira pagina mostra apenas uma amostra limitada; o contador deve aparecer apenas quando houver busca ou filtro ativo.
 - Gratuitos devem ter ordenacao aleatoria entre si a cada nova pesquisa/carregamento.
 - A ordenacao deve considerar plano, qualidade/completude do cadastro, relevancia da busca e aleatoriedade controlada.
 - A qualidade do cadastro deve valorizar dados essenciais e evitar injustica com segmentos que naturalmente nao usam site, Facebook ou outras redes.
@@ -64,6 +68,8 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - O bloco de dominio e publicacao final foi movido para fase posterior, para nao travar melhorias de operacao, seguranca e produto.
 - A pagina comercial para planos deve ser pensada como area para comerciantes, com acesso discreto, sem transformar a busca principal em uma vitrine explicita de compra de posicao.
 - O Documento Mestre e a fonte de decisao; este roadmap e a trilha tecnica de execucao.
+- O painel administrativo deve ser restrito por autenticacao no backend. Nenhuma credencial Google, segredo de sessao ou token privado pode aparecer no HTML/JS publico.
+- Uploads do painel devem validar tipo, tamanho e nome de arquivo antes de gravar no Google Drive. A pasta publica de imagens deve conter apenas arquivos destinados ao site; evidencias e documentos de validacao devem ficar em area privada separada.
 
 ## Sequencia mestre de execucao
 
@@ -119,6 +125,17 @@ A ordem abaixo combina pontuacao, dependencia logica e momento atual do projeto.
 - [ ] 25. Configurar Google Search Console. Area: Publicacao. Pontuacao: 5. Preparado: `sitemap.xml`, `robots.txt` e procedimento documentados; verificacao real depende do token DNS/conta Google.
 - [x] 26. Configurar Analytics ou medicao de buscas e acessos. Area: Publicacao. Pontuacao: 4. Concluido: API `/api/metricas` registra eventos em logs da Vercel.
 
+### P8 - Painel administrativo privado e patrocinadores
+
+- [ ] 27. Preparar base tecnica segura para o painel. Area: Admin/Seguranca. Pontuacao: 8. Em andamento: modulos internos de Google/configuracao criados em `api/_lib` para evitar duplicacao de credenciais e preparar leitura/escrita controlada.
+- [x] 28. Criar pasta de imagens no Google Drive. Area: Admin/Midia. Pontuacao: 7. Concluido: criada pasta `Busca Salto - Imagens` e subpastas `comercios`, `patrocinadores` e `temporarios-pendentes`; IDs registrados em `docs/admin-seguranca.md`.
+- [x] 29. Implementar autenticacao privada do painel. Area: Admin/Seguranca. Pontuacao: 9. Concluido no codigo: login em `/admin`, cookie `HttpOnly`, `Secure` em HTTPS, `SameSite=Strict`, senha hashada e segredo de sessao por variavel de ambiente. Pendente operacional: configurar `ADMIN_PASSWORD_HASH` e `ADMIN_SESSION_SECRET` na Vercel antes de usar em producao.
+- [x] 30. Criar APIs admin de leitura e escrita da planilha. Area: Admin/Dados. Pontuacao: 9. Concluido no codigo: rota autenticada `GET/POST/PUT /api/admin/comercios` lista, busca, cria e edita comercios preservando cabecalhos, ID e linha existente.
+- [x] 31. Criar interface admin de gestao de comercios. Area: Admin/UX. Pontuacao: 8. Concluido no codigo: `admin.html` lista comercios com busca/filtros e formulario de edicao/cadastro apos login. Melhorias futuras podem adicionar confirmacoes mais detalhadas por campo sensivel.
+- [x] 32. Implementar upload de imagens de comercios. Area: Admin/Midia. Pontuacao: 8. Concluido no codigo: upload autenticado valida JPEG/PNG/WebP ate 5 MB, envia para Google Drive, publica o arquivo para leitura e preenche `foto_url` no formulario admin.
+- [x] 33. Implementar gestao de patrocinadores. Area: Admin/Comercial. Pontuacao: 7. Concluido no codigo: painel admin cria/lista/edita banners em aba `patrocinadores`, com link, ordem, status e periodo de exibicao.
+- [x] 34. Criar API publica e carrossel de patrocinadores. Area: Site/Comercial. Pontuacao: 7. Concluido no codigo: API `/api/patrocinadores` retorna apenas banners ativos e `index.html` renderiza carrossel horizontal discreto identificado como publicidade.
+
 ## Planos comerciais iniciais
 
 Para fins de planilha, API e site, os planos iniciais devem usar os valores padronizados:
@@ -131,9 +148,9 @@ Para fins de planilha, API e site, os planos iniciais devem usar os valores padr
 Beneficios iniciais:
 
 - Gratuito: cadastro basico ativo no site, com nome, categoria, subcategoria, bairro, endereco/mapa e contatos basicos quando existirem. Nao possui imagem personalizada, oferta, selo ou destaque visual.
-- Parceiro: inclui todos os recursos do gratuito, imagem no card, descricao revisada, selo de parceiro e prioridade acima dos gratuitos.
-- Destaque: inclui todos os recursos do parceiro, destaque visual mais forte, possibilidade de oferta/promocao e prioridade acima do parceiro.
-- Top: inclui todos os recursos do destaque, posicao maxima na categoria e selo Top Categoria. A regra de exclusividade por categoria ainda sera definida.
+- Parceiro: inclui todos os recursos do gratuito, imagem no card, descricao revisada e prioridade acima dos gratuitos, sem rotulo publico de plano na busca.
+- Destaque: inclui todos os recursos do parceiro, destaque visual mais forte, possibilidade de oferta/promocao e prioridade acima do parceiro, sem rotulo publico de plano na busca.
+- Top: inclui todos os recursos do destaque e posicao maxima na categoria, sem rotulo publico de plano na busca. A regra de exclusividade por categoria ainda sera definida.
 
 A regra comercial inicial preserva telefone e WhatsApp tambem para gratuitos, pois a utilidade do site para o usuario final e prioridade na fase de adocao.
 
@@ -160,7 +177,7 @@ Antes de implementar pagamento, definir:
 - Cadastros gratuitos nao recebem imagem nem oferta no JSON publico da listagem.
 - Parceiro, Destaque e Top podem receber imagem.
 - Oferta e liberada apenas para Destaque e Top.
-- O site agrupa parceiros acima dos gratuitos e renderiza selos conforme o plano.
+- O site aplica prioridade e tratamento visual conforme o plano, mas nao exibe rotulos publicos de plano nos cards da busca.
 - A prioridade tecnica inicial segue a ordem Top, Destaque, Parceiro e Gratuito.
 
 ## Regra de ordenacao implementada
@@ -377,3 +394,6 @@ A API ja evita expor contatos na listagem, aplica limite simples por IP e limita
 - Validado layout mobile dos cards e botoes em celular real em 24/05/2026.
 - Criado Documento Mestre no Google Drive.
 - Criado este roadmap tecnico no GitHub.
+- Restaurados no workspace local os assets publicados usados pela home, PWA, pagina de comerciantes e card Top: `imagens/logo.png`, `imagens/MP.png` e `imagens/scallet.jpg`.
+- Removidos da busca publica os textos explicitos de plano nos cards e grupos, mantendo prioridade, imagem, oferta e destaque visual por plano.
+- Ocultado o contador de resultados na home sem filtros para evitar a impressao de que a base publica possui apenas 30 cadastros.
