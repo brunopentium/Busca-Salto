@@ -8,60 +8,70 @@
   <style>
     :root{--azul:#0b2a4a;--texto:#17324f;--muted:#60738c;--fundo:#f5f7fb;--card:#fff;--borda:#d8e1ec;--ok:#0f766e;--erro:#b42318}
     *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--fundo);color:var(--texto);display:grid;place-items:center;padding:24px}
-    main{width:min(1100px,100%);background:var(--card);border:1px solid var(--borda);border-radius:8px;box-shadow:0 18px 42px rgba(11,42,74,.12);padding:22px}
+    body{margin:0;min-height:100vh;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--fundo);color:var(--texto);padding:24px}
+    main{width:min(1440px,100%);margin:0 auto;background:var(--card);border:1px solid var(--borda);border-radius:8px;box-shadow:0 18px 42px rgba(11,42,74,.12);padding:24px}
     h1{margin:0 0 6px;color:var(--azul);font-size:1.35rem;letter-spacing:0}
     p{margin:0 0 18px;color:var(--muted);line-height:1.45}
     form{display:grid;gap:12px}
     .login{max-width:440px;margin:0 auto}
     label{display:grid;gap:6px;font-weight:700;color:var(--azul)}
-    input,button{width:100%;border-radius:8px;border:1px solid var(--borda);padding:12px;font:inherit}
-    input:focus,button:focus{outline:2px solid #bdd9ff;border-color:#5fa3e6}
+    input,select,textarea,button{width:100%;border-radius:8px;border:1px solid var(--borda);padding:12px;font:inherit;min-width:0}
+    input:focus,select:focus,textarea:focus,button:focus{outline:2px solid #bdd9ff;border-color:#5fa3e6}
     button{border:0;background:var(--azul);color:#fff;font-weight:800;cursor:pointer}
     button.secondary{background:#e8eef6;color:var(--azul);border:1px solid var(--borda)}
     button:disabled{opacity:.65;cursor:wait}
     .status{min-height:22px;margin-top:12px;font-size:.94rem;color:var(--muted)}
     .status.error{color:var(--erro)}
     .status.ok{color:var(--ok)}
-    .panel{display:none;gap:12px}
+    .panel{display:none;gap:16px}
     .panel.active{display:grid}
     .login.hidden{display:none}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
     .topbar h1{margin:0}
-    .filters{display:grid;grid-template-columns:minmax(220px,1fr) 160px 160px 120px;gap:10px;margin-top:8px}
+    .filters{display:grid;grid-template-columns:minmax(260px,1fr) minmax(140px,180px) minmax(140px,180px) 120px;gap:10px;margin-top:8px;padding:14px;border:1px solid var(--borda);border-radius:8px;background:#fbfcfe}
     .toolbar{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
     .toolbar button{width:auto;min-width:96px}
-    .content-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
-    .table-wrap{overflow:auto;border:1px solid var(--borda);border-radius:8px}
-    table{width:100%;border-collapse:collapse;min-width:920px}
-    th,td{text-align:left;padding:10px;border-bottom:1px solid #edf1f6;font-size:.9rem;vertical-align:top}
-    th{background:#f6f8fb;color:var(--azul);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
-    tr:last-child td{border-bottom:0}
+    .content-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,440px);gap:16px;align-items:start}
+    .list-panel{border:1px solid var(--borda);border-radius:8px;background:#fff;overflow:hidden}
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:#f6f8fb;border-bottom:1px solid #edf1f6}
+    .section-head h2{margin:0;color:var(--azul);font-size:1rem}
+    .record-list{display:grid;gap:0}
+    .record-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:14px;border-bottom:1px solid #edf1f6}
+    .record-card:last-child{border-bottom:0}
+    .record-main{min-width:0}
+    .record-title{display:flex;align-items:flex-start;gap:8px;min-width:0;flex-wrap:wrap}
+    .record-title strong{color:var(--azul);font-size:1rem;overflow-wrap:anywhere}
+    .record-id{font-size:.76rem;color:var(--muted);background:#eef3fa;border-radius:999px;padding:3px 7px;font-weight:800;white-space:nowrap}
+    .record-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+    .meta-block{min-width:0}
+    .meta-label{display:block;margin-bottom:3px;color:#6c7d91;font-size:.68rem;text-transform:uppercase;font-weight:800;letter-spacing:.04em}
+    .meta-value{font-size:.9rem;line-height:1.35;overflow-wrap:anywhere}
+    .record-address{margin-top:8px;font-size:.88rem;color:var(--muted);overflow-wrap:anywhere}
+    .record-actions{display:flex;flex-direction:column;gap:8px;align-items:stretch;justify-content:center;width:86px}
     .muted{color:var(--muted)}
     .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef3fa;color:#294866;font-size:.78rem;font-weight:700}
     .empty{padding:16px;color:var(--muted)}
-    .editor{border:1px solid var(--borda);border-radius:8px;padding:12px;background:#fbfcfe}
+    .editor{border:1px solid var(--borda);border-radius:8px;padding:14px;background:#fbfcfe}
     .editor h2{margin:0 0 10px;color:var(--azul);font-size:1rem}
-    .editor-grid{display:grid;gap:9px}
+    .editor-grid,.sponsor-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .editor label{font-size:.82rem}
-    .editor input,.editor select,.editor textarea{padding:9px;border-radius:7px;border:1px solid var(--borda);font:inherit;width:100%}
     .editor textarea{min-height:84px;resize:vertical}
-    .editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .editor label:has(textarea),.editor-actions,.media-group,.span-2{grid-column:1/-1}
+    .editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
     .upload-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
     .media-group{display:grid;gap:8px;border:1px solid #e4ebf4;border-radius:8px;padding:10px;background:#fff}
     .media-group legend,.media-title{font-weight:800;color:var(--azul);font-size:.82rem}
-    .media-actions{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end}
+    .media-actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:end}
     .media-actions button{width:auto;min-width:82px}
     .danger{background:#fee4e2!important;color:#9f1f17!important;border:1px solid #f8b4ae!important}
-    .sponsor-panel{border:1px solid var(--borda);border-radius:8px;padding:12px;background:#fff}
+    .sponsor-panel{border:1px solid var(--borda);border-radius:8px;padding:14px;background:#fff}
     .sponsor-panel h2{margin:0 0 10px;color:var(--azul);font-size:1rem}
-    .sponsor-grid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:14px;align-items:start}
-    .sponsor-form{display:grid;gap:9px}
+    .sponsor-grid{display:grid;grid-template-columns:minmax(420px,520px) minmax(0,1fr);gap:16px;align-items:start}
+    .sponsor-panel .list-panel{height:100%}
     .sponsor-form label{font-size:.82rem}
-    .sponsor-form input,.sponsor-form select{padding:9px;border-radius:7px;border:1px solid var(--borda);font:inherit;width:100%}
     .row-action{width:auto;padding:7px 9px;background:#e8eef6;color:var(--azul);border:1px solid var(--borda);font-size:.8rem}
-    @media(max-width:960px){.content-grid,.sponsor-grid{grid-template-columns:1fr}}
-    @media(max-width:760px){body{place-items:start;padding:12px}main{padding:16px}.filters{grid-template-columns:1fr}.toolbar{justify-content:stretch}.toolbar button{width:100%}}
+    @media(max-width:1180px){.record-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid,.sponsor-grid{grid-template-columns:1fr}.editor,.sponsor-panel{max-width:none}}
+    @media(max-width:760px){body{padding:10px}main{padding:14px}.topbar{align-items:stretch}.toolbar{width:100%;justify-content:stretch}.toolbar button{flex:1;min-width:0}.filters{grid-template-columns:1fr;padding:10px}.record-card{grid-template-columns:1fr}.record-actions{width:100%;flex-direction:row}.record-actions button{flex:1}.record-meta{grid-template-columns:1fr}.editor-grid,.sponsor-form{grid-template-columns:1fr}.media-actions{grid-template-columns:1fr 1fr}.media-actions label{grid-column:1/-1}.editor-actions{grid-template-columns:1fr}.sponsor-panel{padding:10px}}
   </style>
 </head>
 <body>
@@ -97,6 +107,7 @@
           <option value="ativo">Ativo</option>
           <option value="inativo">Inativo</option>
           <option value="pendente">Pendente</option>
+          <option value="excluido">Excluido</option>
         </select>
         <select id="planFilter" name="plano">
           <option value="">Plano</option>
@@ -108,23 +119,13 @@
         <button id="filterButton" type="submit">Filtrar</button>
       </form>
       <div class="content-grid">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Comercio</th>
-                <th>Categoria</th>
-                <th>Bairro</th>
-                <th>Contato</th>
-                <th>Plano</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="commerceRows"></tbody>
-          </table>
-        </div>
+        <section class="list-panel">
+          <div class="section-head">
+            <h2>Comercios</h2>
+            <span class="muted">Edite ou exclua sem rolagem lateral</span>
+          </div>
+          <div id="commerceRows" class="record-list"></div>
+        </section>
         <aside class="editor">
           <h2 id="editorTitle">Novo comercio</h2>
           <form id="commerceForm" class="editor-grid">
@@ -269,12 +270,13 @@
               <button id="newSponsorButton" class="secondary" type="button">Novo</button>
             </div>
           </form>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>ID</th><th>Nome</th><th>Status</th><th>Ordem</th><th>Periodo</th><th></th></tr></thead>
-              <tbody id="sponsorRows"></tbody>
-            </table>
-          </div>
+          <section class="list-panel">
+            <div class="section-head">
+              <h2>Lista de patrocinadores</h2>
+              <span class="muted">Banners ativos e inativos</span>
+            </div>
+            <div id="sponsorRows" class="record-list"></div>
+          </section>
         </div>
       </section>
       <div id="panelStatus" class="status" role="status"></div>
@@ -364,24 +366,30 @@
     function renderComercios(data) {
       summary.textContent = `${data.total} comercio${data.total === 1 ? "" : "s"} encontrado${data.total === 1 ? "" : "s"}.`;
       if (!data.items.length) {
-        commerceRows.innerHTML = '<tr><td colspan="8" class="empty">Nenhum cadastro encontrado.</td></tr>';
+        commerceRows.innerHTML = '<div class="empty">Nenhum cadastro encontrado.</div>';
         window.currentComercios = [];
         return;
       }
       commerceRows.innerHTML = data.items.map((item) => `
-        <tr data-id="${escapeHtml(item.id)}">
-          <td>${escapeHtml(item.id)}<br><span class="muted">Linha ${escapeHtml(item.rowNumber)}</span></td>
-          <td><strong>${escapeHtml(item.nome || "Sem nome")}</strong><br><span class="muted">${escapeHtml(item.endereco)}</span></td>
-          <td>${escapeHtml(item.categoria)}<br><span class="muted">${escapeHtml(item.subcategoria)}</span></td>
-          <td>${escapeHtml(item.bairro)}</td>
-          <td>${contactSummary(item)}</td>
-          <td><span class="pill">${escapeHtml(item.plano)}</span></td>
-          <td>${escapeHtml(item.status)}</td>
-          <td>
+        <article class="record-card" data-id="${escapeHtml(item.id)}">
+          <div class="record-main">
+            <div class="record-title">
+              <span class="record-id">ID ${escapeHtml(item.id)} · Linha ${escapeHtml(item.rowNumber)}</span>
+              <strong>${escapeHtml(item.nome || "Sem nome")}</strong>
+            </div>
+            <div class="record-meta">
+              <div class="meta-block"><span class="meta-label">Categoria</span><div class="meta-value">${escapeHtml(item.categoria)}${item.subcategoria ? `<br><span class="muted">${escapeHtml(item.subcategoria)}</span>` : ""}</div></div>
+              <div class="meta-block"><span class="meta-label">Bairro</span><div class="meta-value">${escapeHtml(item.bairro || "Nao informado")}</div></div>
+              <div class="meta-block"><span class="meta-label">Contato</span><div class="meta-value">${contactSummary(item)}</div></div>
+              <div class="meta-block"><span class="meta-label">Status</span><div class="meta-value"><span class="pill">${escapeHtml(item.plano)}</span> ${escapeHtml(item.status)}</div></div>
+            </div>
+            ${item.endereco ? `<div class="record-address">${escapeHtml(item.endereco)}</div>` : ""}
+          </div>
+          <div class="record-actions">
             <button class="row-action" type="button" data-edit-id="${escapeHtml(item.id)}">Editar</button>
             <button class="row-action danger" type="button" data-delete-id="${escapeHtml(item.id)}">Excluir</button>
-          </td>
-        </tr>
+          </div>
+        </article>
       `).join("");
       window.currentComercios = data.items;
     }
@@ -424,22 +432,29 @@
 
     function renderSponsors(data) {
       if (!data.items.length) {
-        sponsorRows.innerHTML = '<tr><td colspan="6" class="empty">Nenhum patrocinador cadastrado.</td></tr>';
+        sponsorRows.innerHTML = '<div class="empty">Nenhum patrocinador cadastrado.</div>';
         window.currentSponsors = [];
         return;
       }
       sponsorRows.innerHTML = data.items.map((item) => `
-        <tr>
-          <td>${escapeHtml(item.id)}</td>
-          <td><strong>${escapeHtml(item.nome)}</strong><br><span class="muted">${escapeHtml(item.link_url)}</span></td>
-          <td>${escapeHtml(item.status)}</td>
-          <td>${escapeHtml(item.ordem)}</td>
-          <td>${escapeHtml(item.inicio)} ${item.fim ? `ate ${escapeHtml(item.fim)}` : ""}</td>
-          <td>
+        <article class="record-card">
+          <div class="record-main">
+            <div class="record-title">
+              <span class="record-id">ID ${escapeHtml(item.id)}</span>
+              <strong>${escapeHtml(item.nome || "Sem nome")}</strong>
+            </div>
+            <div class="record-meta">
+              <div class="meta-block"><span class="meta-label">Status</span><div class="meta-value">${escapeHtml(item.status)}</div></div>
+              <div class="meta-block"><span class="meta-label">Ordem</span><div class="meta-value">${escapeHtml(item.ordem)}</div></div>
+              <div class="meta-block"><span class="meta-label">Periodo</span><div class="meta-value">${escapeHtml(item.inicio || "Sem inicio")} ${item.fim ? `ate ${escapeHtml(item.fim)}` : ""}</div></div>
+              <div class="meta-block"><span class="meta-label">Link</span><div class="meta-value">${escapeHtml(item.link_url || "Sem link")}</div></div>
+            </div>
+          </div>
+          <div class="record-actions">
             <button class="row-action" type="button" data-sponsor-id="${escapeHtml(item.id)}">Editar</button>
             <button class="row-action danger" type="button" data-delete-sponsor-id="${escapeHtml(item.id)}">Excluir</button>
-          </td>
-        </tr>
+          </div>
+        </article>
       `).join("");
       window.currentSponsors = data.items;
     }
