@@ -216,7 +216,17 @@
     const summary = document.getElementById("summary");
     const loginStatus = document.getElementById("loginStatus");
     const panelStatus = document.getElementById("panelStatus");
+    const GOOGLE_OAUTH_CLIENT_ID = "782984878308-t95veqip64rl7t9gqam5dn4p9mm30qbq.apps.googleusercontent.com";
+    const GOOGLE_DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+    const GOOGLE_DRIVE_FOLDERS = {
+      comercio: "1SI56xKqxzdxLEgu72Q1G-NL00LuOAPNA",
+      patrocinador: "18rKSfu38PHR8NCda6j3V6BS99kuT9NU7",
+      pendente: "1ZWoxvbRLi0wN1utVI1KS4aZqW8CsfbCp",
+    };
     let filterTimer = null;
+    let googleTokenClient = null;
+    let googleAccessToken = "";
+    let googleIdentityScriptPromise = null;
 
     function showPanel() {
       loginBox.classList.add("hidden");
@@ -425,13 +435,115 @@
       }
     });
 
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
-        reader.onerror = () => reject(new Error("Nao foi possivel ler a imagem."));
-        reader.readAsDataURL(file);
+    function safeFileBase(value = "") {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 120) || "imagem";
+    }
+
+    function fileExtension(file) {
+      const byType = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+      return byType[file.type] || safeFileBase(file.name).split(".").pop() || "jpg";
+    }
+
+    function ensureImageFile(file) {
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        throw new Error("Tipo de imagem nao permitido.");
+      }
+      if (!file.size || file.size > 3 * 1024 * 1024) {
+        throw new Error("Imagem vazia ou maior que 3 MB.");
+      }
+    }
+
+    function loadGoogleIdentityScript() {
+      if (window.google?.accounts?.oauth2) return Promise.resolve();
+      if (googleIdentityScriptPromise) return googleIdentityScriptPromise;
+      googleIdentityScriptPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error("Nao foi possivel carregar o login do Google."));
+        document.head.appendChild(script);
       });
+      return googleIdentityScriptPromise;
+    }
+
+    async function getGoogleDriveToken() {
+      await loadGoogleIdentityScript();
+      if (googleAccessToken) return googleAccessToken;
+      return new Promise((resolve, reject) => {
+        googleTokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_OAUTH_CLIENT_ID,
+          scope: GOOGLE_DRIVE_SCOPE,
+          callback: (response) => {
+            if (response?.error) return reject(new Error("Autorizacao do Google Drive cancelada."));
+            googleAccessToken = response.access_token;
+            resolve(googleAccessToken);
+          },
+        });
+        googleTokenClient.requestAccessToken({ prompt: "consent" });
+      });
+    }
+
+    async function driveFetch(url, options = {}) {
+      const token = await getGoogleDriveToken();
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(options.headers || {}),
+        },
+      });
+      if (response.status === 401) {
+        googleAccessToken = "";
+      }
+      return response;
+    }
+
+    async function uploadImageFor(kind, file, extra = {}) {
+      ensureImageFile(file);
+      const folderId = GOOGLE_DRIVE_FOLDERS[kind] || GOOGLE_DRIVE_FOLDERS.comercio;
+      const name = [
+        safeFileBase(extra.commerceId || "novo"),
+        safeFileBase(extra.commerceName || file.name),
+        Date.now(),
+      ].join("-") + `.${fileExtension(file)}`;
+      const metadata = { name, parents: [folderId] };
+      const boundary = `busca_salto_${Date.now()}`;
+      const body = new Blob([
+        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`,
+        JSON.stringify(metadata),
+        `\r\n--${boundary}\r\nContent-Type: ${file.type}\r\n\r\n`,
+        file,
+        `\r\n--${boundary}--`,
+      ], { type: `multipart/related; boundary=${boundary}` });
+
+      const createResponse = await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink", {
+        method: "POST",
+        headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+        body,
+      });
+      const created = await createResponse.json().catch(() => ({}));
+      if (!createResponse.ok || !created.id) {
+        throw new Error(created.error?.message || "Nao foi possivel enviar a imagem para o Drive.");
+      }
+
+      const permissionResponse = await driveFetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(created.id)}/permissions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "reader", type: "anyone" }),
+      });
+      if (!permissionResponse.ok) {
+        throw new Error("Imagem enviada, mas nao foi possivel torna-la publica.");
+      }
+
+      return `https://drive.google.com/uc?export=view&id=${created.id}`;
     }
 
     uploadPhotoButton.addEventListener("click", async () => {
@@ -447,22 +559,10 @@
       panelStatus.className = "status";
       try {
         const formData = Object.fromEntries(new FormData(commerceForm).entries());
-        const response = await fetch("/api/admin/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({
-            kind: "comercio",
-            commerceId: formData.id || "novo",
-            commerceName: formData.nome || file.name,
-            fileName: file.name,
-            contentType: file.type,
-            dataBase64: await fileToBase64(file),
-          }),
+        fotoUrlInput.value = await uploadImageFor("comercio", file, {
+          commerceId: formData.id || "novo",
+          commerceName: formData.nome || file.name,
         });
-        const result = await response.json();
-        if (!response.ok || !result.ok) throw new Error(result.error || "Falha no upload.");
-        fotoUrlInput.value = result.file.url;
         panelStatus.textContent = "Imagem enviada.";
         panelStatus.className = "status ok";
       } catch (error) {
@@ -472,24 +572,6 @@
         uploadPhotoButton.disabled = false;
       }
     });
-
-    async function uploadImageFor(kind, file, extra) {
-      const response = await fetch("/api/admin/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          kind,
-          fileName: file.name,
-          contentType: file.type,
-          dataBase64: await fileToBase64(file),
-          ...extra,
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.ok) throw new Error(result.error || "Falha no upload.");
-      return result.file.url;
-    }
 
     uploadSponsorButton.addEventListener("click", async () => {
       const file = sponsorFile.files && sponsorFile.files[0];
