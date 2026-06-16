@@ -370,6 +370,13 @@ function truncateText(value = "", maxLength = 160) {
   return `${text.slice(0, maxLength).trim()}...`;
 }
 
+function publicImageUrl(url = "") {
+  const value = String(url || "").trim();
+  const match = value.match(/[?&]id=([^&]+)/) || value.match(/\/d\/([^/]+)/) || value.match(/\/file\/d\/([^/]+)/);
+  if (!match) return value;
+  return `/api/imagem?id=${encodeURIComponent(decodeURIComponent(match[1]))}&sz=w1000`;
+}
+
 function seededRandom(input = "") {
   let hash = 2166136261;
   for (let index = 0; index < input.length; index += 1) {
@@ -473,8 +480,8 @@ function publicItem(item) {
     palavras_chave: item.palavras_chave,
     tipo_exibicao: plan,
     oferta: allowsOffer(plan) ? item.oferta : "",
-    foto_url: allowsImage(plan) ? item.foto_url : "",
-    fotos: allowsImage(plan) ? item.fotos || [] : [],
+    foto_url: allowsImage(plan) ? publicImageUrl(item.foto_url) : "",
+    fotos: allowsImage(plan) ? (item.fotos || []).map(publicImageUrl) : [],
     has_whatsapp: Boolean(item.whatsapp),
     has_telefone: Boolean(item.telefone),
     has_instagram: Boolean(item.instagram),

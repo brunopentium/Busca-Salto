@@ -141,7 +141,7 @@ function driveImageUrl(url = "") {
   const value = String(url || "").trim();
   const match = value.match(/[?&]id=([^&]+)/) || value.match(/\/d\/([^/]+)/) || value.match(/\/file\/d\/([^/]+)/);
   if (!match) return value;
-  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(decodeURIComponent(match[1]))}&sz=w1000`;
+  return `/api/imagem?id=${encodeURIComponent(decodeURIComponent(match[1]))}&sz=w1000`;
 }
 
 function publicSponsor(sponsor) {
