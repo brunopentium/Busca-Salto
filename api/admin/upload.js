@@ -94,7 +94,7 @@ module.exports = async function handler(req, res) {
       requestBody: { role: "reader", type: "anyone" },
     });
 
-    const publicUrl = `https://drive.google.com/uc?export=view&id=${created.data.id}`;
+    const publicUrl = `https://drive.google.com/thumbnail?id=${encodeURIComponent(created.data.id)}&sz=w1000`;
     return json(res, 201, {
       ok: true,
       file: {

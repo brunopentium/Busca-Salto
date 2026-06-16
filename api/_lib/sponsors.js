@@ -93,11 +93,18 @@ function isSponsorActive(sponsor, now = todayDate()) {
   return true;
 }
 
+function driveImageUrl(url = "") {
+  const value = String(url || "").trim();
+  const match = value.match(/[?&]id=([^&]+)/) || value.match(/\/d\/([^/]+)/) || value.match(/\/file\/d\/([^/]+)/);
+  if (!match) return value;
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(decodeURIComponent(match[1]))}&sz=w1000`;
+}
+
 function publicSponsor(sponsor) {
   return {
     id: sponsor.id,
     nome: sponsor.nome,
-    imagem_url: sponsor.imagem_url,
+    imagem_url: driveImageUrl(sponsor.imagem_url),
     link_url: sponsor.link_url,
     texto_alt: sponsor.texto_alt || sponsor.nome,
   };

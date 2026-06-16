@@ -543,7 +543,7 @@
         throw new Error("Imagem enviada, mas nao foi possivel torna-la publica.");
       }
 
-      return `https://drive.google.com/uc?export=view&id=${created.id}`;
+      return `https://drive.google.com/thumbnail?id=${encodeURIComponent(created.id)}&sz=w1000`;
     }
 
     uploadPhotoButton.addEventListener("click", async () => {
