@@ -159,7 +159,7 @@
           <form id="sponsorForm" class="sponsor-form">
             <input id="sponsorId" name="id" type="hidden" />
             <label>Nome<input name="nome" required maxlength="120" /></label>
-            <label>Imagem URL<input id="sponsorImageUrl" name="imagem_url" required maxlength="500" /></label>
+            <label>Imagem URL (opcional)<input id="sponsorImageUrl" name="imagem_url" maxlength="500" placeholder="Preenchida automaticamente apos o upload" /></label>
             <div class="upload-row">
               <label>Arquivo do banner<input id="sponsorFile" type="file" accept="image/jpeg,image/png,image/webp" /></label>
               <button id="uploadSponsorButton" class="secondary" type="button">Enviar</button>
@@ -525,6 +525,15 @@
       const data = Object.fromEntries(new FormData(sponsorForm).entries());
       const isEdit = Boolean(data.id);
       try {
+        const file = sponsorFile.files && sponsorFile.files[0];
+        if (file && !data.imagem_url) {
+          panelStatus.textContent = "Enviando banner...";
+          data.imagem_url = await uploadImageFor("patrocinador", file, {
+            commerceId: data.id || "patrocinador",
+            commerceName: data.nome || file.name,
+          });
+          sponsorImageUrl.value = data.imagem_url;
+        }
         const response = await fetch(isEdit ? `/api/admin/patrocinadores?id=${encodeURIComponent(data.id)}` : "/api/admin/patrocinadores", {
           method: isEdit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
