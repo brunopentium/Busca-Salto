@@ -50,6 +50,12 @@ const SEARCH_ALIASES = {
   veterinario: ["veterinaria", "clinica veterinaria"],
   racao: ["racao", "racoes"],
 };
+const SEARCH_STOPWORDS = new Set([
+  "a", "ao", "aos", "as", "ate", "com", "da", "das", "de", "do", "dos", "e", "em", "na", "nas", "no", "nos",
+  "o", "os", "para", "por", "pra", "pro", "uma", "um",
+  "aqui", "encontrar", "mim", "onde", "perto", "preciso", "procuro", "procurar", "proxima", "proximo", "quero",
+  "salto", "sp",
+]);
 const CATEGORY_CANONICAL = {
   "servicos automotivos": "Automotivo",
 };
@@ -89,6 +95,70 @@ const SUBCATEGORY_CANONICAL = {
   "racoes": "Rações",
   "restaurantes por quilo": "Restaurante por Quilo",
   "universidades": "Universidade",
+};
+const SUBCATEGORY_EXPANSIONS = {
+  "acaiteria e pastelaria": ["Açaiteria", "Pastelaria"],
+  "acaiteria e sorveteria": ["Açaiteria", "Sorveteria"],
+  "bar com porcoes": ["Bar"],
+  "bar e restaurante": ["Bar", "Restaurante"],
+  "bolos e doces": ["Confeitaria"],
+  "boteco com porcoes": ["Bar"],
+  botequim: ["Bar"],
+  "cafe e confeitaria": ["Cafeteria", "Confeitaria"],
+  "cafe e restaurante": ["Cafeteria", "Restaurante"],
+  "choperia com porcoes": ["Bar"],
+  "comida oriental": ["Comida Japonesa"],
+  "confeitaria artesanal": ["Confeitaria"],
+  "confeitaria e doceria": ["Confeitaria"],
+  "confeitaria gourmet": ["Confeitaria"],
+  "delivery de acai": ["Açaiteria"],
+  "delivery de comida brasileira": ["Restaurante"],
+  "delivery de espetinhos": ["Espetaria"],
+  "delivery de hamburgueria": ["Hamburgueria"],
+  "delivery de lanches": ["Lanchonete"],
+  "delivery de lanches e porcoes": ["Lanchonete"],
+  "delivery de marmitas": ["Marmitaria"],
+  "delivery de marmitex": ["Marmitaria"],
+  "delivery de restaurante e pizzaria": ["Restaurante", "Pizzaria"],
+  "doces e salgados": ["Confeitaria"],
+  "esfiharia e lanchonete": ["Esfiharia", "Lanchonete"],
+  "esfiharia e pizzaria": ["Esfiharia", "Pizzaria"],
+  "espetaria e bar": ["Espetaria", "Bar"],
+  "espetaria e porcoes": ["Espetaria"],
+  "hamburgueria artesanal": ["Hamburgueria"],
+  "hamburgueria delivery": ["Hamburgueria"],
+  "lanches e hamburgueres": ["Lanchonete", "Hamburgueria"],
+  "lanchonete com hamburguer": ["Lanchonete", "Hamburgueria"],
+  "lanchonete e sorveteria": ["Lanchonete", "Sorveteria"],
+  marmitex: ["Marmitaria"],
+  "marmitas saudaveis": ["Marmitaria"],
+  "padaria e confeitaria": ["Padaria", "Confeitaria"],
+  "padaria gourmet": ["Padaria"],
+  "pastelaria delivery": ["Pastelaria"],
+  "pastelaria e lanchonete": ["Pastelaria", "Lanchonete"],
+  "pizzaria delivery": ["Pizzaria"],
+  "pizzaria e restaurante": ["Pizzaria", "Restaurante"],
+  "restaurante com marmitex": ["Restaurante", "Marmitaria"],
+  "restaurante com porcoes": ["Restaurante"],
+  "restaurante e rotisseria": ["Restaurante", "Rotisseria"],
+  "restaurante japones": ["Comida Japonesa"],
+  "restaurante por quilo": ["Restaurante"],
+  "restaurantes por quilo": ["Restaurante"],
+  "rotisserie e restaurante": ["Rotisseria", "Restaurante"],
+  "self service": ["Restaurante"],
+  "self-service": ["Restaurante"],
+  "sorveteria e acaiteria": ["Sorveteria", "Açaiteria"],
+  "sorveteria e lanchonete": ["Sorveteria", "Lanchonete"],
+  "auto eletrica": ["Autoelétrica"],
+  "autopecas e oficina mecanica": ["Autopeças", "Mecânica"],
+  borracharias: ["Borracharia"],
+  "despachantes documentais": ["Despachante"],
+  "loja de pneus": ["Loja de Pneus"],
+  mecanica: ["Mecânica"],
+  "oficina mecanica": ["Mecânica"],
+  "pneus e mecanica": ["Loja de Pneus", "Mecânica"],
+  "assistencia tecnica de ar condicionado": ["Ar-condicionado"],
+  papelarias: ["Papelaria"],
 };
 
 let cache = { loadedAt: 0, rows: [] };
@@ -160,6 +230,22 @@ function canonicalSubcategory(value = "") {
   return SUBCATEGORY_CANONICAL[normalizeSearchText(trimmed)] || titleCase(trimmed);
 }
 
+function canonicalSubcategoryParts(value = "") {
+  const normalized = normalizeSearchText(value);
+  const expanded = SUBCATEGORY_EXPANSIONS[normalized];
+  if (expanded?.length) return expanded;
+  return [canonicalSubcategory(value)].filter(Boolean);
+}
+
+function canonicalSubcategories(value = "") {
+  const unique = new Map();
+  for (const part of splitSubcategories(value).flatMap(canonicalSubcategoryParts)) {
+    const key = normalizeSearchText(part);
+    if (key) unique.set(key, part);
+  }
+  return [...unique.values()];
+}
+
 function compactSearchText(value = "") {
   return normalizeSearchText(value).replace(/\s+/g, "");
 }
@@ -210,8 +296,14 @@ function levenshteinDistance(a = "", b = "", maxDistance = 2) {
 
 function fuzzyLimit(term = "") {
   if (term.length < 5) return 0;
-  if (term.length < 8) return 1;
+  if (term.length < 11) return 1;
   return 2;
+}
+
+function hasSimilarPrefix(a = "", b = "") {
+  const size = Math.min(a.length, b.length);
+  if (size < 5) return a.slice(0, 3) === b.slice(0, 3);
+  return a.slice(0, 4) === b.slice(0, 4);
 }
 
 function prepareSearchField(value = "") {
@@ -230,23 +322,26 @@ function fieldRelevance(field, rawTerm, weight) {
   const terms = searchVariants(rawTerm);
   if (!terms.length) return 0;
 
-  if (terms.some((term) => field.text.includes(term))) return weight;
+  if (terms.some((term) => field.tokens.includes(term))) return weight;
   if (terms.some((term) => field.variants.has(term))) return Math.round(weight * 0.85);
-  if (terms.some((term) => field.compact.includes(compactSearchText(term)))) return Math.round(weight * 0.8);
-  if (terms.some((term) => field.compactVariants.has(compactSearchText(term)))) return Math.round(weight * 0.75);
+  if (terms.some((term) => term.length >= 4 && field.text.includes(term))) return weight;
+  if (terms.some((term) => term.length >= 5 && field.compact.includes(compactSearchText(term)))) return Math.round(weight * 0.8);
+  if (terms.some((term) => term.length >= 5 && field.compactVariants.has(compactSearchText(term)))) return Math.round(weight * 0.75);
 
   const limit = Math.max(...terms.map(fuzzyLimit));
   if (!limit) return 0;
 
   const hasFuzzyMatch = field.tokens.some((token) => {
     if (token.length < 5) return false;
-    return terms.some((term) => levenshteinDistance(term, token, limit) <= limit);
+    return terms.some((term) => hasSimilarPrefix(term, token) && levenshteinDistance(term, token, limit) <= limit);
   });
   return hasFuzzyMatch ? Math.round(weight * 0.55) : 0;
 }
 
 function searchTerms(value = "") {
-  return normalizeSearchText(value).split(" ").filter((term) => term.length >= 2);
+  return normalizeSearchText(value)
+    .split(" ")
+    .filter((term) => term.length >= 2 && !SEARCH_STOPWORDS.has(term));
 }
 
 function splitSubcategories(value = "") {
@@ -265,7 +360,7 @@ function categoryMatches(item, selectedCategory = "") {
     canonicalCategory(item.categoria),
   ].map(normalizeSearchText);
   if (categoryValues.includes(selected)) return true;
-  return splitSubcategories(item.subcategoria).some((subcategoria) => {
+  return canonicalSubcategories(item.subcategoria).some((subcategoria) => {
     const subcategoryValues = [
       subcategoria,
       canonicalSubcategory(subcategoria),
@@ -482,7 +577,7 @@ async function loadRows() {
 
 function publicItem(item) {
   const plan = normalizePlan(item.tipo_exibicao);
-  const subcategorias = [...new Set(splitSubcategories(item.subcategoria).map(canonicalSubcategory).filter(Boolean))];
+  const subcategorias = canonicalSubcategories(item.subcategoria);
   return {
     id: item.id,
     nome: item.nome,
@@ -515,20 +610,23 @@ function planWeight(plan = "") {
 function computeScore(item, terms) {
   const fields = {
     nome: prepareSearchField(item.nome),
-    categoria: prepareSearchField(item.categoria),
-    subcategoria: prepareSearchField(item.subcategoria),
+    categoria: prepareSearchField(`${item.categoria} ${canonicalCategory(item.categoria)}`),
+    subcategoria: prepareSearchField(`${item.subcategoria} ${canonicalSubcategories(item.subcategoria).join(" ")}`),
     bairro: prepareSearchField(item.bairro),
     descricao: prepareSearchField(item.descricao),
     palavras: prepareSearchField(item.palavras_chave),
   };
   let relevance = 0;
   for (const term of terms) {
-    relevance += fieldRelevance(fields.nome, term, 60);
-    relevance += fieldRelevance(fields.categoria, term, 50);
-    relevance += fieldRelevance(fields.subcategoria, term, 40);
-    relevance += fieldRelevance(fields.palavras, term, 35);
-    relevance += fieldRelevance(fields.descricao, term, 20);
-    relevance += fieldRelevance(fields.bairro, term, 10);
+    const termScore =
+      fieldRelevance(fields.nome, term, 60) +
+      fieldRelevance(fields.categoria, term, 50) +
+      fieldRelevance(fields.subcategoria, term, 45) +
+      fieldRelevance(fields.palavras, term, 30) +
+      fieldRelevance(fields.descricao, term, 14) +
+      fieldRelevance(fields.bairro, term, 8);
+    if (termScore <= 0) return 0;
+    relevance += termScore;
   }
   const base = planWeight(item.tipo_exibicao) + item.prioridade * 20 + qualityScore(item);
   if (!terms.length) return base;
@@ -568,7 +666,7 @@ function buildFilters(rows) {
     }
 
     const group = categoryGroups.get(categoryKey);
-    for (const subcategoria of splitSubcategories(row.subcategoria).map(canonicalSubcategory)) {
+    for (const subcategoria of canonicalSubcategories(row.subcategoria)) {
       const subKey = normalizeSearchText(subcategoria);
       if (!subKey || subKey === categoryKey) continue;
       group.subcategorias.set(subKey, subcategoria);
