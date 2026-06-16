@@ -106,8 +106,6 @@
           <option value="">Status</option>
           <option value="ativo">Ativo</option>
           <option value="inativo">Inativo</option>
-          <option value="pendente">Pendente</option>
-          <option value="excluido">Excluido</option>
         </select>
         <select id="planFilter" name="plano">
           <option value="">Plano</option>
@@ -141,9 +139,9 @@
             <label>Facebook<input name="facebook" maxlength="180" /></label>
             <label>Site<input name="site" maxlength="180" /></label>
             <label>Plano<select name="plano"><option value="gratuito">gratuito</option><option value="parceiro">parceiro</option><option value="destaque">destaque</option><option value="top">top</option></select></label>
-            <label>Status<input name="status" maxlength="40" value="ativo" /></label>
-            <label>Prioridade<input name="prioridade" inputmode="numeric" maxlength="5" value="0" /></label>
-            <label>Verificado<input name="verificado" maxlength="20" /></label>
+            <label>Status<select name="status"><option value="ativo">ativo</option><option value="inativo">inativo</option></select></label>
+            <label>Prioridade<select name="prioridade"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+            <label>Verificado<select name="verificado"><option value="não">não</option><option value="sim">sim</option></select></label>
             <label>Oferta<input name="oferta" maxlength="180" /></label>
             <fieldset class="media-group">
               <legend>Fotos do comercio</legend>
@@ -415,9 +413,11 @@
       editorTitle.textContent = item.id ? `Editar ${item.id}` : "Novo comercio";
       commerceForm.reset();
       commerceId.value = item.id || "";
+      const defaults = { plano: "gratuito", status: "ativo", prioridade: "0", verificado: "não" };
       for (const field of commerceForm.elements) {
         if (!field.name || field.name === "id") continue;
-        field.value = item[field.name] || (field.name === "status" ? "ativo" : field.name === "prioridade" ? "0" : "");
+        field.value = item[field.name] || defaults[field.name] || "";
+        if (field.tagName === "SELECT" && field.selectedIndex < 0) field.value = defaults[field.name] || "";
       }
     }
 
@@ -529,7 +529,7 @@
 
     async function deleteCommerce(id) {
       const item = (window.currentComercios || []).find((entry) => String(entry.id) === String(id));
-      if (!confirm(`Excluir o comercio "${item?.nome || id}" do site? A linha sera marcada como excluida.`)) return;
+      if (!confirm(`Excluir o comercio "${item?.nome || id}" do site? A linha sera marcada como inativa.`)) return;
       panelStatus.textContent = "Excluindo comercio...";
       panelStatus.className = "status";
       try {
@@ -539,7 +539,7 @@
         });
         const result = await response.json();
         if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao excluir.");
-        panelStatus.textContent = "Comercio marcado como excluido.";
+        panelStatus.textContent = "Comercio marcado como inativo.";
         panelStatus.className = "status ok";
         await loadComercios();
       } catch (error) {
@@ -550,7 +550,7 @@
 
     async function deleteSponsor(id) {
       const item = (window.currentSponsors || []).find((entry) => String(entry.id) === String(id));
-      if (!confirm(`Excluir o patrocinador "${item?.nome || id}" do site? A linha sera marcada como excluida.`)) return;
+      if (!confirm(`Excluir o patrocinador "${item?.nome || id}" do site? A linha sera marcada como inativa.`)) return;
       panelStatus.textContent = "Excluindo patrocinador...";
       panelStatus.className = "status";
       try {
@@ -560,7 +560,7 @@
         });
         const result = await response.json();
         if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao excluir.");
-        panelStatus.textContent = "Patrocinador marcado como excluido.";
+        panelStatus.textContent = "Patrocinador marcado como inativo.";
         panelStatus.className = "status ok";
         await loadSponsors();
       } catch (error) {

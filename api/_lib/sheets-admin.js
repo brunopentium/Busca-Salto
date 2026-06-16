@@ -72,13 +72,17 @@ function lastCommerceRowNumber(values = [], headers = [], headerIndex = 0) {
   return headerIndex + 1;
 }
 
-async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows) {
+async function getSheetProperties(sheets, spreadsheetId, sheetName) {
   const metadata = await sheets.spreadsheets.get({
     spreadsheetId,
     fields: "sheets.properties(sheetId,title,gridProperties(rowCount))",
   });
   const sheet = (metadata.data.sheets || []).find((item) => item.properties?.title === sheetName);
-  const properties = sheet?.properties;
+  return sheet?.properties || null;
+}
+
+async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows) {
+  const properties = await getSheetProperties(sheets, spreadsheetId, sheetName);
   if (typeof properties?.sheetId !== "number") return;
 
   const rowCount = properties.gridProperties?.rowCount || 0;
@@ -94,6 +98,37 @@ async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows)
           length: Math.max(minRows - rowCount, 100),
         },
       }],
+    },
+  });
+}
+
+async function copyRowPattern(sheets, spreadsheetId, sheetName, sourceRowNumber, targetRowNumber, columnCount) {
+  if (sourceRowNumber < 1 || targetRowNumber < 1 || sourceRowNumber === targetRowNumber) return;
+  const properties = await getSheetProperties(sheets, spreadsheetId, sheetName);
+  if (typeof properties?.sheetId !== "number") return;
+
+  const source = {
+    sheetId: properties.sheetId,
+    startRowIndex: sourceRowNumber - 1,
+    endRowIndex: sourceRowNumber,
+    startColumnIndex: 0,
+    endColumnIndex: columnCount,
+  };
+  const destination = {
+    sheetId: properties.sheetId,
+    startRowIndex: targetRowNumber - 1,
+    endRowIndex: targetRowNumber,
+    startColumnIndex: 0,
+    endColumnIndex: columnCount,
+  };
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [
+        { copyPaste: { source, destination, pasteType: "PASTE_FORMAT" } },
+        { copyPaste: { source, destination, pasteType: "PASTE_DATA_VALIDATION" } },
+      ],
     },
   });
 }
@@ -133,7 +168,7 @@ function rowToAdminObject(headers, row, index) {
     palavras_chave: raw.palavras_chave || "",
     plano: raw.plano || raw.tipo_exibicao || "gratuito",
     status: raw.status || "ativo",
-    prioridade: raw.prioridade || "",
+    prioridade: raw.prioridade || "0",
     oferta: raw.oferta || "",
     foto_url: raw.foto_url || raw.imagem || raw.imagem_url || "",
     foto_url_2: raw.foto_url_2 || "",
@@ -141,7 +176,7 @@ function rowToAdminObject(headers, row, index) {
     foto_url_4: raw.foto_url_4 || "",
     foto_url_5: raw.foto_url_5 || "",
     fotos: commerceImageUrls(raw),
-    verificado: raw.verificado || "",
+    verificado: raw.verificado || "não",
   };
 }
 
@@ -202,8 +237,12 @@ function valueForKey(data, key, fallback = "") {
 
 function sanitizeCommercePayload(payload = {}, options = {}) {
   const allowedPlans = new Set(["gratuito", "parceiro", "destaque", "top"]);
+  const allowedPriorities = new Set(["0", "1", "2", "3"]);
+  const allowedStatuses = new Set(["ativo", "inativo"]);
   const plan = normalizeSearchText(payload.plano || payload.tipo_exibicao || "gratuito");
   const status = normalizeSearchText(payload.status || "ativo") || "ativo";
+  const prioridade = valueForKey(payload, "prioridade", "0").replace(/[^0-9]/g, "").slice(0, 1) || "0";
+  const verificado = normalizeSearchText(valueForKey(payload, "verificado", "não"));
   const now = new Date().toISOString().slice(0, 10);
 
   const data = {
@@ -221,9 +260,9 @@ function sanitizeCommercePayload(payload = {}, options = {}) {
     facebook: valueForKey(payload, "facebook").slice(0, 180),
     telefone: valueForKey(payload, "telefone").slice(0, 40),
     plano: allowedPlans.has(plan) ? plan : "gratuito",
-    prioridade: valueForKey(payload, "prioridade", "0").replace(/[^0-9-]/g, "").slice(0, 5) || "0",
-    status: status.slice(0, 40),
-    verificado: valueForKey(payload, "verificado").slice(0, 20),
+    prioridade: allowedPriorities.has(prioridade) ? prioridade : "0",
+    status: allowedStatuses.has(status) ? status : "inativo",
+    verificado: verificado === "sim" ? "sim" : "não",
     oferta: valueForKey(payload, "oferta").slice(0, 180),
     foto_url: valueForKey(payload, "foto_url").slice(0, 500),
     foto_url_2: valueForKey(payload, "foto_url_2").slice(0, 500),
@@ -287,6 +326,7 @@ async function appendCommerce(payload) {
   const lastColumn = columnName(current.headers.length - 1);
 
   await ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, nextRowNumber);
+  await copyRowPattern(sheets, spreadsheetId, sheetName, Math.max((current.headerRowNumber || 1) + 1, nextRowNumber - 1), nextRowNumber, current.headers.length);
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
@@ -328,7 +368,7 @@ async function updateCommerce(id, payload) {
 }
 
 async function deleteCommerce(id) {
-  return updateCommerce(id, { status: "excluido" });
+  return updateCommerce(id, { status: "inativo" });
 }
 
 function adminSearchMatches(row, query = "") {

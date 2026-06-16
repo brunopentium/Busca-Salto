@@ -48,13 +48,17 @@ function lastSponsorRowNumber(values = []) {
   return 1;
 }
 
-async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows) {
+async function getSheetProperties(sheets, spreadsheetId, sheetName) {
   const metadata = await sheets.spreadsheets.get({
     spreadsheetId,
     fields: "sheets.properties(sheetId,title,gridProperties(rowCount))",
   });
   const sheet = (metadata.data.sheets || []).find((item) => item.properties?.title === sheetName);
-  const properties = sheet?.properties;
+  return sheet?.properties || null;
+}
+
+async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows) {
+  const properties = await getSheetProperties(sheets, spreadsheetId, sheetName);
   if (typeof properties?.sheetId !== "number") return;
 
   const rowCount = properties.gridProperties?.rowCount || 0;
@@ -70,6 +74,37 @@ async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows)
           length: Math.max(minRows - rowCount, 100),
         },
       }],
+    },
+  });
+}
+
+async function copyRowPattern(sheets, spreadsheetId, sheetName, sourceRowNumber, targetRowNumber, columnCount) {
+  if (sourceRowNumber < 1 || targetRowNumber < 1 || sourceRowNumber === targetRowNumber) return;
+  const properties = await getSheetProperties(sheets, spreadsheetId, sheetName);
+  if (typeof properties?.sheetId !== "number") return;
+
+  const source = {
+    sheetId: properties.sheetId,
+    startRowIndex: sourceRowNumber - 1,
+    endRowIndex: sourceRowNumber,
+    startColumnIndex: 0,
+    endColumnIndex: columnCount,
+  };
+  const destination = {
+    sheetId: properties.sheetId,
+    startRowIndex: targetRowNumber - 1,
+    endRowIndex: targetRowNumber,
+    startColumnIndex: 0,
+    endColumnIndex: columnCount,
+  };
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [
+        { copyPaste: { source, destination, pasteType: "PASTE_FORMAT" } },
+        { copyPaste: { source, destination, pasteType: "PASTE_DATA_VALIDATION" } },
+      ],
     },
   });
 }
@@ -204,6 +239,7 @@ function publicSponsor(sponsor) {
 
 function sanitizeSponsorPayload(payload = {}) {
   const status = normalize(payload.status || "ativo") || "ativo";
+  const allowedStatuses = new Set(["ativo", "inativo"]);
   const data = {
     id: String(payload.id || "").trim(),
     nome: String(payload.nome || "").trim().slice(0, 120),
@@ -218,7 +254,7 @@ function sanitizeSponsorPayload(payload = {}) {
     imagem_mobile_4: String(payload.imagem_mobile_4 || "").trim().slice(0, 500),
     imagem_mobile_5: String(payload.imagem_mobile_5 || "").trim().slice(0, 500),
     link_url: String(payload.link_url || "").trim().slice(0, 500),
-    status: status.slice(0, 40),
+    status: allowedStatuses.has(status) ? status : "inativo",
     ordem: String(payload.ordem || "0").replace(/[^0-9-]/g, "").slice(0, 5) || "0",
     inicio: String(payload.inicio || "").trim().slice(0, 10),
     fim: String(payload.fim || "").trim().slice(0, 10),
@@ -261,6 +297,7 @@ async function appendSponsor(payload) {
   const nextRowNumber = Math.max(lastSponsorRowNumber(allRowsResponse.data.values || []) + 1, 2);
 
   await ensureSheetRowCapacity(sheets, spreadsheetId, SPONSORS_SHEET_NAME, nextRowNumber);
+  await copyRowPattern(sheets, spreadsheetId, SPONSORS_SHEET_NAME, Math.max(2, nextRowNumber - 1), nextRowNumber, SPONSOR_HEADERS.length);
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
@@ -294,7 +331,7 @@ async function updateSponsor(id, payload) {
 }
 
 async function deleteSponsor(id) {
-  return updateSponsor(id, { status: "excluido" });
+  return updateSponsor(id, { status: "inativo" });
 }
 
 module.exports = {
