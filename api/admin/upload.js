@@ -27,6 +27,22 @@ function folderForKind(kind) {
   return folders.businesses;
 }
 
+function uploadErrorMessage(error) {
+  const message = String(error?.message || "");
+  const status = Number(error?.code || error?.response?.status || 0);
+
+  if (message.includes("Google credentials are not configured")) {
+    return "Credenciais do Google nao configuradas na Vercel.";
+  }
+  if (status === 401 || status === 403) {
+    return "Sem permissao para enviar para a pasta do Google Drive.";
+  }
+  if (status === 404) {
+    return "Pasta do Google Drive nao encontrada.";
+  }
+  return "Nao foi possivel enviar a imagem.";
+}
+
 function parseImagePayload(body = {}) {
   const contentType = cleanText(body.contentType, 80).toLowerCase();
   if (!ALLOWED_IMAGE_TYPES.has(contentType)) {
@@ -60,7 +76,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const payload = parseImagePayload(await readJsonBody(req, { maxBytes: 5 * 1024 * 1024 }));
-    const drive = await getDriveClient([GOOGLE_SCOPES.driveFile]);
+    const drive = await getDriveClient([GOOGLE_SCOPES.drive]);
     const folderId = folderForKind(payload.kind);
     const name = `${payload.commerceId}-${payload.commerceName}-${Date.now()}.${payload.extension}`;
 
@@ -94,11 +110,12 @@ module.exports = async function handler(req, res) {
       service: "busca-salto-admin",
       event: "admin_upload_error",
       message: error?.message || "Erro desconhecido",
+      status: error?.code || error?.response?.status || null,
       timestamp: new Date().toISOString(),
     }));
     return json(res, error.statusCode || 500, {
       ok: false,
-      error: error.statusCode ? error.message : "Nao foi possivel enviar a imagem.",
+      error: error.statusCode ? error.message : uploadErrorMessage(error),
     });
   }
 };

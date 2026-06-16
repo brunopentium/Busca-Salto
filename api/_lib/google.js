@@ -11,6 +11,7 @@ const GOOGLE_SCOPES = {
   sheetsRead: "https://www.googleapis.com/auth/spreadsheets.readonly",
   sheetsWrite: "https://www.googleapis.com/auth/spreadsheets",
   driveFile: "https://www.googleapis.com/auth/drive.file",
+  drive: "https://www.googleapis.com/auth/drive",
 };
 
 function getSpreadsheetConfig() {
