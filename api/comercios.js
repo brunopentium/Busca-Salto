@@ -4,7 +4,7 @@ const MAX_LIMIT = 30;
 const CONTACT_TYPES = new Set(["whatsapp", "telefone", "instagram", "facebook", "site"]);
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./_lib/google");
 const { spreadsheetId: SPREADSHEET_ID } = getSpreadsheetConfig();
-const RANGE = sheetRange("A1:T");
+const RANGE = sheetRange("A1:ZZ");
 const RANDOM_BUCKET_MS = 5 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 120;
@@ -406,6 +406,13 @@ function rowToObject(headers, row, index) {
     raw[normalizeHeader(header)] = String(row[index] || "").trim();
   });
   const plan = normalizePlan(raw.plano || raw.tipo_exibicao);
+  const fotos = [
+    raw.foto_url || raw.imagem || raw.imagem_url,
+    raw.foto_url_2,
+    raw.foto_url_3,
+    raw.foto_url_4,
+    raw.foto_url_5,
+  ].map((url) => String(url || "").trim()).filter(Boolean);
   return {
     id: raw.id || String(index + 1),
     nome: raw.nome,
@@ -422,7 +429,8 @@ function rowToObject(headers, row, index) {
     telefone: raw.telefone,
     tipo_exibicao: plan,
     oferta: raw.oferta,
-    foto_url: raw.foto_url || raw.imagem || raw.imagem_url,
+    foto_url: fotos[0] || "",
+    fotos,
     status: raw.status || "ativo",
     prioridade: Number.parseInt(raw.prioridade || "0", 10) || 0,
     verificado: raw.verificado,
@@ -466,6 +474,7 @@ function publicItem(item) {
     tipo_exibicao: plan,
     oferta: allowsOffer(plan) ? item.oferta : "",
     foto_url: allowsImage(plan) ? item.foto_url : "",
+    fotos: allowsImage(plan) ? item.fotos || [] : [],
     has_whatsapp: Boolean(item.whatsapp),
     has_telefone: Boolean(item.telefone),
     has_instagram: Boolean(item.instagram),

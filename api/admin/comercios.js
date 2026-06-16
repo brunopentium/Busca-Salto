@@ -1,6 +1,6 @@
 const { requireAdminSession } = require("../_lib/admin-auth");
 const { cleanText, json, readJsonBody } = require("../_lib/http");
-const { adminSearchMatches, appendCommerce, normalizeSearchText, readAdminSheetRows, updateCommerce } = require("../_lib/sheets-admin");
+const { adminSearchMatches, appendCommerce, deleteCommerce, normalizeSearchText, readAdminSheetRows, updateCommerce } = require("../_lib/sheets-admin");
 
 function parsePositiveInt(value, fallback, max) {
   const number = Number.parseInt(value, 10);
@@ -36,6 +36,12 @@ module.exports = async function handler(req, res) {
       const body = await readJsonBody(req, { maxBytes: 32 * 1024 });
       const id = cleanText(req.query.id || body.id, 40);
       const item = await updateCommerce(id, body);
+      return json(res, 200, { ok: true, item });
+    }
+
+    if (req.method === "DELETE") {
+      const id = cleanText(req.query.id, 40);
+      const item = await deleteCommerce(id);
       return json(res, 200, { ok: true, item });
     }
 

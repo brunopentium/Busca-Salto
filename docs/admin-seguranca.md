@@ -93,6 +93,16 @@ Limites iniciais:
 
 Depois de enviar a foto pelo painel, o campo `foto_url` e preenchido. Para a imagem aparecer no site publico, salvar o cadastro e usar plano que permita imagem.
 
+O painel agora aceita ate 5 fotos por comercio:
+
+- `foto_url`
+- `foto_url_2`
+- `foto_url_3`
+- `foto_url_4`
+- `foto_url_5`
+
+O site publico continua usando a primeira foto como capa do card. As demais ficam registradas para galerias ou expansoes futuras. Remover uma foto no painel limpa o campo do cadastro; o arquivo enviado ao Drive pode permanecer na pasta publica.
+
 ## Patrocinadores
 
 Os banners de patrocinadores ficam na aba `patrocinadores`, criada automaticamente quando o painel admin acessar a gestao pela primeira vez.
@@ -109,5 +119,18 @@ Cabecalhos:
 - `fim`
 - `texto_alt`
 - `data_atualizacao`
+- `imagem_desktop_2`
+- `imagem_desktop_3`
+- `imagem_desktop_4`
+- `imagem_desktop_5`
+- `imagem_mobile_1`
+- `imagem_mobile_2`
+- `imagem_mobile_3`
+- `imagem_mobile_4`
+- `imagem_mobile_5`
 
 Somente registros com `status` ativo, imagem preenchida e dentro do periodo configurado aparecem na API publica e no carrossel do site.
+
+O campo `imagem_url` permanece como o banner desktop principal por compatibilidade. Para patrocinadores, o painel permite ate 5 banners desktop (`imagem_url` + `imagem_desktop_2` a `imagem_desktop_5`) e ate 5 banners smartphone (`imagem_mobile_1` a `imagem_mobile_5`). No celular, o site usa os banners smartphone quando existirem; se nao existirem, usa os banners desktop.
+
+Excluir comercio ou patrocinador pelo painel marca a linha como `excluido`, sem apagar fisicamente a linha da planilha. Isso remove o item do site publico e preserva historico operacional.

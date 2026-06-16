@@ -1,5 +1,7 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
 
+const COMMERCE_EXTRA_HEADERS = ["foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5"];
+
 function normalize(value = "") {
   return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
@@ -27,6 +29,16 @@ function columnName(index) {
     number = Math.floor((number - 1) / 26);
   }
   return column;
+}
+
+function commerceImageUrls(raw = {}) {
+  return [
+    raw.foto_url || raw.imagem || raw.imagem_url || "",
+    raw.foto_url_2 || "",
+    raw.foto_url_3 || "",
+    raw.foto_url_4 || "",
+    raw.foto_url_5 || "",
+  ].map((url) => String(url || "").trim()).filter(Boolean);
 }
 
 function rowToAdminObject(headers, row, index) {
@@ -57,12 +69,42 @@ function rowToAdminObject(headers, row, index) {
     prioridade: raw.prioridade || "",
     oferta: raw.oferta || "",
     foto_url: raw.foto_url || raw.imagem || raw.imagem_url || "",
+    foto_url_2: raw.foto_url_2 || "",
+    foto_url_3: raw.foto_url_3 || "",
+    foto_url_4: raw.foto_url_4 || "",
+    foto_url_5: raw.foto_url_5 || "",
+    fotos: commerceImageUrls(raw),
     verificado: raw.verificado || "",
   };
 }
 
+async function ensureCommerceHeaders() {
+  const { spreadsheetId } = getSpreadsheetConfig();
+  const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: sheetRange("A1:ZZ1"),
+    valueRenderOption: "FORMATTED_VALUE",
+  });
+  const headers = (response.data.values || [])[0] || [];
+  const existing = new Set(headers.map((header, index) => headerKey(header, index)));
+  const missing = COMMERCE_EXTRA_HEADERS.filter((header) => !existing.has(header));
+  if (!missing.length) return headers;
+
+  const nextHeaders = [...headers, ...missing];
+  const lastColumn = columnName(nextHeaders.length - 1);
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: sheetRange(`A1:${lastColumn}1`),
+    valueInputOption: "RAW",
+    requestBody: { values: [nextHeaders] },
+  });
+  return nextHeaders;
+}
+
 async function readAdminSheetRows() {
   const { spreadsheetId } = getSpreadsheetConfig();
+  await ensureCommerceHeaders();
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsRead]);
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
@@ -112,6 +154,10 @@ function sanitizeCommercePayload(payload = {}, options = {}) {
     verificado: valueForKey(payload, "verificado").slice(0, 20),
     oferta: valueForKey(payload, "oferta").slice(0, 180),
     foto_url: valueForKey(payload, "foto_url").slice(0, 500),
+    foto_url_2: valueForKey(payload, "foto_url_2").slice(0, 500),
+    foto_url_3: valueForKey(payload, "foto_url_3").slice(0, 500),
+    foto_url_4: valueForKey(payload, "foto_url_4").slice(0, 500),
+    foto_url_5: valueForKey(payload, "foto_url_5").slice(0, 500),
     data_atualizacao: valueForKey(payload, "data_atualizacao", now).slice(0, 30),
   };
 
@@ -197,6 +243,10 @@ async function updateCommerce(id, payload) {
   return rowToAdminObject(current.headers, values, row.rowNumber - 2);
 }
 
+async function deleteCommerce(id) {
+  return updateCommerce(id, { status: "excluido" });
+}
+
 function adminSearchMatches(row, query = "") {
   const terms = normalizeSearchText(query).split(" ").filter(Boolean);
   if (!terms.length) return true;
@@ -222,6 +272,8 @@ module.exports = {
   adminSearchMatches,
   appendCommerce,
   buildRowValues,
+  deleteCommerce,
+  ensureCommerceHeaders,
   normalizeSearchText,
   readAdminSheetRows,
   sanitizeCommercePayload,

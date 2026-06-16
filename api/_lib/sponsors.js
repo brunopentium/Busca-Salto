@@ -1,9 +1,13 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig } = require("./google");
 
 const SPONSORS_SHEET_NAME = (process.env.GOOGLE_SPONSORS_SHEET_TAB || "patrocinadores").trim();
-const SPONSOR_HEADERS = ["id", "nome", "imagem_url", "link_url", "status", "ordem", "inicio", "fim", "texto_alt", "data_atualizacao"];
+const SPONSOR_HEADERS = [
+  "id", "nome", "imagem_url", "link_url", "status", "ordem", "inicio", "fim", "texto_alt", "data_atualizacao",
+  "imagem_desktop_2", "imagem_desktop_3", "imagem_desktop_4", "imagem_desktop_5",
+  "imagem_mobile_1", "imagem_mobile_2", "imagem_mobile_3", "imagem_mobile_4", "imagem_mobile_5",
+];
 
-function sponsorRange(range = "A1:J") {
+function sponsorRange(range = "A1:ZZ") {
   return `${SPONSORS_SHEET_NAME}!${range}`;
 }
 
@@ -13,6 +17,21 @@ function normalize(value = "") {
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function columnName(index) {
+  let column = "";
+  let number = index + 1;
+  while (number > 0) {
+    const remainder = (number - 1) % 26;
+    column = String.fromCharCode(65 + remainder) + column;
+    number = Math.floor((number - 1) / 26);
+  }
+  return column;
+}
+
+function imageList(...values) {
+  return values.map((value) => String(value || "").trim()).filter(Boolean).slice(0, 5).map(driveImageUrl);
 }
 
 function rowToSponsor(row, index) {
@@ -25,6 +44,17 @@ function rowToSponsor(row, index) {
     id: raw.id || String(index + 1),
     nome: raw.nome,
     imagem_url: raw.imagem_url,
+    imagem_desktop_2: raw.imagem_desktop_2,
+    imagem_desktop_3: raw.imagem_desktop_3,
+    imagem_desktop_4: raw.imagem_desktop_4,
+    imagem_desktop_5: raw.imagem_desktop_5,
+    imagem_mobile_1: raw.imagem_mobile_1,
+    imagem_mobile_2: raw.imagem_mobile_2,
+    imagem_mobile_3: raw.imagem_mobile_3,
+    imagem_mobile_4: raw.imagem_mobile_4,
+    imagem_mobile_5: raw.imagem_mobile_5,
+    imagens_desktop: imageList(raw.imagem_url, raw.imagem_desktop_2, raw.imagem_desktop_3, raw.imagem_desktop_4, raw.imagem_desktop_5),
+    imagens_mobile: imageList(raw.imagem_mobile_1, raw.imagem_mobile_2, raw.imagem_mobile_3, raw.imagem_mobile_4, raw.imagem_mobile_5),
     link_url: raw.link_url,
     status: raw.status || "ativo",
     ordem: Number.parseInt(raw.ordem || "0", 10) || 0,
@@ -56,15 +86,29 @@ async function ensureSponsorsSheet() {
 
   const headerResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: sponsorRange("A1:J1"),
+    range: sponsorRange("A1:ZZ1"),
   }).catch(() => ({ data: { values: [] } }));
 
-  if (!(headerResponse.data.values || [])[0]?.length) {
+  const currentHeaders = (headerResponse.data.values || [])[0] || [];
+  if (!currentHeaders.length) {
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: sponsorRange("A1:J1"),
+      range: sponsorRange(`A1:${columnName(SPONSOR_HEADERS.length - 1)}1`),
       valueInputOption: "RAW",
       requestBody: { values: [SPONSOR_HEADERS] },
+    });
+    return;
+  }
+
+  const existing = new Set(currentHeaders);
+  const missing = SPONSOR_HEADERS.filter((header) => !existing.has(header));
+  if (missing.length) {
+    const nextHeaders = [...currentHeaders, ...missing];
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: sponsorRange(`A1:${columnName(nextHeaders.length - 1)}1`),
+      valueInputOption: "RAW",
+      requestBody: { values: [nextHeaders] },
     });
   }
 }
@@ -74,7 +118,7 @@ async function readSponsors() {
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsRead]);
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: sponsorRange("A1:J"),
+    range: sponsorRange("A1:ZZ"),
     valueRenderOption: "FORMATTED_VALUE",
   }).catch((error) => {
     if (error?.code === 400) return { data: { values: [] } };
@@ -87,7 +131,7 @@ async function readSponsors() {
 
 function isSponsorActive(sponsor, now = todayDate()) {
   if (normalize(sponsor.status) !== "ativo") return false;
-  if (!sponsor.nome || !sponsor.imagem_url) return false;
+  if (!sponsor.nome || !sponsor.imagens_desktop.length) return false;
   if (sponsor.inicio && sponsor.inicio > now) return false;
   if (sponsor.fim && sponsor.fim < now) return false;
   return true;
@@ -101,10 +145,14 @@ function driveImageUrl(url = "") {
 }
 
 function publicSponsor(sponsor) {
+  const desktopImages = sponsor.imagens_desktop.length ? sponsor.imagens_desktop : imageList(sponsor.imagem_url);
+  const mobileImages = sponsor.imagens_mobile.length ? sponsor.imagens_mobile : desktopImages;
   return {
     id: sponsor.id,
     nome: sponsor.nome,
-    imagem_url: driveImageUrl(sponsor.imagem_url),
+    imagem_url: desktopImages[0] || "",
+    imagens_desktop: desktopImages,
+    imagens_mobile: mobileImages,
     link_url: sponsor.link_url,
     texto_alt: sponsor.texto_alt || sponsor.nome,
   };
@@ -116,6 +164,15 @@ function sanitizeSponsorPayload(payload = {}) {
     id: String(payload.id || "").trim(),
     nome: String(payload.nome || "").trim().slice(0, 120),
     imagem_url: String(payload.imagem_url || "").trim().slice(0, 500),
+    imagem_desktop_2: String(payload.imagem_desktop_2 || "").trim().slice(0, 500),
+    imagem_desktop_3: String(payload.imagem_desktop_3 || "").trim().slice(0, 500),
+    imagem_desktop_4: String(payload.imagem_desktop_4 || "").trim().slice(0, 500),
+    imagem_desktop_5: String(payload.imagem_desktop_5 || "").trim().slice(0, 500),
+    imagem_mobile_1: String(payload.imagem_mobile_1 || "").trim().slice(0, 500),
+    imagem_mobile_2: String(payload.imagem_mobile_2 || "").trim().slice(0, 500),
+    imagem_mobile_3: String(payload.imagem_mobile_3 || "").trim().slice(0, 500),
+    imagem_mobile_4: String(payload.imagem_mobile_4 || "").trim().slice(0, 500),
+    imagem_mobile_5: String(payload.imagem_mobile_5 || "").trim().slice(0, 500),
     link_url: String(payload.link_url || "").trim().slice(0, 500),
     status: status.slice(0, 40),
     ordem: String(payload.ordem || "0").replace(/[^0-9-]/g, "").slice(0, 5) || "0",
@@ -125,8 +182,8 @@ function sanitizeSponsorPayload(payload = {}) {
     data_atualizacao: todayDate(),
   };
 
-  if (!data.nome || !data.imagem_url) {
-    const error = new Error("Nome e imagem do patrocinador sao obrigatorios.");
+  if (!data.nome || !imageList(data.imagem_url, data.imagem_desktop_2, data.imagem_desktop_3, data.imagem_desktop_4, data.imagem_desktop_5).length) {
+    const error = new Error("Nome e ao menos um banner desktop do patrocinador sao obrigatorios.");
     error.statusCode = 400;
     throw error;
   }
@@ -177,15 +234,20 @@ async function updateSponsor(id, payload) {
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: sponsorRange(`A${sponsor.rowNumber}:J${sponsor.rowNumber}`),
+    range: sponsorRange(`A${sponsor.rowNumber}:${columnName(SPONSOR_HEADERS.length - 1)}${sponsor.rowNumber}`),
     valueInputOption: "USER_ENTERED",
     requestBody: { values: [values] },
   });
   return rowToSponsor(values, sponsor.rowNumber - 2);
 }
 
+async function deleteSponsor(id) {
+  return updateSponsor(id, { status: "excluido" });
+}
+
 module.exports = {
   appendSponsor,
+  deleteSponsor,
   ensureSponsorsSheet,
   isSponsorActive,
   publicSponsor,

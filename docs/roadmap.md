@@ -397,3 +397,4 @@ A API ja evita expor contatos na listagem, aplica limite simples por IP e limita
 - Restaurados no workspace local os assets publicados usados pela home, PWA, pagina de comerciantes e card Top: `imagens/logo.png`, `imagens/MP.png` e `imagens/scallet.jpg`.
 - Removidos da busca publica os textos explicitos de plano nos cards e grupos, mantendo prioridade, imagem, oferta e destaque visual por plano.
 - Ocultado o contador de resultados na home sem filtros para evitar a impressao de que a base publica possui apenas 30 cadastros.
+- Expandido o painel admin para ate 5 fotos por comercio, ate 5 banners desktop e ate 5 banners smartphone por patrocinador, com remocao de imagens do cadastro e exclusao segura por status `excluido`.
