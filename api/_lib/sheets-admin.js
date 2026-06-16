@@ -60,6 +60,32 @@ function lastFilledRowNumber(values = []) {
   return 1;
 }
 
+async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows) {
+  const metadata = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: "sheets.properties(sheetId,title,gridProperties(rowCount))",
+  });
+  const sheet = (metadata.data.sheets || []).find((item) => item.properties?.title === sheetName);
+  const properties = sheet?.properties;
+  if (typeof properties?.sheetId !== "number") return;
+
+  const rowCount = properties.gridProperties?.rowCount || 0;
+  if (rowCount >= minRows) return;
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{
+        appendDimension: {
+          sheetId: properties.sheetId,
+          dimension: "ROWS",
+          length: Math.max(minRows - rowCount, 100),
+        },
+      }],
+    },
+  });
+}
+
 function commerceImageUrls(raw = {}) {
   return [
     raw.foto_url || raw.imagem || raw.imagem_url || "",
@@ -228,7 +254,7 @@ function buildRowValues(headers, existingValues = [], data = {}) {
 }
 
 async function appendCommerce(payload) {
-  const { spreadsheetId } = getSpreadsheetConfig();
+  const { spreadsheetId, sheetName } = getSpreadsheetConfig();
   const current = await readAdminSheetRows();
   const data = sanitizeCommercePayload({
     ...payload,
@@ -243,6 +269,8 @@ async function appendCommerce(payload) {
   });
   const nextRowNumber = Math.max(lastFilledRowNumber(allRowsResponse.data.values || []) + 1, (current.headerRowNumber || 1) + 1);
   const lastColumn = columnName(current.headers.length - 1);
+
+  await ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, nextRowNumber);
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,

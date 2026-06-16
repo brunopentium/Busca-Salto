@@ -37,6 +37,32 @@ function lastFilledRowNumber(values = []) {
   return 1;
 }
 
+async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows) {
+  const metadata = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: "sheets.properties(sheetId,title,gridProperties(rowCount))",
+  });
+  const sheet = (metadata.data.sheets || []).find((item) => item.properties?.title === sheetName);
+  const properties = sheet?.properties;
+  if (typeof properties?.sheetId !== "number") return;
+
+  const rowCount = properties.gridProperties?.rowCount || 0;
+  if (rowCount >= minRows) return;
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{
+        appendDimension: {
+          sheetId: properties.sheetId,
+          dimension: "ROWS",
+          length: Math.max(minRows - rowCount, 100),
+        },
+      }],
+    },
+  });
+}
+
 function imageList(...values) {
   return values.map((value) => String(value || "").trim()).filter(Boolean).slice(0, 5).map(driveImageUrl);
 }
@@ -222,6 +248,8 @@ async function appendSponsor(payload) {
     valueRenderOption: "FORMATTED_VALUE",
   });
   const nextRowNumber = Math.max(lastFilledRowNumber(allRowsResponse.data.values || []) + 1, 2);
+
+  await ensureSheetRowCapacity(sheets, spreadsheetId, SPONSORS_SHEET_NAME, nextRowNumber);
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
