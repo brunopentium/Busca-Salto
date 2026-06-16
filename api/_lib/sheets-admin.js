@@ -1,6 +1,11 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
 
 const COMMERCE_EXTRA_HEADERS = ["foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5"];
+const COMMERCE_CONTENT_KEYS = new Set([
+  "id", "nome", "categoria", "subcategoria", "bairro", "endereco", "whatsapp", "instagram", "site",
+  "descricao", "palavras_chave", "facebook", "telefone", "oferta", "foto_url", "imagem", "imagem_url",
+  "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5",
+]);
 const REQUIRED_HEADER_KEYS = new Set(["id", "nome", "categoria"]);
 
 function normalize(value = "") {
@@ -53,11 +58,18 @@ function findHeaderInfo(values = []) {
   };
 }
 
-function lastFilledRowNumber(values = []) {
-  for (let index = values.length - 1; index >= 0; index -= 1) {
-    if ((values[index] || []).some((cell) => String(cell || "").trim())) return index + 1;
+function rowHasCommerceContent(headers, row = []) {
+  return headers.some((header, index) => {
+    const key = headerKey(header, index);
+    return COMMERCE_CONTENT_KEYS.has(key) && String(row[index] || "").trim();
+  });
+}
+
+function lastCommerceRowNumber(values = [], headers = [], headerIndex = 0) {
+  for (let index = values.length - 1; index > headerIndex; index -= 1) {
+    if (rowHasCommerceContent(headers, values[index])) return index + 1;
   }
-  return 1;
+  return headerIndex + 1;
 }
 
 async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows) {
@@ -173,7 +185,7 @@ async function readAdminSheetRows() {
   const rows = values.slice(headerIndex + 1).map((row, index) => {
     const item = rowToAdminObject(headers, row, index);
     return { ...item, rowNumber: headerRowNumber + index + 1 };
-  });
+  }).filter((row) => rowHasCommerceContent(headers, row.values));
 
   return {
     headers,
@@ -267,7 +279,11 @@ async function appendCommerce(payload) {
     range: sheetRange("A1:ZZ"),
     valueRenderOption: "FORMATTED_VALUE",
   });
-  const nextRowNumber = Math.max(lastFilledRowNumber(allRowsResponse.data.values || []) + 1, (current.headerRowNumber || 1) + 1);
+  const nextRowNumber = Math.max(lastCommerceRowNumber(
+    allRowsResponse.data.values || [],
+    current.headers,
+    (current.headerRowNumber || 1) - 1,
+  ) + 1, (current.headerRowNumber || 1) + 1);
   const lastColumn = columnName(current.headers.length - 1);
 
   await ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, nextRowNumber);

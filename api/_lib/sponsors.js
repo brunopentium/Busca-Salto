@@ -6,6 +6,11 @@ const SPONSOR_HEADERS = [
   "imagem_desktop_2", "imagem_desktop_3", "imagem_desktop_4", "imagem_desktop_5",
   "imagem_mobile_1", "imagem_mobile_2", "imagem_mobile_3", "imagem_mobile_4", "imagem_mobile_5",
 ];
+const SPONSOR_CONTENT_KEYS = new Set([
+  "id", "nome", "imagem_url", "link_url", "texto_alt",
+  "imagem_desktop_2", "imagem_desktop_3", "imagem_desktop_4", "imagem_desktop_5",
+  "imagem_mobile_1", "imagem_mobile_2", "imagem_mobile_3", "imagem_mobile_4", "imagem_mobile_5",
+]);
 
 function sponsorRange(range = "A1:ZZ") {
   return `${SPONSORS_SHEET_NAME}!${range}`;
@@ -30,9 +35,15 @@ function columnName(index) {
   return column;
 }
 
-function lastFilledRowNumber(values = []) {
-  for (let index = values.length - 1; index >= 0; index -= 1) {
-    if ((values[index] || []).some((cell) => String(cell || "").trim())) return index + 1;
+function rowHasSponsorContent(row = []) {
+  return SPONSOR_HEADERS.some((header, index) => (
+    SPONSOR_CONTENT_KEYS.has(header) && String(row[index] || "").trim()
+  ));
+}
+
+function lastSponsorRowNumber(values = []) {
+  for (let index = values.length - 1; index > 0; index -= 1) {
+    if (rowHasSponsorContent(values[index])) return index + 1;
   }
   return 1;
 }
@@ -158,7 +169,7 @@ async function readSponsors() {
     throw error;
   });
   const values = response.data.values || [];
-  const rows = values.slice(1).map(rowToSponsor);
+  const rows = values.slice(1).map(rowToSponsor).filter((row) => rowHasSponsorContent(row.values));
   return { rows, updatedAt: new Date().toISOString() };
 }
 
@@ -247,7 +258,7 @@ async function appendSponsor(payload) {
     range: sponsorRange("A1:ZZ"),
     valueRenderOption: "FORMATTED_VALUE",
   });
-  const nextRowNumber = Math.max(lastFilledRowNumber(allRowsResponse.data.values || []) + 1, 2);
+  const nextRowNumber = Math.max(lastSponsorRowNumber(allRowsResponse.data.values || []) + 1, 2);
 
   await ensureSheetRowCapacity(sheets, spreadsheetId, SPONSORS_SHEET_NAME, nextRowNumber);
 
