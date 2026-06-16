@@ -209,10 +209,13 @@ const SUBCATEGORY_EXPANSIONS = {
 
   imobiliarias: ["Imobiliária"],
   "corretor de imoveis": ["Imobiliária"],
+  "corretores de imoveis": ["Imobiliária"],
   "imoveis para temporada": ["Imobiliária"],
   "corretora de seguros": ["Seguros"],
+  "corretoras de seguros": ["Seguros"],
   "agencias de emprego": ["Recursos Humanos"],
   "material grafico": ["Gráficas"],
+  "materiais graficos": ["Gráficas"],
   "comunicacao visual": ["Gráficas"],
   "produtoras de video": ["Produtora de Vídeo"],
   "coworkings": ["Espaços Compartilhados"],
