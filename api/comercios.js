@@ -283,6 +283,19 @@ function normalizeHeader(value = "") {
   return normalize(value).replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
 
+function headerKey(header, index) {
+  const key = normalizeHeader(header);
+  if (key) return key;
+  return index === 0 ? "id" : `col_${index + 1}`;
+}
+
+function findHeaderIndex(values = []) {
+  return Math.max(0, values.findIndex((row) => {
+    const keys = new Set((row || []).map((header, index) => headerKey(header, index)));
+    return keys.has("id") && keys.has("nome") && keys.has("categoria");
+  }));
+}
+
 function cleanParam(value, maxLength = 80) {
   return String(value || "").trim().slice(0, maxLength);
 }
@@ -456,9 +469,10 @@ async function loadRows() {
   });
 
   const values = response.data.values || [];
-  const headers = values[0] || [];
+  const headerIndex = findHeaderIndex(values);
+  const headers = values[headerIndex] || [];
   const rows = values
-    .slice(1)
+    .slice(headerIndex + 1)
     .map((row, index) => rowToObject(headers, row, index))
     .filter((row) => row.nome && normalize(row.status) === "ativo");
 

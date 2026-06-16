@@ -30,6 +30,13 @@ function columnName(index) {
   return column;
 }
 
+function lastFilledRowNumber(values = []) {
+  for (let index = values.length - 1; index >= 0; index -= 1) {
+    if ((values[index] || []).some((cell) => String(cell || "").trim())) return index + 1;
+  }
+  return 1;
+}
+
 function imageList(...values) {
   return values.map((value) => String(value || "").trim()).filter(Boolean).slice(0, 5).map(driveImageUrl);
 }
@@ -209,14 +216,20 @@ async function appendSponsor(payload) {
   const { spreadsheetId } = getSpreadsheetConfig();
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
   const values = sponsorValues(data);
-  await sheets.spreadsheets.values.append({
+  const allRowsResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: sponsorRange("A1"),
+    range: sponsorRange("A1:ZZ"),
+    valueRenderOption: "FORMATTED_VALUE",
+  });
+  const nextRowNumber = Math.max(lastFilledRowNumber(allRowsResponse.data.values || []) + 1, 2);
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: sponsorRange(`A${nextRowNumber}:${columnName(SPONSOR_HEADERS.length - 1)}${nextRowNumber}`),
     valueInputOption: "USER_ENTERED",
-    insertDataOption: "INSERT_ROWS",
     requestBody: { values: [values] },
   });
-  return rowToSponsor(values, rows.length);
+  return { ...rowToSponsor(values, rows.length), rowNumber: nextRowNumber };
 }
 
 async function updateSponsor(id, payload) {

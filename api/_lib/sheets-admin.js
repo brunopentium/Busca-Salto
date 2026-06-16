@@ -1,6 +1,7 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
 
 const COMMERCE_EXTRA_HEADERS = ["foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5"];
+const REQUIRED_HEADER_KEYS = new Set(["id", "nome", "categoria"]);
 
 function normalize(value = "") {
   return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -29,6 +30,34 @@ function columnName(index) {
     number = Math.floor((number - 1) / 26);
   }
   return column;
+}
+
+function findHeaderInfo(values = []) {
+  const headerIndex = values.findIndex((row) => {
+    const keys = new Set((row || []).map((header, index) => headerKey(header, index)));
+    return [...REQUIRED_HEADER_KEYS].every((key) => keys.has(key));
+  });
+
+  if (headerIndex >= 0) {
+    return {
+      headerIndex,
+      headerRowNumber: headerIndex + 1,
+      headers: values[headerIndex] || [],
+    };
+  }
+
+  return {
+    headerIndex: 0,
+    headerRowNumber: 1,
+    headers: values[0] || [],
+  };
+}
+
+function lastFilledRowNumber(values = []) {
+  for (let index = values.length - 1; index >= 0; index -= 1) {
+    if ((values[index] || []).some((cell) => String(cell || "").trim())) return index + 1;
+  }
+  return 1;
 }
 
 function commerceImageUrls(raw = {}) {
@@ -83,10 +112,11 @@ async function ensureCommerceHeaders() {
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: sheetRange("A1:ZZ1"),
+    range: sheetRange("A1:ZZ"),
     valueRenderOption: "FORMATTED_VALUE",
   });
-  const headers = (response.data.values || [])[0] || [];
+  const values = response.data.values || [];
+  const { headers, headerRowNumber } = findHeaderInfo(values);
   const existing = new Set(headers.map((header, index) => headerKey(header, index)));
   const missing = COMMERCE_EXTRA_HEADERS.filter((header) => !existing.has(header));
   if (!missing.length) return headers;
@@ -95,7 +125,7 @@ async function ensureCommerceHeaders() {
   const lastColumn = columnName(nextHeaders.length - 1);
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: sheetRange(`A1:${lastColumn}1`),
+    range: sheetRange(`A${headerRowNumber}:${lastColumn}${headerRowNumber}`),
     valueInputOption: "RAW",
     requestBody: { values: [nextHeaders] },
   });
@@ -113,11 +143,15 @@ async function readAdminSheetRows() {
   });
 
   const values = response.data.values || [];
-  const headers = values[0] || [];
-  const rows = values.slice(1).map((row, index) => rowToAdminObject(headers, row, index));
+  const { headers, headerIndex, headerRowNumber } = findHeaderInfo(values);
+  const rows = values.slice(headerIndex + 1).map((row, index) => {
+    const item = rowToAdminObject(headers, row, index);
+    return { ...item, rowNumber: headerRowNumber + index + 1 };
+  });
 
   return {
     headers,
+    headerRowNumber,
     rows,
     updatedAt: new Date().toISOString(),
   };
@@ -202,16 +236,22 @@ async function appendCommerce(payload) {
   });
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
   const values = buildRowValues(current.headers, [], data);
-
-  await sheets.spreadsheets.values.append({
+  const allRowsResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: sheetRange("A1"),
+    range: sheetRange("A1:ZZ"),
+    valueRenderOption: "FORMATTED_VALUE",
+  });
+  const nextRowNumber = Math.max(lastFilledRowNumber(allRowsResponse.data.values || []) + 1, (current.headerRowNumber || 1) + 1);
+  const lastColumn = columnName(current.headers.length - 1);
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: sheetRange(`A${nextRowNumber}:${lastColumn}${nextRowNumber}`),
     valueInputOption: "USER_ENTERED",
-    insertDataOption: "INSERT_ROWS",
     requestBody: { values: [values] },
   });
 
-  return rowToAdminObject(current.headers, values, current.rows.length);
+  return { ...rowToAdminObject(current.headers, values, current.rows.length), rowNumber: nextRowNumber };
 }
 
 async function updateCommerce(id, payload) {
@@ -274,6 +314,7 @@ module.exports = {
   buildRowValues,
   deleteCommerce,
   ensureCommerceHeaders,
+  findHeaderInfo,
   normalizeSearchText,
   readAdminSheetRows,
   sanitizeCommercePayload,
