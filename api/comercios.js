@@ -17,6 +17,8 @@ const PAGINATION_LIMITS = {
 };
 const SEARCH_ALIASES = {
   acai: ["acaiteria", "sorveteria"],
+  pastel: ["pastelaria"],
+  pasteis: ["pastelaria"],
   lanche: ["lanchonete", "lanches", "hamburgueria"],
   lanches: ["lanchonete", "lanche", "hamburgueria"],
   hamburguer: ["hamburgueria", "hamburguerias"],
@@ -166,6 +168,95 @@ const SUBCATEGORY_EXPANSIONS = {
   "assistencia tecnica de ar condicionado": ["Ar-condicionado"],
   "acougues boutique": ["Açougue"],
   papelarias: ["Papelaria"],
+  "academia e artes marciais": ["Academia"],
+  "academia e lutas": ["Academia"],
+  "centro de diagnostico": ["Clínica de Imagem"],
+  "clinica medica especializada": ["Clínica Médica"],
+  "clinica multidisciplinar": ["Clínica Médica"],
+  "consultorio medico": ["Clínica Médica"],
+  "diagnostico por imagem": ["Clínica de Imagem"],
+  "farmacia e drogaria": ["Farmácia"],
+  "fisioterapia e acupuntura": ["Fisioterapia"],
+  "fisioterapia e pilates": ["Fisioterapia", "Pilates"],
+  "psicologia e neuropsicologia": ["Psicologia"],
+  ortodontia: ["Clínica Odontológica"],
+  policlinica: ["Clínica Médica"],
+  "pronto atendimento": ["Hospitais"],
+  "lojas de produtos naturais": ["Produtos Naturais"],
+  suplementos: ["Produtos Naturais"],
+  "terapias alternativas": ["Terapias"],
+  "terapeutas ocupacionais": ["Terapias"],
+  "casas de repouso": ["Cuidador de Idosos"],
+
+  "chaveiros": ["Chaveiro"],
+  "chaveiro automotivo": ["Chaveiro"],
+  "auto socorro": ["Guincho"],
+  "alinhamento e balanceamento": ["Centro Automotivo"],
+  "troca de oleo": ["Centro Automotivo"],
+  vulcanizacao: ["Borracharia"],
+  "rodas automotivas": ["Loja de Pneus"],
+  "som e acessorios automotivos": ["Acessórios Automotivos"],
+
+  alarmes: ["Segurança Eletrônica"],
+  "instalacao de cameras": ["Segurança Eletrônica"],
+  refrigeracao: ["Ar-condicionado"],
+  "loja de moveis": ["Móveis"],
+  "moveis e decoracao": ["Móveis"],
+  "moveis planejados": ["Móveis"],
+  reformas: ["Pedreiros"],
+  "portoes automaticos": ["Segurança Eletrônica"],
+  "limpeza de piscina": ["Piscina"],
+
+  imobiliarias: ["Imobiliária"],
+  "corretor de imoveis": ["Imobiliária"],
+  "imoveis para temporada": ["Imobiliária"],
+  "corretora de seguros": ["Seguros"],
+  "agencias de emprego": ["Recursos Humanos"],
+  "material grafico": ["Gráficas"],
+  "comunicacao visual": ["Gráficas"],
+  "produtoras de video": ["Produtora de Vídeo"],
+  "coworkings": ["Espaços Compartilhados"],
+  "escritorios compartilhados": ["Espaços Compartilhados"],
+  "consultorios compartilhados": ["Espaços Compartilhados"],
+  "administradoras de condominios": ["Condomínios"],
+  "sindicos profissionais": ["Condomínios"],
+
+  "barbearia e salao masculino": ["Barbearia"],
+  cabelo: ["Salão de Beleza"],
+  "cabelo e colorimetria": ["Salão de Beleza"],
+  "cabelo e estetica": ["Salão de Beleza", "Estética"],
+  "cabelos cacheados e crespos": ["Salão de Beleza"],
+  "centro de estetica e beleza": ["Estética", "Salão de Beleza"],
+  "estetica e beleza": ["Estética"],
+  "escova express": ["Salão de Beleza"],
+  "unhas e maquiagem": ["Unhas", "Maquiagem"],
+  maquiadores: ["Maquiagem"],
+
+  bercarios: ["Educação Infantil"],
+  creches: ["Educação Infantil"],
+  "escola infantil": ["Educação Infantil"],
+  "escola particular": ["Escola Particular"],
+  "cursos de ingles": ["Escolas de Idiomas"],
+  "faculdade": ["Ensino Superior"],
+  universidade: ["Ensino Superior"],
+
+  "aluguel de mesas e cadeiras": ["Aluguel para Festas"],
+  "aluguel de brinquedos": ["Aluguel para Festas"],
+  "artigos para festas": ["Artigos para Festas"],
+  "lojas de festas": ["Artigos para Festas"],
+  "lojas de embalagens": ["Artigos para Festas"],
+  "decoracao de festas": ["Decoração de Festas"],
+  "chacaras para eventos": ["Espaços para Eventos"],
+  "saloes de festa": ["Espaços para Eventos"],
+  "espacos de lazer": ["Espaços para Eventos"],
+  "organizadores de eventos": ["Cerimonialistas"],
+  "filmagem de casamento": ["Produtora de Vídeo"],
+  fotografos: ["Fotógrafos"],
+
+  "casas de racao": ["Rações"],
+  "pet shops": ["Pet Shop"],
+  "veterinarios": ["Clínica Veterinária"],
+  "lojas agropecuarias": ["Agropecuária"],
 };
 
 let cache = { loadedAt: 0, rows: [] };
@@ -331,9 +422,8 @@ function fieldRelevance(field, rawTerm, weight) {
 
   if (terms.some((term) => field.tokens.includes(term))) return weight;
   if (terms.some((term) => field.variants.has(term))) return Math.round(weight * 0.85);
-  if (terms.some((term) => term.length >= 4 && field.text.includes(term))) return weight;
-  if (terms.some((term) => term.length >= 5 && field.compact.includes(compactSearchText(term)))) return Math.round(weight * 0.8);
-  if (terms.some((term) => term.length >= 5 && field.compactVariants.has(compactSearchText(term)))) return Math.round(weight * 0.75);
+  if (terms.some((term) => term.length >= 5 && field.tokens.some((token) => token.startsWith(term)))) return Math.round(weight * 0.7);
+  if (terms.some((term) => term.length >= 6 && field.compactVariants.has(compactSearchText(term)))) return Math.round(weight * 0.65);
 
   const limit = Math.max(...terms.map(fuzzyLimit));
   if (!limit) return 0;
