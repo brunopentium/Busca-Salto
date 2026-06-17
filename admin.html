@@ -900,7 +900,7 @@
 
     async function loadSiteConfig() {
       try {
-        const response = await fetch("/api/admin/site-config", { cache: "no-store", credentials: "same-origin" });
+        const response = await fetch("/api/admin/patrocinadores?mode=site-config", { cache: "no-store", credentials: "same-origin" });
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.error || "Falha ao carregar identidade.");
         setSiteConfig(data.config || {});
@@ -1298,7 +1298,7 @@
       panelStatus.className = "status";
       const data = Object.fromEntries(new FormData(siteConfigForm).entries());
       try {
-        const response = await fetch("/api/admin/site-config", {
+        const response = await fetch("/api/admin/patrocinadores?mode=site-config", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "same-origin",

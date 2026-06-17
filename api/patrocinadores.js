@@ -1,7 +1,8 @@
 const { json } = require("./_lib/http");
+const { readSiteConfigPublic } = require("./_lib/site-config");
 const { isSponsorActive, publicSponsor, readSponsors } = require("./_lib/sponsors");
 
-let cache = { loadedAt: 0, items: [] };
+let cache = { loadedAt: 0, items: [], config: { logo: { url: "", ajuste: {} }, banner: { url: "", ajuste: {} } } };
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 module.exports = async function handler(req, res) {
@@ -11,16 +12,18 @@ module.exports = async function handler(req, res) {
     const now = Date.now();
     if (!cache.loadedAt || now - cache.loadedAt > CACHE_TTL_MS) {
       const { rows } = await readSponsors();
+      const config = await readSiteConfigPublic().catch(() => ({ logo: { url: "", ajuste: {} }, banner: { url: "", ajuste: {} } }));
       cache = {
         loadedAt: now,
         items: rows
           .filter(isSponsorActive)
           .sort((a, b) => a.ordem - b.ordem || String(a.nome).localeCompare(String(b.nome), "pt-BR"))
           .map(publicSponsor),
+        config,
       };
     }
 
-    return json(res, 200, { ok: true, items: cache.items, updatedAt: new Date(cache.loadedAt).toISOString() }, {
+    return json(res, 200, { ok: true, items: cache.items, config: cache.config, updatedAt: new Date(cache.loadedAt).toISOString() }, {
       cacheControl: "public, max-age=120",
     });
   } catch (error) {
@@ -31,6 +34,6 @@ module.exports = async function handler(req, res) {
       message: error?.message || "Erro desconhecido",
       timestamp: new Date().toISOString(),
     }));
-    return json(res, 200, { ok: true, items: [] });
+    return json(res, 200, { ok: true, items: [], config: { logo: { url: "", ajuste: {} }, banner: { url: "", ajuste: {} } } });
   }
 };

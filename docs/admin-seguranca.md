@@ -64,10 +64,8 @@ Essas pastas permanecem privadas por padrao. O fluxo de upload deve publicar ape
 - `api/admin/logout.js`: encerra sessao.
 - `api/admin/comercios.js`: lista, cria e edita comercios com dados completos somente para sessao admin.
 - `api/admin/upload.js`: recebe imagem autenticada, valida tipo/tamanho, envia ao Google Drive e retorna URL publica do arquivo aprovado.
-- `api/admin/patrocinadores.js`: cria, lista e edita banners de patrocinadores em aba propria da planilha.
-- `api/admin/site-config.js`: le e salva logo e banner principal configuraveis pelo painel.
-- `api/patrocinadores.js`: API publica somente com patrocinadores ativos.
-- `api/site-config.js`: API publica com identidade visual ativa do site.
+- `api/admin/patrocinadores.js`: cria, lista e edita banners de patrocinadores em aba propria da planilha; tambem le e salva a identidade do site via `mode=site-config`.
+- `api/patrocinadores.js`: API publica com patrocinadores ativos e identidade visual ativa do site.
 - `api/_lib/sponsors.js`: garante a aba `patrocinadores`, aplica cabecalhos e filtra periodo/status.
 - `api/_lib/site-config.js`: garante a aba `config_site` e sanitiza URLs/ajustes da identidade do site.
 - `api/_lib/sheets-admin.js`: le e escreve na planilha com cabecalhos preservados e mapeia linhas para o painel.
