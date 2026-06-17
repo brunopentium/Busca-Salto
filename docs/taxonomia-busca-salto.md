@@ -53,3 +53,22 @@ Ao salvar um comercio, a API admin tambem normaliza categoria e subcategoria ant
 ## Uso na busca publica
 
 A API publica continua aplicando uma camada de padronizacao na leitura da planilha. Assim, dados antigos podem continuar existindo na base, mas o usuario final ve filtros mais limpos e resultados mais coerentes.
+
+## Limpeza aplicada na base
+
+Em 2026-06-16 foi aplicado um primeiro lote de limpeza diretamente na aba `base_interna`, limitado as colunas `categoria` e `subcategoria`, linhas 2 a 700.
+
+O lote corrigiu nomes que geravam filtros duplicados ou muito especificos, incluindo:
+
+- `Servicos Automotivos` para `Automotivo`;
+- `Oficina Mecanica` para `Mecanica`;
+- `Pizzaria Delivery` para `Pizzaria`;
+- `Pastelaria Delivery` para `Pastelaria`;
+- variacoes `Delivery de ...` para a subcategoria principal;
+- `Corretores de Imoveis` para `Imobiliaria`;
+- `Corretoras de Seguros` para `Seguros`;
+- `Materiais graficos` e `Comunicacao visual` para `Graficas`;
+- `Clinica Medica Especializada` para `Clinica Medica`;
+- plurais educacionais como `Escolas particulares` para o singular padronizado.
+
+A limpeza nao alterou nome, endereco, contatos, descricao, palavras-chave, fotos, plano, prioridade, status ou verificacao.
