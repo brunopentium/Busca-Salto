@@ -3,6 +3,7 @@ const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 30;
 const CONTACT_TYPES = new Set(["whatsapp", "telefone", "instagram", "facebook", "site"]);
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./_lib/google");
+const { canonicalCategory, canonicalSubcategories } = require("./_lib/taxonomy");
 const { spreadsheetId: SPREADSHEET_ID } = getSpreadsheetConfig();
 const RANGE = sheetRange("A1:ZZ");
 const RANDOM_BUCKET_MS = 5 * 60 * 1000;
@@ -58,218 +59,6 @@ const SEARCH_STOPWORDS = new Set([
   "aqui", "encontrar", "mim", "onde", "perto", "preciso", "procuro", "procurar", "proxima", "proximo", "quero",
   "salto", "sp",
 ]);
-const CATEGORY_CANONICAL = {
-  "servicos automotivos": "Automotivo",
-};
-const SUBCATEGORY_CANONICAL = {
-  "acougues boutique": "Açougue Boutique",
-  "assistencia tecnica": "Assistência Técnica",
-  "auto eletrica": "Autoelétrica",
-  autoeletrica: "Autoelétrica",
-  borracharias: "Borracharia",
-  churrascarias: "Churrascaria",
-  "clinicas de imagem": "Clínica de Imagem",
-  "clinicas medicas": "Clínica Médica",
-  "clinicas veterinarias": "Clínica Veterinária",
-  "comunidades religiosas": "Comunidade Religiosa",
-  conveniencias: "Conveniência",
-  "corretoras de seguros": "Corretora de Seguros",
-  "corretores de imoveis": "Corretor de Imóveis",
-  "cuidadores de idosos": "Cuidador de Idosos",
-  "distribuidoras de bebidas": "Distribuidora de Bebidas",
-  "escolas infantis": "Escola Infantil",
-  "escolas particulares": "Escola Particular",
-  "faculdades": "Faculdade",
-  "hortifrutis": "Hortifrúti",
-  "laboratorios de exames": "Laboratório de Exames",
-  "loja de pneus": "Loja de Pneus",
-  "lojas de moveis": "Loja de Móveis",
-  "lojas de presentes": "Loja de Presentes",
-  "materiais graficos": "Material Gráfico",
-  "musicos": "Músicos",
-  djs: "DJs",
-  epis: "EPIs",
-  ongs: "ONGs",
-  "nutricionistas": "Nutricionista",
-  "otica": "Ótica",
-  "pneus e mecanica": "Pneus e Mecânica",
-  "produtores locais": "Produtores Locais",
-  "racoes": "Rações",
-  "restaurantes por quilo": "Restaurante por Quilo",
-  "universidades": "Universidade",
-};
-const SUBCATEGORY_EXPANSIONS = {
-  "acaiteria e pastelaria": ["Açaiteria", "Pastelaria"],
-  "acaiteria e sorveteria": ["Açaiteria", "Sorveteria"],
-  "bar com porcoes": ["Bar"],
-  "bar e restaurante": ["Bar", "Restaurante"],
-  bolos: ["Confeitaria"],
-  "bolos e doces": ["Confeitaria"],
-  "boteco com porcoes": ["Bar"],
-  botequim: ["Bar"],
-  "cafe e confeitaria": ["Cafeteria", "Confeitaria"],
-  "cafe e restaurante": ["Cafeteria", "Restaurante"],
-  cafeterias: ["Cafeteria"],
-  "choperia com porcoes": ["Bar"],
-  "comida oriental": ["Comida Japonesa"],
-  "confeitaria artesanal": ["Confeitaria"],
-  "confeitaria e doceria": ["Confeitaria"],
-  "confeitaria gourmet": ["Confeitaria"],
-  "delivery de acai": ["Açaiteria"],
-  "delivery de comida brasileira": ["Restaurante"],
-  "delivery de espetinhos": ["Espetaria"],
-  "delivery de hamburgueria": ["Hamburgueria"],
-  "delivery de lanches": ["Lanchonete"],
-  "delivery de lanches e porcoes": ["Lanchonete"],
-  "delivery de marmitas": ["Marmitaria"],
-  "delivery de marmitex": ["Marmitaria"],
-  "delivery de restaurante e pizzaria": ["Restaurante", "Pizzaria"],
-  doceria: ["Confeitaria"],
-  "doces e salgados": ["Confeitaria"],
-  "esfiharia e lanchonete": ["Esfiharia", "Lanchonete"],
-  "esfiharia e pizzaria": ["Esfiharia", "Pizzaria"],
-  "espetaria e bar": ["Espetaria", "Bar"],
-  "espetaria e porcoes": ["Espetaria"],
-  "hamburgueria artesanal": ["Hamburgueria"],
-  "hamburgueria delivery": ["Hamburgueria"],
-  "lanches e hamburgueres": ["Lanchonete", "Hamburgueria"],
-  "lanchonete com hamburguer": ["Lanchonete", "Hamburgueria"],
-  "lanchonete e sorveteria": ["Lanchonete", "Sorveteria"],
-  marmitex: ["Marmitaria"],
-  "marmitas saudaveis": ["Marmitaria"],
-  "padaria e confeitaria": ["Padaria", "Confeitaria"],
-  "padaria gourmet": ["Padaria"],
-  "pastelaria delivery": ["Pastelaria"],
-  "pastelaria e lanchonete": ["Pastelaria", "Lanchonete"],
-  "pizzaria delivery": ["Pizzaria"],
-  "pizzaria e restaurante": ["Pizzaria", "Restaurante"],
-  "restaurante com marmitex": ["Restaurante", "Marmitaria"],
-  "restaurante com marmitaria": ["Restaurante", "Marmitaria"],
-  "restaurante com porcoes": ["Restaurante"],
-  "restaurante e rotisseria": ["Restaurante", "Rotisseria"],
-  "restaurante japones": ["Comida Japonesa"],
-  "restaurante nordestino": ["Restaurante"],
-  "restaurante por quilo": ["Restaurante"],
-  "restaurante rural": ["Restaurante"],
-  "restaurantes por quilo": ["Restaurante"],
-  "rotisserie e restaurante": ["Rotisseria", "Restaurante"],
-  "self service": ["Restaurante"],
-  "self-service": ["Restaurante"],
-  "sorveteria e acaiteria": ["Sorveteria", "Açaiteria"],
-  "sorveteria e lanchonete": ["Sorveteria", "Lanchonete"],
-  "auto eletrica": ["Autoelétrica"],
-  "autopecas e oficina mecanica": ["Autopeças", "Mecânica"],
-  borracharias: ["Borracharia"],
-  "despachantes documentais": ["Despachante"],
-  "loja de pneus": ["Loja de Pneus"],
-  mecanica: ["Mecânica"],
-  "oficina mecanica": ["Mecânica"],
-  "pneus e mecanica": ["Loja de Pneus", "Mecânica"],
-  picoleteria: ["Sorveteria"],
-  rotisserias: ["Rotisseria"],
-  "sorveteria artesanal": ["Sorveteria"],
-  "assistencia tecnica de ar condicionado": ["Ar-condicionado"],
-  "acougues boutique": ["Açougue"],
-  acougues: ["Açougue"],
-  galeterias: ["Restaurante"],
-  hortas: ["Hortifrúti"],
-  "lojas de produtos congelados": ["Mercados"],
-  papelarias: ["Papelaria"],
-  "produtores locais": ["Hortifrúti"],
-  "academia e artes marciais": ["Academia"],
-  "academia e lutas": ["Academia"],
-  "centro de diagnostico": ["Clínica de Imagem"],
-  "clinica medica especializada": ["Clínica Médica"],
-  "clinica multidisciplinar": ["Clínica Médica"],
-  "consultorio medico": ["Clínica Médica"],
-  "diagnostico por imagem": ["Clínica de Imagem"],
-  "farmacia e drogaria": ["Farmácia"],
-  "fisioterapia e acupuntura": ["Fisioterapia"],
-  "fisioterapia e pilates": ["Fisioterapia", "Pilates"],
-  "psicologia e neuropsicologia": ["Psicologia"],
-  ortodontia: ["Clínica Odontológica"],
-  policlinica: ["Clínica Médica"],
-  "pronto atendimento": ["Hospitais"],
-  "lojas de produtos naturais": ["Produtos Naturais"],
-  suplementos: ["Produtos Naturais"],
-  "terapias alternativas": ["Terapias"],
-  "terapeutas ocupacionais": ["Terapias"],
-  "casas de repouso": ["Cuidador de Idosos"],
-
-  "chaveiros": ["Chaveiro"],
-  "chaveiro automotivo": ["Chaveiro"],
-  "auto socorro": ["Guincho"],
-  "alinhamento e balanceamento": ["Centro Automotivo"],
-  "troca de oleo": ["Centro Automotivo"],
-  vulcanizacao: ["Borracharia"],
-  "rodas automotivas": ["Loja de Pneus"],
-  "som e acessorios automotivos": ["Acessórios Automotivos"],
-
-  alarmes: ["Segurança Eletrônica"],
-  "instalacao de cameras": ["Segurança Eletrônica"],
-  refrigeracao: ["Ar-condicionado"],
-  "loja de moveis": ["Móveis"],
-  "moveis e decoracao": ["Móveis"],
-  "moveis planejados": ["Móveis"],
-  reformas: ["Pedreiros"],
-  "portoes automaticos": ["Segurança Eletrônica"],
-  "limpeza de piscina": ["Piscina"],
-
-  imobiliarias: ["Imobiliária"],
-  "corretor de imoveis": ["Imobiliária"],
-  "corretores de imoveis": ["Imobiliária"],
-  "imoveis para temporada": ["Imobiliária"],
-  "corretora de seguros": ["Seguros"],
-  "corretoras de seguros": ["Seguros"],
-  "agencias de emprego": ["Recursos Humanos"],
-  "material grafico": ["Gráficas"],
-  "materiais graficos": ["Gráficas"],
-  "comunicacao visual": ["Gráficas"],
-  "produtoras de video": ["Produtora de Vídeo"],
-  "coworkings": ["Espaços Compartilhados"],
-  "escritorios compartilhados": ["Espaços Compartilhados"],
-  "consultorios compartilhados": ["Espaços Compartilhados"],
-  "administradoras de condominios": ["Condomínios"],
-  "sindicos profissionais": ["Condomínios"],
-
-  "barbearia e salao masculino": ["Barbearia"],
-  cabelo: ["Salão de Beleza"],
-  "cabelo e colorimetria": ["Salão de Beleza"],
-  "cabelo e estetica": ["Salão de Beleza", "Estética"],
-  "cabelos cacheados e crespos": ["Salão de Beleza"],
-  "centro de estetica e beleza": ["Estética", "Salão de Beleza"],
-  "estetica e beleza": ["Estética"],
-  "escova express": ["Salão de Beleza"],
-  "unhas e maquiagem": ["Unhas", "Maquiagem"],
-  maquiadores: ["Maquiagem"],
-
-  bercarios: ["Educação Infantil"],
-  creches: ["Educação Infantil"],
-  "escola infantil": ["Educação Infantil"],
-  "escola particular": ["Escola Particular"],
-  "cursos de ingles": ["Escolas de Idiomas"],
-  "faculdade": ["Ensino Superior"],
-  universidade: ["Ensino Superior"],
-
-  "aluguel de mesas e cadeiras": ["Aluguel para Festas"],
-  "aluguel de brinquedos": ["Aluguel para Festas"],
-  "artigos para festas": ["Artigos para Festas"],
-  "lojas de festas": ["Artigos para Festas"],
-  "lojas de embalagens": ["Artigos para Festas"],
-  "decoracao de festas": ["Decoração de Festas"],
-  "chacaras para eventos": ["Espaços para Eventos"],
-  "saloes de festa": ["Espaços para Eventos"],
-  "espacos de lazer": ["Espaços para Eventos"],
-  "organizadores de eventos": ["Cerimonialistas"],
-  "filmagem de casamento": ["Produtora de Vídeo"],
-  fotografos: ["Fotógrafos"],
-
-  "casas de racao": ["Rações"],
-  "pet shops": ["Pet Shop"],
-  "veterinarios": ["Clínica Veterinária"],
-  "lojas agropecuarias": ["Agropecuária"],
-};
-
 let cache = { loadedAt: 0, rows: [] };
 const rateLimitStore = new Map();
 
@@ -314,45 +103,6 @@ function normalize(value = "") {
 
 function normalizeSearchText(value = "") {
   return normalize(value).replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function titleCase(value = "") {
-  const lowerWords = new Set(["a", "ao", "aos", "as", "com", "da", "de", "do", "dos", "e", "em", "para", "por"]);
-  return String(value || "")
-    .trim()
-    .toLocaleLowerCase("pt-BR")
-    .replace(/\S+/g, (word, index) => {
-      if (index > 0 && lowerWords.has(word)) return word;
-      return word.charAt(0).toLocaleUpperCase("pt-BR") + word.slice(1);
-    });
-}
-
-function canonicalCategory(value = "") {
-  const trimmed = String(value || "").trim();
-  if (!trimmed) return "";
-  return CATEGORY_CANONICAL[normalizeSearchText(trimmed)] || titleCase(trimmed);
-}
-
-function canonicalSubcategory(value = "") {
-  const trimmed = String(value || "").trim();
-  if (!trimmed) return "";
-  return SUBCATEGORY_CANONICAL[normalizeSearchText(trimmed)] || titleCase(trimmed);
-}
-
-function canonicalSubcategoryParts(value = "") {
-  const normalized = normalizeSearchText(value);
-  const expanded = SUBCATEGORY_EXPANSIONS[normalized];
-  if (expanded?.length) return expanded;
-  return [canonicalSubcategory(value)].filter(Boolean);
-}
-
-function canonicalSubcategories(value = "") {
-  const unique = new Map();
-  for (const part of splitSubcategories(value).flatMap(canonicalSubcategoryParts)) {
-    const key = normalizeSearchText(part);
-    if (key) unique.set(key, part);
-  }
-  return [...unique.values()];
 }
 
 function compactSearchText(value = "") {
@@ -452,13 +202,6 @@ function searchTerms(value = "") {
     .filter((term) => term.length >= 2 && !SEARCH_STOPWORDS.has(term));
 }
 
-function splitSubcategories(value = "") {
-  return String(value || "")
-    .split(/[;,/|]+/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 function categoryMatches(item, selectedCategory = "") {
   if (!selectedCategory) return true;
   const selected = normalizeSearchText(selectedCategory);
@@ -468,13 +211,7 @@ function categoryMatches(item, selectedCategory = "") {
     canonicalCategory(item.categoria),
   ].map(normalizeSearchText);
   if (categoryValues.includes(selected)) return true;
-  return canonicalSubcategories(item.subcategoria).some((subcategoria) => {
-    const subcategoryValues = [
-      subcategoria,
-      canonicalSubcategory(subcategoria),
-    ].map(normalizeSearchText);
-    return subcategoryValues.includes(selected);
-  });
+  return canonicalSubcategories(item.subcategoria).some((subcategoria) => normalizeSearchText(subcategoria) === selected);
 }
 
 function bairroMatches(item, selectedBairro = "") {
