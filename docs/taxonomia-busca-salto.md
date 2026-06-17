@@ -72,3 +72,16 @@ O lote corrigiu nomes que geravam filtros duplicados ou muito especificos, inclu
 - plurais educacionais como `Escolas particulares` para o singular padronizado.
 
 A limpeza nao alterou nome, endereco, contatos, descricao, palavras-chave, fotos, plano, prioridade, status ou verificacao.
+
+Em 2026-06-16 foi aplicado um segundo lote pontual na mesma aba, tambem limitado as colunas `categoria` e `subcategoria`.
+
+Esse lote corrigiu sobras visiveis nos filtros publicos:
+
+- `Restaurante com Marmitaria` para `Restaurante; Marmitaria`;
+- hortifrutis/quitandas em `Comercio Geral` para `Alimentacao` / `Hortifruti`;
+- `Lojas de moveis` para `Moveis`;
+- `Papelarias; Lojas de presentes` para `Papelaria; Loja de Presentes`;
+- uma linha de pet shop com `Pesca e camping` indevido para `Agropecuaria; Pet Shop; Banho e Tosa; Racoes`;
+- pesqueiros com excesso de rotulos para `Pesqueiros`.
+
+A API publica tambem teve o cache interno reduzido para 1 minuto, para que ajustes do admin/planilha aparecam mais rapido no site.

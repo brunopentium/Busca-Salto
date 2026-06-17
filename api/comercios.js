@@ -1,4 +1,4 @@
-const CACHE_TTL_MS = 15 * 60 * 1000;
+const CACHE_TTL_MS = 60 * 1000;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 30;
 const CONTACT_TYPES = new Set(["whatsapp", "telefone", "instagram", "facebook", "site"]);
@@ -144,6 +144,7 @@ const SUBCATEGORY_EXPANSIONS = {
   "pizzaria delivery": ["Pizzaria"],
   "pizzaria e restaurante": ["Pizzaria", "Restaurante"],
   "restaurante com marmitex": ["Restaurante", "Marmitaria"],
+  "restaurante com marmitaria": ["Restaurante", "Marmitaria"],
   "restaurante com porcoes": ["Restaurante"],
   "restaurante e rotisseria": ["Restaurante", "Rotisseria"],
   "restaurante japones": ["Comida Japonesa"],

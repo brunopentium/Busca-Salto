@@ -178,6 +178,7 @@ const SUBCATEGORY_ALIASES = {
   "pizzaria e restaurante": ["Pizzaria", "Restaurante"],
   "restaurante com delivery": ["Restaurante"],
   "restaurante com marmitex": ["Restaurante", "Marmitaria"],
+  "restaurante com marmitaria": ["Restaurante", "Marmitaria"],
   "restaurante com porcoes": ["Restaurante"],
   "restaurante e rotisseria": ["Restaurante", "Rotisseria"],
   "restaurante japones": ["Comida Japonesa"],
