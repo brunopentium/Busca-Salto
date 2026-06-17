@@ -45,6 +45,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - Criada taxonomia operacional em `docs/taxonomia-busca-salto.md` e modulo compartilhavel em `api/_lib/taxonomy.js`; novos cadastros pelo admin passam a ser guiados por categorias oficiais e normalizados antes de gravar na planilha.
 - A API publica tambem passou a usar diretamente o modulo `api/_lib/taxonomy.js`, evitando mapas duplicados de categorias/subcategorias entre site e admin.
 - O admin passou a usar selecao multipla visual para subcategorias, com busca, chips e lista filtrada pela categoria selecionada, salvando no formato `Subcategoria; Outra Subcategoria`.
+- O admin passou a ter preview de enquadramento para fotos de comercio e banners de patrocinador, salvando modo de encaixe, zoom e posicao sem recortar a imagem original.
 - Criada pagina `comerciantes.html` para apresentacao discreta dos planos comerciais.
 - Criada API `/api/checkout` preparada para Mercado Pago; quando as credenciais nao estiverem configuradas, a pagina informa que o checkout ainda esta em ativacao.
 - Criada API `/api/metricas` para registrar eventos basicos de uso nos logs da Vercel.

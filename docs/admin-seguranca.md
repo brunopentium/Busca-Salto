@@ -133,4 +133,6 @@ Somente registros com `status` ativo, imagem preenchida e dentro do periodo conf
 
 O campo `imagem_url` permanece como o banner desktop principal por compatibilidade. Para patrocinadores, o painel permite ate 5 banners desktop (`imagem_url` + `imagem_desktop_2` a `imagem_desktop_5`) e ate 5 banners smartphone (`imagem_mobile_1` a `imagem_mobile_5`). No celular, o site usa os banners smartphone quando existirem; se nao existirem, usa os banners desktop.
 
+Fotos e banners podem ter configuracao de enquadramento salva separadamente da URL. O admin grava modo de encaixe, zoom e posicao em campos de ajuste, preservando o arquivo original no Google Drive e permitindo reajuste posterior sem novo upload.
+
 Excluir comercio ou patrocinador pelo painel marca a linha como `excluido`, sem apagar fisicamente a linha da planilha. Isso remove o item do site publico e preserva historico operacional.

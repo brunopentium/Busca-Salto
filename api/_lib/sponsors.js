@@ -5,6 +5,8 @@ const SPONSOR_HEADERS = [
   "id", "nome", "imagem_url", "link_url", "status", "ordem", "inicio", "fim", "texto_alt", "data_atualizacao",
   "imagem_desktop_2", "imagem_desktop_3", "imagem_desktop_4", "imagem_desktop_5",
   "imagem_mobile_1", "imagem_mobile_2", "imagem_mobile_3", "imagem_mobile_4", "imagem_mobile_5",
+  "imagem_ajuste", "imagem_desktop_2_ajuste", "imagem_desktop_3_ajuste", "imagem_desktop_4_ajuste", "imagem_desktop_5_ajuste",
+  "imagem_mobile_1_ajuste", "imagem_mobile_2_ajuste", "imagem_mobile_3_ajuste", "imagem_mobile_4_ajuste", "imagem_mobile_5_ajuste",
 ];
 const SPONSOR_CONTENT_KEYS = new Set([
   "id", "nome", "imagem_url", "link_url", "texto_alt",
@@ -113,11 +115,41 @@ function imageList(...values) {
   return values.map((value) => String(value || "").trim()).filter(Boolean).slice(0, 5).map(driveImageUrl);
 }
 
+function parseImageAdjust(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function imageEntries(urls = [], adjustments = []) {
+  return urls
+    .map((url, index) => ({
+      url: String(url || "").trim(),
+      adjust: parseImageAdjust(adjustments[index] || ""),
+    }))
+    .filter((entry) => entry.url)
+    .slice(0, 5)
+    .map((entry) => ({ ...entry, url: driveImageUrl(entry.url) }));
+}
+
 function rowToSponsor(row, index) {
   const raw = {};
   SPONSOR_HEADERS.forEach((header, columnIndex) => {
     raw[header] = String(row[columnIndex] || "").trim();
   });
+  const desktopEntries = imageEntries(
+    [raw.imagem_url, raw.imagem_desktop_2, raw.imagem_desktop_3, raw.imagem_desktop_4, raw.imagem_desktop_5],
+    [raw.imagem_ajuste, raw.imagem_desktop_2_ajuste, raw.imagem_desktop_3_ajuste, raw.imagem_desktop_4_ajuste, raw.imagem_desktop_5_ajuste],
+  );
+  const mobileEntries = imageEntries(
+    [raw.imagem_mobile_1, raw.imagem_mobile_2, raw.imagem_mobile_3, raw.imagem_mobile_4, raw.imagem_mobile_5],
+    [raw.imagem_mobile_1_ajuste, raw.imagem_mobile_2_ajuste, raw.imagem_mobile_3_ajuste, raw.imagem_mobile_4_ajuste, raw.imagem_mobile_5_ajuste],
+  );
   return {
     rowNumber: index + 2,
     id: raw.id || String(index + 1),
@@ -132,8 +164,20 @@ function rowToSponsor(row, index) {
     imagem_mobile_3: raw.imagem_mobile_3,
     imagem_mobile_4: raw.imagem_mobile_4,
     imagem_mobile_5: raw.imagem_mobile_5,
-    imagens_desktop: imageList(raw.imagem_url, raw.imagem_desktop_2, raw.imagem_desktop_3, raw.imagem_desktop_4, raw.imagem_desktop_5),
-    imagens_mobile: imageList(raw.imagem_mobile_1, raw.imagem_mobile_2, raw.imagem_mobile_3, raw.imagem_mobile_4, raw.imagem_mobile_5),
+    imagem_ajuste: raw.imagem_ajuste,
+    imagem_desktop_2_ajuste: raw.imagem_desktop_2_ajuste,
+    imagem_desktop_3_ajuste: raw.imagem_desktop_3_ajuste,
+    imagem_desktop_4_ajuste: raw.imagem_desktop_4_ajuste,
+    imagem_desktop_5_ajuste: raw.imagem_desktop_5_ajuste,
+    imagem_mobile_1_ajuste: raw.imagem_mobile_1_ajuste,
+    imagem_mobile_2_ajuste: raw.imagem_mobile_2_ajuste,
+    imagem_mobile_3_ajuste: raw.imagem_mobile_3_ajuste,
+    imagem_mobile_4_ajuste: raw.imagem_mobile_4_ajuste,
+    imagem_mobile_5_ajuste: raw.imagem_mobile_5_ajuste,
+    imagens_desktop: desktopEntries.map((entry) => entry.url),
+    imagens_mobile: mobileEntries.map((entry) => entry.url),
+    ajustes_desktop: desktopEntries.map((entry) => entry.adjust),
+    ajustes_mobile: mobileEntries.map((entry) => entry.adjust),
     link_url: raw.link_url,
     status: raw.status || "ativo",
     ordem: Number.parseInt(raw.ordem || "0", 10) || 0,
@@ -232,9 +276,32 @@ function publicSponsor(sponsor) {
     imagem_url: desktopImages[0] || "",
     imagens_desktop: desktopImages,
     imagens_mobile: mobileImages,
+    ajustes_desktop: sponsor.ajustes_desktop || [],
+    ajustes_mobile: sponsor.imagens_mobile.length ? (sponsor.ajustes_mobile || []) : (sponsor.ajustes_desktop || []),
     link_url: sponsor.link_url,
     texto_alt: sponsor.texto_alt || sponsor.nome,
   };
+}
+
+function sanitizeImageAdjustment(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    return "";
+  }
+  if (!parsed || typeof parsed !== "object") return "";
+  const allowedFits = new Set(["cover", "contain", "width", "height"]);
+  const fit = allowedFits.has(String(parsed.fit || "")) ? String(parsed.fit) : "cover";
+  const zoomNumber = Number.parseFloat(parsed.zoom);
+  const xNumber = Number.parseFloat(parsed.x);
+  const yNumber = Number.parseFloat(parsed.y);
+  const zoom = Math.min(Math.max(Number.isFinite(zoomNumber) ? zoomNumber : 1, 1), 3);
+  const x = Math.min(Math.max(Number.isFinite(xNumber) ? xNumber : 50, 0), 100);
+  const y = Math.min(Math.max(Number.isFinite(yNumber) ? yNumber : 50, 0), 100);
+  return JSON.stringify({ fit, zoom: Number(zoom.toFixed(2)), x: Math.round(x), y: Math.round(y) });
 }
 
 function sanitizeSponsorPayload(payload = {}) {
@@ -253,6 +320,16 @@ function sanitizeSponsorPayload(payload = {}) {
     imagem_mobile_3: String(payload.imagem_mobile_3 || "").trim().slice(0, 500),
     imagem_mobile_4: String(payload.imagem_mobile_4 || "").trim().slice(0, 500),
     imagem_mobile_5: String(payload.imagem_mobile_5 || "").trim().slice(0, 500),
+    imagem_ajuste: sanitizeImageAdjustment(payload.imagem_ajuste),
+    imagem_desktop_2_ajuste: sanitizeImageAdjustment(payload.imagem_desktop_2_ajuste),
+    imagem_desktop_3_ajuste: sanitizeImageAdjustment(payload.imagem_desktop_3_ajuste),
+    imagem_desktop_4_ajuste: sanitizeImageAdjustment(payload.imagem_desktop_4_ajuste),
+    imagem_desktop_5_ajuste: sanitizeImageAdjustment(payload.imagem_desktop_5_ajuste),
+    imagem_mobile_1_ajuste: sanitizeImageAdjustment(payload.imagem_mobile_1_ajuste),
+    imagem_mobile_2_ajuste: sanitizeImageAdjustment(payload.imagem_mobile_2_ajuste),
+    imagem_mobile_3_ajuste: sanitizeImageAdjustment(payload.imagem_mobile_3_ajuste),
+    imagem_mobile_4_ajuste: sanitizeImageAdjustment(payload.imagem_mobile_4_ajuste),
+    imagem_mobile_5_ajuste: sanitizeImageAdjustment(payload.imagem_mobile_5_ajuste),
     link_url: String(payload.link_url || "").trim().slice(0, 500),
     status: allowedStatuses.has(status) ? status : "inativo",
     ordem: String(payload.ordem || "0").replace(/[^0-9-]/g, "").slice(0, 5) || "0",

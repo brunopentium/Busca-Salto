@@ -330,6 +330,32 @@ function publicImageUrl(url = "") {
   return `/api/imagem?id=${encodeURIComponent(decodeURIComponent(match[1]))}&sz=w1000`;
 }
 
+function parseImageAdjust(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function publicImageAdjust(value = "") {
+  const parsed = parseImageAdjust(value);
+  const allowedFits = new Set(["cover", "contain", "width", "height"]);
+  const fit = allowedFits.has(String(parsed.fit || "")) ? String(parsed.fit) : "cover";
+  const zoomNumber = Number.parseFloat(parsed.zoom);
+  const xNumber = Number.parseFloat(parsed.x);
+  const yNumber = Number.parseFloat(parsed.y);
+  return {
+    fit,
+    zoom: Math.min(Math.max(Number.isFinite(zoomNumber) ? zoomNumber : 1, 1), 3),
+    x: Math.min(Math.max(Number.isFinite(xNumber) ? xNumber : 50, 0), 100),
+    y: Math.min(Math.max(Number.isFinite(yNumber) ? yNumber : 50, 0), 100),
+  };
+}
+
 function seededRandom(input = "") {
   let hash = 2166136261;
   for (let index = 0; index < input.length; index += 1) {
@@ -366,13 +392,16 @@ function rowToObject(headers, row, index) {
     raw[normalizeHeader(header)] = String(row[index] || "").trim();
   });
   const plan = normalizePlan(raw.plano || raw.tipo_exibicao);
-  const fotos = [
-    raw.foto_url || raw.imagem || raw.imagem_url,
-    raw.foto_url_2,
-    raw.foto_url_3,
-    raw.foto_url_4,
-    raw.foto_url_5,
-  ].map((url) => String(url || "").trim()).filter(Boolean);
+  const imageSlots = [
+    [raw.foto_url || raw.imagem || raw.imagem_url, raw.foto_ajuste],
+    [raw.foto_url_2, raw.foto_ajuste_2],
+    [raw.foto_url_3, raw.foto_ajuste_3],
+    [raw.foto_url_4, raw.foto_ajuste_4],
+    [raw.foto_url_5, raw.foto_ajuste_5],
+  ].map(([url, adjust]) => ({ url: String(url || "").trim(), adjust: publicImageAdjust(adjust) }))
+    .filter((slot) => slot.url);
+  const fotos = imageSlots.map((slot) => slot.url);
+  const fotoAjustes = imageSlots.map((slot) => slot.adjust);
   return {
     id: raw.id || String(index + 1),
     nome: raw.nome,
@@ -391,6 +420,7 @@ function rowToObject(headers, row, index) {
     oferta: raw.oferta,
     foto_url: fotos[0] || "",
     fotos,
+    foto_ajustes: fotoAjustes,
     status: raw.status || "ativo",
     prioridade: Number.parseInt(raw.prioridade || "0", 10) || 0,
     verificado: raw.verificado,
@@ -436,6 +466,7 @@ function publicItem(item) {
     oferta: allowsOffer(plan) ? item.oferta : "",
     foto_url: allowsImage(plan) ? publicImageUrl(item.foto_url) : "",
     fotos: allowsImage(plan) ? (item.fotos || []).map(publicImageUrl) : [],
+    foto_ajustes: allowsImage(plan) ? (item.foto_ajustes || []) : [],
     has_whatsapp: Boolean(item.whatsapp),
     has_telefone: Boolean(item.telefone),
     has_instagram: Boolean(item.instagram),

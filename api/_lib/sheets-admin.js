@@ -1,11 +1,15 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
 const { normalizeCommerceCategoryFields } = require("./taxonomy");
 
-const COMMERCE_EXTRA_HEADERS = ["foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5"];
+const COMMERCE_EXTRA_HEADERS = [
+  "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5",
+  "foto_ajuste", "foto_ajuste_2", "foto_ajuste_3", "foto_ajuste_4", "foto_ajuste_5",
+];
 const COMMERCE_CONTENT_KEYS = new Set([
   "id", "nome", "categoria", "subcategoria", "bairro", "endereco", "whatsapp", "instagram", "site",
   "descricao", "palavras_chave", "facebook", "telefone", "oferta", "foto_url", "imagem", "imagem_url",
   "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5",
+  "foto_ajuste", "foto_ajuste_2", "foto_ajuste_3", "foto_ajuste_4", "foto_ajuste_5",
 ]);
 const REQUIRED_HEADER_KEYS = new Set(["id", "nome", "categoria"]);
 
@@ -144,6 +148,27 @@ function commerceImageUrls(raw = {}) {
   ].map((url) => String(url || "").trim()).filter(Boolean);
 }
 
+function parseImageAdjust(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function commerceImageAdjustments(raw = {}) {
+  return [
+    raw.foto_ajuste || "",
+    raw.foto_ajuste_2 || "",
+    raw.foto_ajuste_3 || "",
+    raw.foto_ajuste_4 || "",
+    raw.foto_ajuste_5 || "",
+  ].map(parseImageAdjust);
+}
+
 function rowToAdminObject(headers, row, index) {
   const raw = {};
   headers.forEach((header, columnIndex) => {
@@ -176,7 +201,13 @@ function rowToAdminObject(headers, row, index) {
     foto_url_3: raw.foto_url_3 || "",
     foto_url_4: raw.foto_url_4 || "",
     foto_url_5: raw.foto_url_5 || "",
+    foto_ajuste: raw.foto_ajuste || "",
+    foto_ajuste_2: raw.foto_ajuste_2 || "",
+    foto_ajuste_3: raw.foto_ajuste_3 || "",
+    foto_ajuste_4: raw.foto_ajuste_4 || "",
+    foto_ajuste_5: raw.foto_ajuste_5 || "",
     fotos: commerceImageUrls(raw),
+    foto_ajustes: commerceImageAdjustments(raw),
     verificado: raw.verificado || "não",
   };
 }
@@ -236,6 +267,32 @@ function valueForKey(data, key, fallback = "") {
   return String(data[key] ?? "").trim();
 }
 
+function sanitizeImageAdjustment(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    return "";
+  }
+  if (!parsed || typeof parsed !== "object") return "";
+  const allowedFits = new Set(["cover", "contain", "width", "height"]);
+  const fit = allowedFits.has(String(parsed.fit || "")) ? String(parsed.fit) : "cover";
+  const zoomNumber = Number.parseFloat(parsed.zoom);
+  const xNumber = Number.parseFloat(parsed.x);
+  const yNumber = Number.parseFloat(parsed.y);
+  const zoom = Math.min(Math.max(Number.isFinite(zoomNumber) ? zoomNumber : 1, 1), 3);
+  const x = Math.min(Math.max(Number.isFinite(xNumber) ? xNumber : 50, 0), 100);
+  const y = Math.min(Math.max(Number.isFinite(yNumber) ? yNumber : 50, 0), 100);
+  return JSON.stringify({
+    fit,
+    zoom: Number(zoom.toFixed(2)),
+    x: Math.round(x),
+    y: Math.round(y),
+  });
+}
+
 function sanitizeCommercePayload(payload = {}, options = {}) {
   const allowedPlans = new Set(["gratuito", "parceiro", "destaque", "top"]);
   const allowedPriorities = new Set(["0", "1", "2", "3"]);
@@ -275,6 +332,11 @@ function sanitizeCommercePayload(payload = {}, options = {}) {
     foto_url_3: valueForKey(payload, "foto_url_3").slice(0, 500),
     foto_url_4: valueForKey(payload, "foto_url_4").slice(0, 500),
     foto_url_5: valueForKey(payload, "foto_url_5").slice(0, 500),
+    foto_ajuste: sanitizeImageAdjustment(valueForKey(payload, "foto_ajuste")),
+    foto_ajuste_2: sanitizeImageAdjustment(valueForKey(payload, "foto_ajuste_2")),
+    foto_ajuste_3: sanitizeImageAdjustment(valueForKey(payload, "foto_ajuste_3")),
+    foto_ajuste_4: sanitizeImageAdjustment(valueForKey(payload, "foto_ajuste_4")),
+    foto_ajuste_5: sanitizeImageAdjustment(valueForKey(payload, "foto_ajuste_5")),
     data_atualizacao: valueForKey(payload, "data_atualizacao", now).slice(0, 30),
   };
 
