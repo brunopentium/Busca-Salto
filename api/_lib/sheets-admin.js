@@ -1,4 +1,5 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
+const { normalizeCommerceCategoryFields } = require("./taxonomy");
 
 const COMMERCE_EXTRA_HEADERS = ["foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5"];
 const COMMERCE_CONTENT_KEYS = new Set([
@@ -245,11 +246,16 @@ function sanitizeCommercePayload(payload = {}, options = {}) {
   const verificado = normalizeSearchText(valueForKey(payload, "verificado", "não"));
   const now = new Date().toISOString().slice(0, 10);
 
+  const categoryFields = normalizeCommerceCategoryFields({
+    categoria: valueForKey(payload, "categoria").slice(0, 80),
+    subcategoria: valueForKey(payload, "subcategoria").slice(0, 180),
+  });
+
   const data = {
     id: valueForKey(payload, "id"),
     nome: valueForKey(payload, "nome").slice(0, 140),
-    categoria: valueForKey(payload, "categoria").slice(0, 80),
-    subcategoria: valueForKey(payload, "subcategoria").slice(0, 180),
+    categoria: categoryFields.categoria.slice(0, 80),
+    subcategoria: categoryFields.subcategoria.slice(0, 180),
     bairro: valueForKey(payload, "bairro").slice(0, 80),
     endereco: valueForKey(payload, "endereco").slice(0, 180),
     whatsapp: valueForKey(payload, "whatsapp").slice(0, 40),

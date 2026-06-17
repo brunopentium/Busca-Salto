@@ -129,8 +129,8 @@
           <form id="commerceForm" class="editor-grid">
             <input id="commerceId" name="id" type="hidden" />
             <label>Nome<input name="nome" required maxlength="140" /></label>
-            <label>Categoria<input name="categoria" maxlength="80" /></label>
-            <label>Subcategoria<input name="subcategoria" maxlength="180" /></label>
+            <label>Categoria<select id="categoriaSelect" name="categoria"><option value="">Categoria</option></select></label>
+            <label>Subcategoria<input id="subcategoriaInput" name="subcategoria" list="subcategoriaOptions" maxlength="180" placeholder="Ex.: Restaurante; Pizzaria" /><datalist id="subcategoriaOptions"></datalist></label>
             <label>Bairro<input name="bairro" maxlength="80" /></label>
             <label>Endereco<input name="endereco" maxlength="180" /></label>
             <label>WhatsApp<input name="whatsapp" maxlength="40" /></label>
@@ -293,6 +293,9 @@
     const commerceRows = document.getElementById("commerceRows");
     const commerceForm = document.getElementById("commerceForm");
     const commerceId = document.getElementById("commerceId");
+    const categoriaSelect = document.getElementById("categoriaSelect");
+    const subcategoriaInput = document.getElementById("subcategoriaInput");
+    const subcategoriaOptions = document.getElementById("subcategoriaOptions");
     const editorTitle = document.getElementById("editorTitle");
     const newCommerceButton = document.getElementById("newCommerceButton");
     const saveCommerceButton = document.getElementById("saveCommerceButton");
@@ -314,6 +317,7 @@
       pendente: "1ZWoxvbRLi0wN1utVI1KS4aZqW8CsfbCp",
     };
     let filterTimer = null;
+    let taxonomia = [];
     let googleTokenClient = null;
     let googleAccessToken = "";
     let googleIdentityScriptPromise = null;
@@ -322,6 +326,7 @@
       loginBox.classList.add("hidden");
       adminPanel.classList.add("active");
       panelStatus.textContent = "";
+      loadTaxonomia();
       loadComercios();
       loadSponsors();
     }
@@ -349,6 +354,70 @@
         '"': "&quot;",
         "'": "&#039;",
       }[char]));
+    }
+
+    function escapeOption(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      }[char]));
+    }
+
+    function ensureSelectOption(select, value) {
+      if (!value || Array.from(select.options).some((option) => option.value === value)) return;
+      select.insertAdjacentHTML("beforeend", `<option value="${escapeOption(value)}">${escapeOption(value)}</option>`);
+    }
+
+    function selectedTaxonomyGroup(category = "") {
+      return taxonomia.find((group) => group.categoria === category) || null;
+    }
+
+    function allSubcategoryNames() {
+      const seen = new Set();
+      const names = [];
+      for (const group of taxonomia) {
+        for (const name of group.subcategorias || []) {
+          const key = name.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          names.push(name);
+        }
+      }
+      return names.sort((a, b) => a.localeCompare(b, "pt-BR"));
+    }
+
+    function updateSubcategoryOptions(category = categoriaSelect.value) {
+      const group = selectedTaxonomyGroup(category);
+      const options = group ? group.subcategorias || [] : allSubcategoryNames();
+      subcategoriaOptions.innerHTML = options
+        .map((name) => `<option value="${escapeOption(name)}"></option>`)
+        .join("");
+    }
+
+    function renderTaxonomia() {
+      const currentCategory = categoriaSelect.value;
+      categoriaSelect.innerHTML = '<option value="">Categoria</option>' + taxonomia
+        .map((group) => `<option value="${escapeOption(group.categoria)}">${escapeOption(group.categoria)}</option>`)
+        .join("");
+      ensureSelectOption(categoriaSelect, currentCategory);
+      categoriaSelect.value = currentCategory;
+      updateSubcategoryOptions(currentCategory);
+    }
+
+    async function loadTaxonomia() {
+      try {
+        const response = await fetch("/api/admin/taxonomia", { cache: "no-store", credentials: "same-origin" });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || "Falha ao carregar taxonomia.");
+        taxonomia = data.taxonomia || [];
+        renderTaxonomia();
+      } catch (error) {
+        panelStatus.textContent = error.message || "Nao foi possivel carregar categorias.";
+        panelStatus.className = "status error";
+      }
     }
 
     function contactSummary(item) {
@@ -416,9 +485,11 @@
       const defaults = { plano: "gratuito", status: "ativo", prioridade: "0", verificado: "não" };
       for (const field of commerceForm.elements) {
         if (!field.name || field.name === "id") continue;
+        if (field.name === "categoria") ensureSelectOption(field, item[field.name] || "");
         field.value = item[field.name] || defaults[field.name] || "";
         if (field.tagName === "SELECT" && field.selectedIndex < 0) field.value = defaults[field.name] || "";
       }
+      updateSubcategoryOptions(categoriaSelect.value);
     }
 
     function setSponsorItem(item = {}) {
@@ -804,6 +875,7 @@
     });
 
     refreshButton.addEventListener("click", loadComercios);
+    categoriaSelect.addEventListener("change", () => updateSubcategoryOptions(categoriaSelect.value));
     filtersForm.addEventListener("submit", (event) => {
       event.preventDefault();
       loadComercios();
