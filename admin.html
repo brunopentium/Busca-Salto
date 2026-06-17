@@ -146,6 +146,35 @@
         </select>
         <button id="filterButton" type="submit">Filtrar</button>
       </form>
+      <section class="sponsor-panel">
+        <h2>Identidade do site</h2>
+        <form id="siteConfigForm" class="sponsor-form">
+          <fieldset class="media-group">
+            <legend>Logo principal</legend>
+            <label>Logo URL<input name="site_logo_url" maxlength="500" placeholder="Se vazio, usa o logo atual" /></label>
+            <div class="media-actions">
+              <label>Arquivo logo<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="site_logo_url" /></label>
+              <button class="secondary" type="button" data-upload-kind="site" data-upload-target="site_logo_url">Enviar</button>
+              <button class="secondary" type="button" data-adjust-target="site_logo_url">Enquadrar</button>
+              <button class="secondary danger" type="button" data-clear-target="site_logo_url">Remover</button>
+            </div>
+          </fieldset>
+          <fieldset class="media-group">
+            <legend>Banner principal</legend>
+            <label>Banner URL<input name="site_banner_url" maxlength="500" placeholder="Se vazio, usa o banner atual" /></label>
+            <div class="media-actions">
+              <label>Arquivo banner<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="site_banner_url" /></label>
+              <button class="secondary" type="button" data-upload-kind="site" data-upload-target="site_banner_url">Enviar</button>
+              <button class="secondary" type="button" data-adjust-target="site_banner_url">Enquadrar</button>
+              <button class="secondary danger" type="button" data-clear-target="site_banner_url">Remover</button>
+            </div>
+          </fieldset>
+          <div class="editor-actions">
+            <button id="saveSiteConfigButton" type="submit">Salvar identidade</button>
+            <button id="reloadSiteConfigButton" class="secondary" type="button">Recarregar</button>
+          </div>
+        </form>
+      </section>
       <div class="content-grid">
         <section class="list-panel">
           <div class="section-head">
@@ -388,6 +417,9 @@
     const newCommerceButton = document.getElementById("newCommerceButton");
     const saveCommerceButton = document.getElementById("saveCommerceButton");
     const fotoUrlInput = document.getElementById("fotoUrlInput");
+    const siteConfigForm = document.getElementById("siteConfigForm");
+    const saveSiteConfigButton = document.getElementById("saveSiteConfigButton");
+    const reloadSiteConfigButton = document.getElementById("reloadSiteConfigButton");
     const sponsorForm = document.getElementById("sponsorForm");
     const sponsorId = document.getElementById("sponsorId");
     const sponsorRows = document.getElementById("sponsorRows");
@@ -416,6 +448,7 @@
     const GOOGLE_DRIVE_FOLDERS = {
       comercio: "1SI56xKqxzdxLEgu72Q1G-NL00LuOAPNA",
       patrocinador: "18rKSfu38PHR8NCda6j3V6BS99kuT9NU7",
+      site: "18scb_k52bmcHyyz6WPnmzuy7S0N8mvb-",
       pendente: "1ZWoxvbRLi0wN1utVI1KS4aZqW8CsfbCp",
     };
     let filterTimer = null;
@@ -429,6 +462,8 @@
     let activePreviewObjectUrl = "";
     let adjustDrag = null;
     const IMAGE_ADJUSTMENTS = [
+      { form: "site", target: "site_logo_url", config: "site_logo_ajuste", label: "Logo do site", ratio: "1/1" },
+      { form: "site", target: "site_banner_url", config: "site_banner_ajuste", label: "Banner principal do site", ratio: "16/9" },
       { form: "commerce", target: "foto_url", config: "foto_ajuste", label: "Foto 1 do comercio", ratio: "16/9" },
       { form: "commerce", target: "foto_url_2", config: "foto_ajuste_2", label: "Foto 2 do comercio", ratio: "16/9" },
       { form: "commerce", target: "foto_url_3", config: "foto_ajuste_3", label: "Foto 3 do comercio", ratio: "16/9" },
@@ -450,6 +485,7 @@
       loginBox.classList.add("hidden");
       adminPanel.classList.add("active");
       panelStatus.textContent = "";
+      loadSiteConfig();
       loadTaxonomia();
       loadComercios();
       loadSponsors();
@@ -485,6 +521,7 @@
     }
 
     function formForAdjustment(meta) {
+      if (meta?.form === "site") return siteConfigForm;
       return meta?.form === "sponsor" ? sponsorForm : commerceForm;
     }
 
@@ -854,6 +891,25 @@
       }
     }
 
+    function setSiteConfig(config = {}) {
+      for (const field of siteConfigForm.elements) {
+        if (!field.name) continue;
+        field.value = config[field.name] || "";
+      }
+    }
+
+    async function loadSiteConfig() {
+      try {
+        const response = await fetch("/api/admin/site-config", { cache: "no-store", credentials: "same-origin" });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || "Falha ao carregar identidade.");
+        setSiteConfig(data.config || {});
+      } catch (error) {
+        panelStatus.textContent = error.message || "Nao foi possivel carregar a identidade do site.";
+        panelStatus.className = "status error";
+      }
+    }
+
     function renderSponsors(data) {
       if (!data.items.length) {
         sponsorRows.innerHTML = '<div class="empty">Nenhum patrocinador cadastrado.</div>';
@@ -1144,7 +1200,7 @@
     async function handleImageUpload(button) {
       const target = button.dataset.uploadTarget;
       const kind = button.dataset.uploadKind || "comercio";
-      const form = kind === "patrocinador" ? sponsorForm : commerceForm;
+      const form = kind === "site" ? siteConfigForm : kind === "patrocinador" ? sponsorForm : commerceForm;
       const field = inputByName(form, target);
       const fileInput = fileInputByTarget(target);
       const file = fileInput?.files && fileInput.files[0];
@@ -1180,7 +1236,7 @@
     }
 
     function clearImageField(target) {
-      const field = inputByName(commerceForm, target) || inputByName(sponsorForm, target);
+      const field = inputByName(siteConfigForm, target) || inputByName(commerceForm, target) || inputByName(sponsorForm, target);
       const fileInput = fileInputByTarget(target);
       const meta = adjustmentMetaForTarget(target);
       if (field) field.value = "";
@@ -1235,7 +1291,38 @@
       }
     });
 
-    refreshButton.addEventListener("click", loadComercios);
+    siteConfigForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      saveSiteConfigButton.disabled = true;
+      panelStatus.textContent = "Salvando identidade do site...";
+      panelStatus.className = "status";
+      const data = Object.fromEntries(new FormData(siteConfigForm).entries());
+      try {
+        const response = await fetch("/api/admin/site-config", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar identidade.");
+        setSiteConfig(result.config || {});
+        panelStatus.textContent = "Identidade do site salva.";
+        panelStatus.className = "status ok";
+      } catch (error) {
+        panelStatus.textContent = error.message || "Nao foi possivel salvar a identidade.";
+        panelStatus.className = "status error";
+      } finally {
+        saveSiteConfigButton.disabled = false;
+      }
+    });
+
+    reloadSiteConfigButton.addEventListener("click", loadSiteConfig);
+    refreshButton.addEventListener("click", () => {
+      loadSiteConfig();
+      loadComercios();
+      loadSponsors();
+    });
     adjustCloseButton.addEventListener("click", closeImageAdjustment);
     adjustSaveButton.addEventListener("click", saveImageAdjustment);
     adjustResetButton.addEventListener("click", () => setActiveAdjustment({ fit: "cover", zoom: 1, x: 50, y: 50 }));

@@ -65,8 +65,11 @@ Essas pastas permanecem privadas por padrao. O fluxo de upload deve publicar ape
 - `api/admin/comercios.js`: lista, cria e edita comercios com dados completos somente para sessao admin.
 - `api/admin/upload.js`: recebe imagem autenticada, valida tipo/tamanho, envia ao Google Drive e retorna URL publica do arquivo aprovado.
 - `api/admin/patrocinadores.js`: cria, lista e edita banners de patrocinadores em aba propria da planilha.
+- `api/admin/site-config.js`: le e salva logo e banner principal configuraveis pelo painel.
 - `api/patrocinadores.js`: API publica somente com patrocinadores ativos.
+- `api/site-config.js`: API publica com identidade visual ativa do site.
 - `api/_lib/sponsors.js`: garante a aba `patrocinadores`, aplica cabecalhos e filtra periodo/status.
+- `api/_lib/site-config.js`: garante a aba `config_site` e sanitiza URLs/ajustes da identidade do site.
 - `api/_lib/sheets-admin.js`: le e escreve na planilha com cabecalhos preservados e mapeia linhas para o painel.
 - `admin.html`: tela inicial privada do painel.
 
@@ -134,5 +137,18 @@ Somente registros com `status` ativo, imagem preenchida e dentro do periodo conf
 O campo `imagem_url` permanece como o banner desktop principal por compatibilidade. Para patrocinadores, o painel permite ate 5 banners desktop (`imagem_url` + `imagem_desktop_2` a `imagem_desktop_5`) e ate 5 banners smartphone (`imagem_mobile_1` a `imagem_mobile_5`). No celular, o site usa os banners smartphone quando existirem; se nao existirem, usa os banners desktop.
 
 Fotos e banners podem ter configuracao de enquadramento salva separadamente da URL. O admin grava modo de encaixe, zoom e posicao em campos de ajuste, preservando o arquivo original no Google Drive e permitindo reajuste posterior sem novo upload.
+
+## Identidade do site
+
+Logo e banner principal ficam na aba `config_site`, criada automaticamente pelo admin.
+
+Chaves:
+
+- `site_logo_url`
+- `site_logo_ajuste`
+- `site_banner_url`
+- `site_banner_ajuste`
+
+Se algum campo estiver vazio, o site publico usa os assets atuais como fallback. O upload usa a pasta geral de imagens do Drive, ou `GOOGLE_DRIVE_SITE_FOLDER_ID` caso a variavel seja configurada futuramente.
 
 Excluir comercio ou patrocinador pelo painel marca a linha como `excluido`, sem apagar fisicamente a linha da planilha. Isso remove o item do site publico e preserva historico operacional.

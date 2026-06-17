@@ -46,6 +46,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A API publica tambem passou a usar diretamente o modulo `api/_lib/taxonomy.js`, evitando mapas duplicados de categorias/subcategorias entre site e admin.
 - O admin passou a usar selecao multipla visual para subcategorias, com busca, chips e lista filtrada pela categoria selecionada, salvando no formato `Subcategoria; Outra Subcategoria`.
 - O admin passou a ter preview de enquadramento para fotos de comercio e banners de patrocinador, salvando modo de encaixe, zoom e posicao sem recortar a imagem original.
+- O admin passou a gerenciar logo e banner principal do site, com upload, preview de enquadramento e fallback para os assets atuais.
 - Criada pagina `comerciantes.html` para apresentacao discreta dos planos comerciais.
 - Criada API `/api/checkout` preparada para Mercado Pago; quando as credenciais nao estiverem configuradas, a pagina informa que o checkout ainda esta em ativacao.
 - Criada API `/api/metricas` para registrar eventos basicos de uso nos logs da Vercel.

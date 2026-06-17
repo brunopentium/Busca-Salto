@@ -23,6 +23,7 @@ function safeFileBase(value = "") {
 function folderForKind(kind) {
   const folders = getDriveFolderConfig();
   if (kind === "patrocinador") return folders.sponsors;
+  if (kind === "site") return folders.site || folders.images;
   if (kind === "pendente") return folders.pending;
   return folders.businesses;
 }

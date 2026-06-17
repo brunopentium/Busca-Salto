@@ -4,6 +4,7 @@ const DEFAULT_DRIVE_FOLDERS = {
   images: "18scb_k52bmcHyyz6WPnmzuy7S0N8mvb-",
   businesses: "1SI56xKqxzdxLEgu72Q1G-NL00LuOAPNA",
   sponsors: "18rKSfu38PHR8NCda6j3V6BS99kuT9NU7",
+  site: "18scb_k52bmcHyyz6WPnmzuy7S0N8mvb-",
   pending: "1ZWoxvbRLi0wN1utVI1KS4aZqW8CsfbCp",
 };
 
@@ -26,6 +27,7 @@ function getDriveFolderConfig() {
     images: (process.env.GOOGLE_DRIVE_IMAGES_FOLDER_ID || DEFAULT_DRIVE_FOLDERS.images).trim(),
     businesses: (process.env.GOOGLE_DRIVE_BUSINESSES_FOLDER_ID || DEFAULT_DRIVE_FOLDERS.businesses).trim(),
     sponsors: (process.env.GOOGLE_DRIVE_SPONSORS_FOLDER_ID || DEFAULT_DRIVE_FOLDERS.sponsors).trim(),
+    site: (process.env.GOOGLE_DRIVE_SITE_FOLDER_ID || process.env.GOOGLE_DRIVE_IMAGES_FOLDER_ID || DEFAULT_DRIVE_FOLDERS.site).trim(),
     pending: (process.env.GOOGLE_DRIVE_PENDING_FOLDER_ID || DEFAULT_DRIVE_FOLDERS.pending).trim(),
   };
 }
