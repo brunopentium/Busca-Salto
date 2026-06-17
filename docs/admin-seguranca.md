@@ -146,7 +146,11 @@ Chaves:
 - `site_logo_ajuste`
 - `site_banner_url`
 - `site_banner_ajuste`
+- `site_banner_mobile_url`
+- `site_banner_mobile_ajuste`
+- `site_banner_brightness`
+- `site_banner_vignette`
 
-Se algum campo estiver vazio, o site publico usa os assets atuais como fallback. O upload usa a pasta geral de imagens do Drive, ou `GOOGLE_DRIVE_SITE_FOLDER_ID` caso a variavel seja configurada futuramente.
+Se o banner smartphone estiver vazio, o site publico usa o banner desktop. Se o banner desktop estiver vazio, usa os assets atuais como fallback. O upload usa a pasta geral de imagens do Drive, ou `GOOGLE_DRIVE_SITE_FOLDER_ID` caso a variavel seja configurada futuramente.
 
 Excluir comercio ou patrocinador pelo painel marca a linha como `excluido`, sem apagar fisicamente a linha da planilha. Isso remove o item do site publico e preserva historico operacional.

@@ -7,6 +7,10 @@ const SITE_CONFIG_KEYS = [
   "site_logo_ajuste",
   "site_banner_url",
   "site_banner_ajuste",
+  "site_banner_mobile_url",
+  "site_banner_mobile_ajuste",
+  "site_banner_brightness",
+  "site_banner_vignette",
 ];
 
 function siteConfigRange(range = "A1:C") {
@@ -54,6 +58,12 @@ function sanitizeImageAdjustment(value = "") {
   const x = Math.min(Math.max(Number.isFinite(xNumber) ? xNumber : 50, 0), 100);
   const y = Math.min(Math.max(Number.isFinite(yNumber) ? yNumber : 50, 0), 100);
   return JSON.stringify({ fit, zoom: Number(zoom.toFixed(2)), x: Math.round(x), y: Math.round(y) });
+}
+
+function sanitizeNumber(value, fallback, min, max) {
+  const number = Number.parseFloat(String(value || ""));
+  const safe = Number.isFinite(number) ? number : fallback;
+  return String(Math.round(Math.min(Math.max(safe, min), max)));
 }
 
 function normalizeConfigMap(values = []) {
@@ -121,6 +131,10 @@ async function readSiteConfigAdmin() {
     site_logo_ajuste: config.site_logo_ajuste || "",
     site_banner_url: config.site_banner_url || "",
     site_banner_ajuste: config.site_banner_ajuste || "",
+    site_banner_mobile_url: config.site_banner_mobile_url || "",
+    site_banner_mobile_ajuste: config.site_banner_mobile_ajuste || "",
+    site_banner_brightness: config.site_banner_brightness || "100",
+    site_banner_vignette: config.site_banner_vignette || "45",
   };
 }
 
@@ -133,6 +147,14 @@ function publicSiteConfig(config = {}) {
     banner: {
       url: driveImageUrl(config.site_banner_url || ""),
       ajuste: parseImageAdjust(config.site_banner_ajuste || ""),
+    },
+    bannerMobile: {
+      url: driveImageUrl(config.site_banner_mobile_url || ""),
+      ajuste: parseImageAdjust(config.site_banner_mobile_ajuste || ""),
+    },
+    bannerVisual: {
+      brightness: Number.parseInt(config.site_banner_brightness || "100", 10) || 100,
+      vignette: Number.parseInt(config.site_banner_vignette || "45", 10) || 45,
     },
   };
 }
@@ -150,6 +172,10 @@ async function updateSiteConfig(payload = {}) {
     site_logo_ajuste: sanitizeImageAdjustment(payload.site_logo_ajuste),
     site_banner_url: String(payload.site_banner_url || "").trim().slice(0, 500),
     site_banner_ajuste: sanitizeImageAdjustment(payload.site_banner_ajuste),
+    site_banner_mobile_url: String(payload.site_banner_mobile_url || "").trim().slice(0, 500),
+    site_banner_mobile_ajuste: sanitizeImageAdjustment(payload.site_banner_mobile_ajuste),
+    site_banner_brightness: sanitizeNumber(payload.site_banner_brightness, 100, 50, 150),
+    site_banner_vignette: sanitizeNumber(payload.site_banner_vignette, 45, 0, 100),
   };
   const updatedAt = todayDate();
   const rows = [
@@ -159,7 +185,7 @@ async function updateSiteConfig(payload = {}) {
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: siteConfigRange("A1:C5"),
+    range: siteConfigRange(`A1:C${SITE_CONFIG_KEYS.length + 1}`),
     valueInputOption: "USER_ENTERED",
     requestBody: { values: rows },
   });
