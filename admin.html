@@ -62,6 +62,7 @@
     .upload-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
     .media-group{display:grid;gap:8px;border:1px solid #e4ebf4;border-radius:8px;padding:10px;background:#fff}
     .media-group legend,.media-title{font-weight:800;color:var(--azul);font-size:.82rem}
+    .field-hint{margin:-2px 0 2px;color:var(--muted);font-size:.82rem;line-height:1.35}
     .media-actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:end}
     .media-actions button{width:auto;min-width:82px}
     .adjust-modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(7,26,44,.48);padding:16px}
@@ -163,6 +164,7 @@
           </fieldset>
           <fieldset class="media-group">
             <legend>Banner principal desktop</legend>
+            <p class="field-hint">Area visivel no site: 2560 px x 800 px (3:1). Minimo recomendado: 1920 px x 640 px.</p>
             <label>Banner desktop URL<input name="site_banner_url" maxlength="500" placeholder="Se vazio, usa o banner atual" /></label>
             <div class="media-actions">
               <label>Arquivo desktop<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="site_banner_url" /></label>
@@ -173,6 +175,7 @@
           </fieldset>
           <fieldset class="media-group">
             <legend>Banner principal smartphone</legend>
+            <p class="field-hint">Area visivel no site: 1080 px x 1350 px (4:5). Minimo recomendado: 900 px x 1125 px.</p>
             <label>Banner smartphone URL<input name="site_banner_mobile_url" maxlength="500" placeholder="Se vazio, usa o banner desktop" /></label>
             <div class="media-actions">
               <label>Arquivo smartphone<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="site_banner_mobile_url" /></label>
@@ -482,8 +485,8 @@
     let adjustDrag = null;
     const IMAGE_ADJUSTMENTS = [
       { form: "site", target: "site_logo_url", config: "site_logo_ajuste", label: "Logo do site", ratio: "1/1" },
-      { form: "site", target: "site_banner_url", config: "site_banner_ajuste", label: "Banner principal desktop", ratio: "16/9" },
-      { form: "site", target: "site_banner_mobile_url", config: "site_banner_mobile_ajuste", label: "Banner principal smartphone", ratio: "9/16" },
+      { form: "site", target: "site_banner_url", config: "site_banner_ajuste", label: "Banner principal desktop", ratio: "3/1", hint: "Preview da area visivel no desktop: 2560 px x 800 px (3:1)." },
+      { form: "site", target: "site_banner_mobile_url", config: "site_banner_mobile_ajuste", label: "Banner principal smartphone", ratio: "4/5", hint: "Preview da area visivel no smartphone: 1080 px x 1350 px (4:5)." },
       { form: "commerce", target: "foto_url", config: "foto_ajuste", label: "Foto 1 do comercio", ratio: "16/9" },
       { form: "commerce", target: "foto_url_2", config: "foto_ajuste_2", label: "Foto 2 do comercio", ratio: "16/9" },
       { form: "commerce", target: "foto_url_3", config: "foto_ajuste_3", label: "Foto 3 do comercio", ratio: "16/9" },
@@ -668,6 +671,7 @@
       };
       adjustTitle.textContent = `Enquadrar - ${meta.label}`;
       adjustPreview.style.setProperty("--adjust-ratio", meta.ratio);
+      adjustHint.textContent = meta.hint || "Arraste a imagem no preview ou use os controles.";
       imageAdjustModal.hidden = false;
       renderAdjustmentPreview();
       preloadAdjustmentImage(image.url).catch(() => {
@@ -1219,8 +1223,8 @@
     }
 
     const IMAGE_UPLOAD_MINIMUMS = {
-      site_banner_url: { width: 1920, height: 900, label: "banner principal desktop" },
-      site_banner_mobile_url: { width: 900, height: 1200, label: "banner principal smartphone" },
+      site_banner_url: { width: 1920, height: 640, label: "banner principal desktop" },
+      site_banner_mobile_url: { width: 900, height: 1125, label: "banner principal smartphone" },
     };
 
     function imageDimensions(file) {
