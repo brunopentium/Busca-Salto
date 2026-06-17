@@ -75,11 +75,13 @@
     .adjust-preview-wrap{display:grid;gap:8px}
     .adjust-preview{position:relative;width:100%;aspect-ratio:var(--adjust-ratio,16/9);overflow:hidden;border:1px solid #c8d7e8;border-radius:8px;background:#eef3fa;touch-action:none;cursor:grab}
     .adjust-preview.is-dragging{cursor:grabbing}
-    .adjust-image{position:absolute;inset:0;background-repeat:no-repeat;background-position:var(--img-x,50%) var(--img-y,50%);background-color:#f8fafc;transform-origin:var(--img-x,50%) var(--img-y,50%)}
+    .adjust-image{position:absolute;inset:0;background-repeat:no-repeat;background-position:var(--img-x,50%) var(--img-y,50%);background-color:#f8fafc;filter:brightness(var(--preview-brightness,100%));transform-origin:var(--img-x,50%) var(--img-y,50%)}
     .adjust-image.fit-cover{background-size:cover;transform:scale(var(--img-zoom,1))}
     .adjust-image.fit-contain{background-size:contain;transform:scale(var(--img-zoom,1))}
     .adjust-image.fit-width{background-size:calc(100% * var(--img-zoom,1)) auto}
     .adjust-image.fit-height{background-size:auto calc(100% * var(--img-zoom,1))}
+    .adjust-frame-effect{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 var(--preview-vignette-blur,0) var(--preview-vignette-spread,0) rgba(7,26,44,.72);background:radial-gradient(ellipse at center,rgba(7,26,44,0) 42%,rgba(7,26,44,var(--preview-vignette-alpha,0)) 100%)}
+    .visual-controls[hidden]{display:none}
     .adjust-controls{display:grid;gap:10px}
     .range-row{display:grid;grid-template-columns:84px minmax(0,1fr) 46px;gap:8px;align-items:center;color:var(--azul);font-weight:700;font-size:.82rem}
     .range-row input{padding:0}
@@ -184,13 +186,10 @@
               <button class="secondary danger" type="button" data-clear-target="site_banner_mobile_url">Remover</button>
             </div>
           </fieldset>
-          <fieldset class="media-group">
-            <legend>Tratamento visual do banner</legend>
-            <div class="site-visual-controls">
-              <label>Clarear / escurecer<input name="site_banner_brightness" type="range" min="50" max="150" step="1" value="100" /></label>
-              <label>Moldura esfumaçada<input name="site_banner_vignette" type="range" min="0" max="100" step="1" value="45" /></label>
-            </div>
-          </fieldset>
+          <input name="site_banner_brightness" type="hidden" value="100" />
+          <input name="site_banner_vignette" type="hidden" value="45" />
+          <input name="site_banner_mobile_brightness" type="hidden" value="100" />
+          <input name="site_banner_mobile_vignette" type="hidden" value="45" />
           <div class="editor-actions">
             <button id="saveSiteConfigButton" type="submit">Salvar identidade</button>
             <button id="reloadSiteConfigButton" class="secondary" type="button">Recarregar</button>
@@ -393,6 +392,7 @@
         <div class="adjust-preview-wrap">
           <div id="adjustPreview" class="adjust-preview">
             <div id="adjustImage" class="adjust-image fit-cover"></div>
+            <div id="adjustFrameEffect" class="adjust-frame-effect"></div>
           </div>
           <p id="adjustHint">Arraste a imagem no preview ou use os controles.</p>
         </div>
@@ -408,6 +408,10 @@
           <div class="range-row"><span>Zoom</span><input id="adjustZoom" type="range" min="1" max="3" step="0.01" /><span id="adjustZoomValue">1.00</span></div>
           <div class="range-row"><span>Horizontal</span><input id="adjustX" type="range" min="0" max="100" step="1" /><span id="adjustXValue">50</span></div>
           <div class="range-row"><span>Vertical</span><input id="adjustY" type="range" min="0" max="100" step="1" /><span id="adjustYValue">50</span></div>
+          <div id="adjustVisualControls" class="visual-controls" hidden>
+            <div class="range-row"><span>Brilho</span><input id="adjustBrightness" type="range" min="50" max="150" step="1" /><span id="adjustBrightnessValue">100%</span></div>
+            <div class="range-row"><span>Bordas</span><input id="adjustVignette" type="range" min="0" max="100" step="1" /><span id="adjustVignetteValue">45</span></div>
+          </div>
           <div class="adjust-actions">
             <button id="adjustSaveButton" type="button">Aplicar</button>
             <button id="adjustResetButton" class="secondary" type="button">Resetar</button>
@@ -453,16 +457,23 @@
     const panelStatus = document.getElementById("panelStatus");
     const imageAdjustModal = document.getElementById("imageAdjustModal");
     const adjustTitle = document.getElementById("adjustTitle");
+    const adjustHint = document.getElementById("adjustHint");
     const adjustCloseButton = document.getElementById("adjustCloseButton");
     const adjustPreview = document.getElementById("adjustPreview");
     const adjustImage = document.getElementById("adjustImage");
+    const adjustFrameEffect = document.getElementById("adjustFrameEffect");
     const adjustFit = document.getElementById("adjustFit");
     const adjustZoom = document.getElementById("adjustZoom");
     const adjustX = document.getElementById("adjustX");
     const adjustY = document.getElementById("adjustY");
+    const adjustVisualControls = document.getElementById("adjustVisualControls");
+    const adjustBrightness = document.getElementById("adjustBrightness");
+    const adjustVignette = document.getElementById("adjustVignette");
     const adjustZoomValue = document.getElementById("adjustZoomValue");
     const adjustXValue = document.getElementById("adjustXValue");
     const adjustYValue = document.getElementById("adjustYValue");
+    const adjustBrightnessValue = document.getElementById("adjustBrightnessValue");
+    const adjustVignetteValue = document.getElementById("adjustVignetteValue");
     const adjustSaveButton = document.getElementById("adjustSaveButton");
     const adjustResetButton = document.getElementById("adjustResetButton");
     const GOOGLE_OAUTH_CLIENT_ID = "782984878308-t95veqip64rl7t9gqam5dn4p9mm30qbq.apps.googleusercontent.com";
@@ -485,8 +496,8 @@
     let adjustDrag = null;
     const IMAGE_ADJUSTMENTS = [
       { form: "site", target: "site_logo_url", config: "site_logo_ajuste", label: "Logo do site", ratio: "1/1" },
-      { form: "site", target: "site_banner_url", config: "site_banner_ajuste", label: "Banner principal desktop", ratio: "3/1", hint: "Preview da area visivel no desktop: 2560 px x 800 px (3:1)." },
-      { form: "site", target: "site_banner_mobile_url", config: "site_banner_mobile_ajuste", label: "Banner principal smartphone", ratio: "4/5", hint: "Preview da area visivel no smartphone: 1080 px x 1350 px (4:5)." },
+      { form: "site", target: "site_banner_url", config: "site_banner_ajuste", label: "Banner principal desktop", ratio: "3/1", hint: "Preview da area visivel no desktop: 2560 px x 800 px (3:1).", visual: { brightness: "site_banner_brightness", vignette: "site_banner_vignette" } },
+      { form: "site", target: "site_banner_mobile_url", config: "site_banner_mobile_ajuste", label: "Banner principal smartphone", ratio: "4/5", hint: "Preview da area visivel no smartphone: 1080 px x 1350 px (4:5).", visual: { brightness: "site_banner_mobile_brightness", vignette: "site_banner_mobile_vignette" } },
       { form: "commerce", target: "foto_url", config: "foto_ajuste", label: "Foto 1 do comercio", ratio: "16/9" },
       { form: "commerce", target: "foto_url_2", config: "foto_ajuste_2", label: "Foto 2 do comercio", ratio: "16/9" },
       { form: "commerce", target: "foto_url_3", config: "foto_ajuste_3", label: "Foto 3 do comercio", ratio: "16/9" },
@@ -563,6 +574,16 @@
       };
     }
 
+    function normalizeVisual(value = {}) {
+      const config = value && typeof value === "object" ? value : {};
+      const brightnessNumber = Number.parseFloat(config.brightness);
+      const vignetteNumber = Number.parseFloat(config.vignette);
+      return {
+        brightness: Math.round(Math.min(Math.max(Number.isFinite(brightnessNumber) ? brightnessNumber : 100, 50), 150)),
+        vignette: Math.round(Math.min(Math.max(Number.isFinite(vignetteNumber) ? vignetteNumber : 45, 0), 100)),
+      };
+    }
+
     function parseAdjustment(value = "") {
       try {
         return normalizeAdjustment(JSON.parse(String(value || "{}")));
@@ -620,9 +641,29 @@
       return { url: "", objectUrl: "" };
     }
 
+    function visualFieldsForMeta(meta) {
+      if (!meta?.visual) return null;
+      const form = formForAdjustment(meta);
+      return {
+        brightness: inputByName(form, meta.visual.brightness),
+        vignette: inputByName(form, meta.visual.vignette),
+      };
+    }
+
+    function readVisualForMeta(meta) {
+      const fields = visualFieldsForMeta(meta);
+      if (!fields) return null;
+      return normalizeVisual({
+        brightness: fields.brightness?.value || "100",
+        vignette: fields.vignette?.value || "45",
+      });
+    }
+
     function renderAdjustmentPreview() {
       if (!activeAdjustment) return;
       const config = normalizeAdjustment(activeAdjustment.config);
+      const hasVisualControls = !!activeAdjustment.meta.visual;
+      const visual = hasVisualControls ? normalizeVisual(activeAdjustment.visual || {}) : { brightness: 100, vignette: 0 };
       adjustFit.value = config.fit;
       adjustZoom.value = String(config.zoom);
       adjustX.value = String(config.x);
@@ -630,10 +671,19 @@
       adjustZoomValue.textContent = config.zoom.toFixed(2);
       adjustXValue.textContent = String(Math.round(config.x));
       adjustYValue.textContent = String(Math.round(config.y));
+      adjustVisualControls.hidden = !hasVisualControls;
+      adjustBrightness.value = String(visual.brightness);
+      adjustVignette.value = String(visual.vignette);
+      adjustBrightnessValue.textContent = `${visual.brightness}%`;
+      adjustVignetteValue.textContent = String(visual.vignette);
       adjustImage.className = `adjust-image fit-${config.fit}`;
       adjustImage.style.setProperty("--img-x", `${config.x}%`);
       adjustImage.style.setProperty("--img-y", `${config.y}%`);
       adjustImage.style.setProperty("--img-zoom", String(config.zoom));
+      adjustImage.style.setProperty("--preview-brightness", `${visual.brightness}%`);
+      adjustFrameEffect.style.setProperty("--preview-vignette-blur", `${Math.round(visual.vignette * 1.4)}px`);
+      adjustFrameEffect.style.setProperty("--preview-vignette-spread", `${Math.round(visual.vignette * .36)}px`);
+      adjustFrameEffect.style.setProperty("--preview-vignette-alpha", (visual.vignette / 180).toFixed(2));
       adjustImage.style.backgroundImage = `url("${activeAdjustment.url}")`;
     }
 
@@ -649,6 +699,12 @@
     function setActiveAdjustment(partial = {}) {
       if (!activeAdjustment) return;
       activeAdjustment.config = normalizeAdjustment({ ...activeAdjustment.config, ...partial });
+      renderAdjustmentPreview();
+    }
+
+    function setActiveVisual(partial = {}) {
+      if (!activeAdjustment) return;
+      activeAdjustment.visual = normalizeVisual({ ...activeAdjustment.visual, ...partial });
       renderAdjustmentPreview();
     }
 
@@ -668,6 +724,7 @@
         meta,
         url: image.url,
         config: parseAdjustment(configField.value),
+        visual: readVisualForMeta(meta),
       };
       adjustTitle.textContent = `Enquadrar - ${meta.label}`;
       adjustPreview.style.setProperty("--adjust-ratio", meta.ratio);
@@ -695,13 +752,19 @@
       if (!activeAdjustment) return;
       const field = adjustmentInput(activeAdjustment.meta);
       const config = normalizeAdjustment(activeAdjustment.config);
+      const visual = normalizeVisual(activeAdjustment.visual || {});
       field.value = JSON.stringify({
         fit: config.fit,
         zoom: Number(config.zoom.toFixed(2)),
         x: Math.round(config.x),
         y: Math.round(config.y),
       });
-      panelStatus.textContent = "Enquadramento aplicado. Salve o cadastro para confirmar.";
+      const visualFields = visualFieldsForMeta(activeAdjustment.meta);
+      if (visualFields) {
+        if (visualFields.brightness) visualFields.brightness.value = String(visual.brightness);
+        if (visualFields.vignette) visualFields.vignette.value = String(visual.vignette);
+      }
+      panelStatus.textContent = visualFields ? "Enquadramento e tratamento visual aplicados. Salve para confirmar." : "Enquadramento aplicado. Salve o cadastro para confirmar.";
       panelStatus.className = "status ok";
       closeImageAdjustment();
     }
@@ -916,7 +979,7 @@
     }
 
     function setSiteConfig(config = {}) {
-      const defaults = { site_banner_brightness: "100", site_banner_vignette: "45" };
+      const defaults = { site_banner_brightness: "100", site_banner_vignette: "45", site_banner_mobile_brightness: "100", site_banner_mobile_vignette: "45" };
       for (const field of siteConfigForm.elements) {
         if (!field.name) continue;
         field.value = config[field.name] || defaults[field.name] || "";
@@ -1382,11 +1445,16 @@
     });
     adjustCloseButton.addEventListener("click", closeImageAdjustment);
     adjustSaveButton.addEventListener("click", saveImageAdjustment);
-    adjustResetButton.addEventListener("click", () => setActiveAdjustment({ fit: "cover", zoom: 1, x: 50, y: 50 }));
+    adjustResetButton.addEventListener("click", () => {
+      setActiveAdjustment({ fit: "cover", zoom: 1, x: 50, y: 50 });
+      if (activeAdjustment?.meta?.visual) setActiveVisual({ brightness: 100, vignette: 45 });
+    });
     adjustFit.addEventListener("change", () => setActiveAdjustment({ fit: adjustFit.value }));
     adjustZoom.addEventListener("input", () => setActiveAdjustment({ zoom: adjustZoom.value }));
     adjustX.addEventListener("input", () => setActiveAdjustment({ x: adjustX.value }));
     adjustY.addEventListener("input", () => setActiveAdjustment({ y: adjustY.value }));
+    adjustBrightness.addEventListener("input", () => setActiveVisual({ brightness: adjustBrightness.value }));
+    adjustVignette.addEventListener("input", () => setActiveVisual({ vignette: adjustVignette.value }));
     adjustPreview.addEventListener("pointerdown", (event) => {
       if (!activeAdjustment) return;
       adjustDrag = {

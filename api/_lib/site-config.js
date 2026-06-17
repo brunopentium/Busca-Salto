@@ -11,6 +11,8 @@ const SITE_CONFIG_KEYS = [
   "site_banner_mobile_ajuste",
   "site_banner_brightness",
   "site_banner_vignette",
+  "site_banner_mobile_brightness",
+  "site_banner_mobile_vignette",
 ];
 
 function siteConfigRange(range = "A1:C") {
@@ -135,6 +137,8 @@ async function readSiteConfigAdmin() {
     site_banner_mobile_ajuste: config.site_banner_mobile_ajuste || "",
     site_banner_brightness: config.site_banner_brightness || "100",
     site_banner_vignette: config.site_banner_vignette || "45",
+    site_banner_mobile_brightness: config.site_banner_mobile_brightness || config.site_banner_brightness || "100",
+    site_banner_mobile_vignette: config.site_banner_mobile_vignette || config.site_banner_vignette || "45",
   };
 }
 
@@ -147,10 +151,18 @@ function publicSiteConfig(config = {}) {
     banner: {
       url: driveImageUrl(config.site_banner_url || "", "w3200"),
       ajuste: parseImageAdjust(config.site_banner_ajuste || ""),
+      visual: {
+        brightness: Number.parseInt(config.site_banner_brightness || "100", 10) || 100,
+        vignette: Number.parseInt(config.site_banner_vignette || "45", 10) || 45,
+      },
     },
     bannerMobile: {
       url: driveImageUrl(config.site_banner_mobile_url || "", "w1800"),
       ajuste: parseImageAdjust(config.site_banner_mobile_ajuste || ""),
+      visual: {
+        brightness: Number.parseInt(config.site_banner_mobile_brightness || config.site_banner_brightness || "100", 10) || 100,
+        vignette: Number.parseInt(config.site_banner_mobile_vignette || config.site_banner_vignette || "45", 10) || 45,
+      },
     },
     bannerVisual: {
       brightness: Number.parseInt(config.site_banner_brightness || "100", 10) || 100,
@@ -176,6 +188,8 @@ async function updateSiteConfig(payload = {}) {
     site_banner_mobile_ajuste: sanitizeImageAdjustment(payload.site_banner_mobile_ajuste),
     site_banner_brightness: sanitizeNumber(payload.site_banner_brightness, 100, 50, 150),
     site_banner_vignette: sanitizeNumber(payload.site_banner_vignette, 45, 0, 100),
+    site_banner_mobile_brightness: sanitizeNumber(payload.site_banner_mobile_brightness || payload.site_banner_brightness, 100, 50, 150),
+    site_banner_mobile_vignette: sanitizeNumber(payload.site_banner_mobile_vignette || payload.site_banner_vignette, 45, 0, 100),
   };
   const updatedAt = todayDate();
   const rows = [
