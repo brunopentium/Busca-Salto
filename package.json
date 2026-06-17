@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "check:public-search": "node scripts/check-public-search.js",
     "start": "vercel dev"
   },
   "dependencies": {

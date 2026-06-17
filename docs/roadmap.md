@@ -41,6 +41,7 @@ Este arquivo concentra as anotacoes tecnicas e o checklist operacional do projet
 - A paginacao publica foi limitada por tipo de consulta para reduzir extracao massiva sequencial.
 - A busca textual foi melhorada para lidar com acentos, plurais, pequenos erros de digitacao, termos sem espaco e sinonimos comerciais comuns.
 - Categorias e subcategorias passaram a ter camada de padronizacao na API, reduzindo duplicidades sem alterar diretamente a planilha-base.
+- Criado script `npm run check:public-search` para validar buscas sensiveis, impedir regressao como `pastelaria` retornando `papelaria` e conferir que a listagem publica nao entrega contatos diretos.
 - Criada taxonomia operacional em `docs/taxonomia-busca-salto.md` e modulo compartilhavel em `api/_lib/taxonomy.js`; novos cadastros pelo admin passam a ser guiados por categorias oficiais e normalizados antes de gravar na planilha.
 - O admin passou a usar selecao multipla visual para subcategorias, com busca, chips e lista filtrada pela categoria selecionada, salvando no formato `Subcategoria; Outra Subcategoria`.
 - Criada pagina `comerciantes.html` para apresentacao discreta dos planos comerciais.
