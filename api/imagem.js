@@ -1,4 +1,5 @@
 const { json } = require("./_lib/http");
+const { GOOGLE_SCOPES, getDriveClient } = require("./_lib/google");
 
 function cleanDriveId(value = "") {
   const id = String(value || "").trim();
@@ -12,6 +13,33 @@ function cleanSize(value = "") {
   return size;
 }
 
+async function fetchOriginalDriveFile(id) {
+  const drive = await getDriveClient([GOOGLE_SCOPES.drive]);
+  const response = await drive.files.get(
+    { fileId: id, alt: "media" },
+    { responseType: "arraybuffer" },
+  );
+  return {
+    contentType: response.headers?.["content-type"] || "image/jpeg",
+    buffer: Buffer.from(response.data),
+  };
+}
+
+async function fetchDriveThumbnail(id, size) {
+  const driveUrl = `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=${encodeURIComponent(size)}`;
+  const response = await fetch(driveUrl, {
+    headers: { "User-Agent": "BuscaSalto/1.0" },
+    redirect: "follow",
+  });
+
+  if (!response.ok) return null;
+
+  return {
+    contentType: response.headers.get("content-type") || "image/jpeg",
+    buffer: Buffer.from(await response.arrayBuffer()),
+  };
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") return json(res, 405, { ok: false, error: "Metodo nao permitido." });
 
@@ -20,20 +48,14 @@ module.exports = async function handler(req, res) {
 
   try {
     const size = cleanSize(req.query.sz);
-    const driveUrl = `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=${encodeURIComponent(size)}`;
-    const response = await fetch(driveUrl, {
-      headers: { "User-Agent": "BuscaSalto/1.0" },
-      redirect: "follow",
-    });
+    const image = await fetchOriginalDriveFile(id).catch(() => null) || await fetchDriveThumbnail(id, size);
+    if (!image?.buffer?.length) return json(res, 404, { ok: false, error: "Imagem nao encontrada." });
 
-    if (!response.ok) return json(res, 404, { ok: false, error: "Imagem nao encontrada." });
-
-    const contentType = response.headers.get("content-type") || "image/jpeg";
-    const buffer = Buffer.from(await response.arrayBuffer());
     res.statusCode = 200;
-    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Type", image.contentType);
+    res.setHeader("Content-Length", String(image.buffer.length));
     res.setHeader("Cache-Control", "public, max-age=86400, s-maxage=86400");
-    res.end(buffer);
+    res.end(image.buffer);
   } catch (error) {
     console.error(JSON.stringify({
       level: "error",

@@ -21,11 +21,11 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function driveImageUrl(url = "") {
+function driveImageUrl(url = "", size = "w1600") {
   const value = String(url || "").trim();
   const match = value.match(/[?&]id=([^&]+)/) || value.match(/\/d\/([^/]+)/) || value.match(/\/file\/d\/([^/]+)/);
   if (!match) return value;
-  return `/api/imagem?id=${encodeURIComponent(decodeURIComponent(match[1]))}&sz=w1600`;
+  return `/api/imagem?id=${encodeURIComponent(decodeURIComponent(match[1]))}&sz=${encodeURIComponent(size)}`;
 }
 
 function parseImageAdjust(value = "") {
@@ -141,15 +141,15 @@ async function readSiteConfigAdmin() {
 function publicSiteConfig(config = {}) {
   return {
     logo: {
-      url: driveImageUrl(config.site_logo_url || ""),
+      url: driveImageUrl(config.site_logo_url || "", "w1000"),
       ajuste: parseImageAdjust(config.site_logo_ajuste || ""),
     },
     banner: {
-      url: driveImageUrl(config.site_banner_url || ""),
+      url: driveImageUrl(config.site_banner_url || "", "w3200"),
       ajuste: parseImageAdjust(config.site_banner_ajuste || ""),
     },
     bannerMobile: {
-      url: driveImageUrl(config.site_banner_mobile_url || ""),
+      url: driveImageUrl(config.site_banner_mobile_url || "", "w1800"),
       ajuste: parseImageAdjust(config.site_banner_mobile_ajuste || ""),
     },
     bannerVisual: {
