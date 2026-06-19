@@ -120,6 +120,18 @@ function topItems(map, limit = 8) {
     .map(([label, count]) => ({ label, count }));
 }
 
+function isoDateOffset(daysAgo) {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() - daysAgo);
+  return date.toISOString().slice(0, 10);
+}
+
+function formatShortDate(dateKey) {
+  const [, month, day] = String(dateKey).split("-");
+  return `${day || ""}/${month || ""}`;
+}
+
 function parseMetricRow(row = []) {
   let payload = {};
   try {
@@ -143,6 +155,13 @@ function aggregateMetrics(rows = [], days = 30) {
   const today = now.toISOString().slice(0, 10);
   const since = new Date(now.getTime() - Math.max(days, 1) * 24 * 60 * 60 * 1000);
   const since7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const timelineDates = Array.from({ length: Math.max(days, 1) }, (_, index) => isoDateOffset(days - 1 - index));
+  const timelineIndex = new Map(timelineDates.map((date) => [date, {
+    date,
+    label: formatShortDate(date),
+    total: 0,
+    events: {},
+  }]));
 
   const events = new Map();
   const pages = new Map();
@@ -168,6 +187,11 @@ function aggregateMetrics(rows = [], days = 30) {
     if (row.path) increment(pages, row.path);
     if (row.date === today) todayCount += 1;
     if (date >= since7) sevenDaysCount += 1;
+    if (timelineIndex.has(row.date)) {
+      const bucket = timelineIndex.get(row.date);
+      bucket.total += 1;
+      bucket.events[row.event] = (bucket.events[row.event] || 0) + 1;
+    }
 
     if (row.event === "search") {
       if (row.payload.busca) increment(searchTerms, row.payload.busca);
@@ -202,6 +226,10 @@ function aggregateMetrics(rows = [], days = 30) {
       businesses: topItems(contactBusinesses, 10),
     },
     sponsors: topItems(sponsors, 10),
+    timeline: {
+      events: ["all", ...ALLOWED_EVENTS],
+      daily: timelineDates.map((date) => timelineIndex.get(date)),
+    },
     recent: metrics.slice(-12).reverse(),
   };
 }
