@@ -166,6 +166,12 @@
               <option value="all">Todos os eventos</option>
             </select>
           </label>
+          <label>Agrupar
+            <select id="metricsGranularity">
+              <option value="day" selected>Por dia</option>
+              <option value="hour">Por hora</option>
+            </select>
+          </label>
           <button id="refreshMetricsButton" class="secondary" type="button">Atualizar</button>
         </div>
         <div id="metricsContent">
@@ -494,6 +500,7 @@
     const metricsContent = document.getElementById("metricsContent");
     const metricsDays = document.getElementById("metricsDays");
     const metricsEvent = document.getElementById("metricsEvent");
+    const metricsGranularity = document.getElementById("metricsGranularity");
     const refreshMetricsButton = document.getElementById("refreshMetricsButton");
     const loginStatus = document.getElementById("loginStatus");
     const panelStatus = document.getElementById("panelStatus");
@@ -623,7 +630,8 @@
         const height = Math.max(4, Math.round((item.count / max) * 100));
         return `<div class="metric-bar" title="${escapeHtml(item.label)}: ${escapeHtml(item.count)}"><div class="metric-bar-fill" style="--bar-height:${height}%"><span>${escapeHtml(item.count)}</span></div><div class="metric-bar-label">${escapeHtml(item.label)}</div></div>`;
       }).join("");
-      return `<section class="metric-chart"><div class="metric-chart-head"><h3>Distribuicao no periodo</h3><span>${escapeHtml(metricEventLabel(selectedEvent))}: ${escapeHtml(total)}</span></div><div class="metric-bars">${bars || '<div class="metric-empty">Sem dados no periodo.</div>'}</div></section>`;
+      const granularityLabel = metrics.timeline?.granularity === "hour" ? "por hora" : "por dia";
+      return `<section class="metric-chart"><div class="metric-chart-head"><h3>Distribuicao no periodo</h3><span>${escapeHtml(metricEventLabel(selectedEvent))} ${escapeHtml(granularityLabel)}: ${escapeHtml(total)}</span></div><div class="metric-bars">${bars || '<div class="metric-empty">Sem dados no periodo.</div>'}</div></section>`;
     }
 
     function renderMetrics(metrics = {}) {
@@ -653,7 +661,11 @@
     async function loadMetrics() {
       metricsContent.innerHTML = '<div class="empty">Carregando indicadores...</div>';
       try {
-        const response = await fetch(`/api/metricas?days=${encodeURIComponent(metricsDays.value || "30")}`, { cache: "no-store", credentials: "same-origin" });
+        const params = new URLSearchParams({
+          days: metricsDays.value || "30",
+          granularity: metricsGranularity.value || "day",
+        });
+        const response = await fetch(`/api/metricas?${params.toString()}`, { cache: "no-store", credentials: "same-origin" });
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.error || "Falha ao carregar indicadores.");
         currentMetrics = data.metrics || {};
@@ -1575,6 +1587,7 @@
     });
     refreshMetricsButton.addEventListener("click", loadMetrics);
     metricsDays.addEventListener("change", loadMetrics);
+    metricsGranularity.addEventListener("change", loadMetrics);
     metricsEvent.addEventListener("change", () => {
       if (currentMetrics) renderMetrics(currentMetrics);
     });

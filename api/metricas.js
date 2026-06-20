@@ -120,16 +120,57 @@ function topItems(map, limit = 8) {
     .map(([label, count]) => ({ label, count }));
 }
 
-function isoDateOffset(daysAgo) {
-  const date = new Date();
-  date.setUTCHours(0, 0, 0, 0);
-  date.setUTCDate(date.getUTCDate() - daysAgo);
-  return date.toISOString().slice(0, 10);
+const METRICS_TIME_ZONE = "America/Sao_Paulo";
+
+function saoPauloParts(date) {
+  return Object.fromEntries(new Intl.DateTimeFormat("pt-BR", {
+    timeZone: METRICS_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+}
+
+function dateKeyFor(date) {
+  const parts = saoPauloParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function hourKeyFor(date) {
+  const parts = saoPauloParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}`;
 }
 
 function formatShortDate(dateKey) {
   const [, month, day] = String(dateKey).split("-");
   return `${day || ""}/${month || ""}`;
+}
+
+function formatShortHour(hourKey) {
+  const [datePart, hour] = String(hourKey).split("T");
+  const [, month, day] = String(datePart).split("-");
+  return `${day || ""}/${month || ""} ${hour || "00"}h`;
+}
+
+function buildTimeline(days, granularity = "day") {
+  const safeDays = Math.max(days, 1);
+  const now = new Date();
+  if (granularity === "hour") {
+    const hours = safeDays * 24;
+    return Array.from({ length: hours }, (_, index) => {
+      const date = new Date(now.getTime() - (hours - 1 - index) * 60 * 60 * 1000);
+      date.setUTCMinutes(0, 0, 0);
+      const key = hourKeyFor(date);
+      return { key, date: key, label: formatShortHour(key), total: 0, events: {} };
+    });
+  }
+  return Array.from({ length: safeDays }, (_, index) => {
+    const date = new Date(now.getTime() - (safeDays - 1 - index) * 24 * 60 * 60 * 1000);
+    const key = dateKeyFor(date);
+    return { key, date: key, label: formatShortDate(key), total: 0, events: {} };
+  });
 }
 
 function parseMetricRow(row = []) {
@@ -150,18 +191,13 @@ function parseMetricRow(row = []) {
   };
 }
 
-function aggregateMetrics(rows = [], days = 30) {
+function aggregateMetrics(rows = [], days = 30, granularity = "day") {
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  const today = dateKeyFor(now);
   const since = new Date(now.getTime() - Math.max(days, 1) * 24 * 60 * 60 * 1000);
   const since7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const timelineDates = Array.from({ length: Math.max(days, 1) }, (_, index) => isoDateOffset(days - 1 - index));
-  const timelineIndex = new Map(timelineDates.map((date) => [date, {
-    date,
-    label: formatShortDate(date),
-    total: 0,
-    events: {},
-  }]));
+  const timelineBuckets = buildTimeline(days, granularity);
+  const timelineIndex = new Map(timelineBuckets.map((bucket) => [bucket.key, bucket]));
 
   const events = new Map();
   const pages = new Map();
@@ -185,10 +221,11 @@ function aggregateMetrics(rows = [], days = 30) {
     const date = new Date(row.timestamp);
     increment(events, row.event);
     if (row.path) increment(pages, row.path);
-    if (row.date === today) todayCount += 1;
+    if (dateKeyFor(date) === today) todayCount += 1;
     if (date >= since7) sevenDaysCount += 1;
-    if (timelineIndex.has(row.date)) {
-      const bucket = timelineIndex.get(row.date);
+    const timelineKey = granularity === "hour" ? hourKeyFor(date) : dateKeyFor(date);
+    if (timelineIndex.has(timelineKey)) {
+      const bucket = timelineIndex.get(timelineKey);
       bucket.total += 1;
       bucket.events[row.event] = (bucket.events[row.event] || 0) + 1;
     }
@@ -227,14 +264,15 @@ function aggregateMetrics(rows = [], days = 30) {
     },
     sponsors: topItems(sponsors, 10),
     timeline: {
+      granularity,
       events: ["all", ...ALLOWED_EVENTS],
-      daily: timelineDates.map((date) => timelineIndex.get(date)),
+      daily: timelineBuckets,
     },
     recent: metrics.slice(-12).reverse(),
   };
 }
 
-async function readMetrics(days) {
+async function readMetrics(days, granularity) {
   await ensureMetricsSheet();
   const { spreadsheetId } = getSpreadsheetConfig();
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsRead]);
@@ -243,7 +281,7 @@ async function readMetrics(days) {
     range: metricsRange("A1:G20000"),
     valueRenderOption: "FORMATTED_VALUE",
   }).catch(() => ({ data: { values: [] } }));
-  return aggregateMetrics((response.data.values || []).slice(1), days);
+  return aggregateMetrics((response.data.values || []).slice(1), days, granularity);
 }
 
 async function handlePost(req, res) {
@@ -306,8 +344,9 @@ async function handleGet(req, res) {
   const session = requireAdminSession(req);
   if (!session.ok) return json(res, session.status, { ok: false, error: session.error });
   const days = Math.min(Math.max(Number.parseInt(req.query.days || "30", 10) || 30, 1), 180);
+  const granularity = String(req.query.granularity || "day") === "hour" ? "hour" : "day";
   try {
-    return json(res, 200, { ok: true, metrics: await readMetrics(days) });
+    return json(res, 200, { ok: true, metrics: await readMetrics(days, granularity) });
   } catch (error) {
     console.error(JSON.stringify({
       level: "error",
