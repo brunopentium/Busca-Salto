@@ -154,23 +154,53 @@ function formatShortHour(hourKey) {
   return `${day || ""}/${month || ""} ${hour || "00"}h`;
 }
 
-function buildTimeline(days, granularity = "day") {
-  const safeDays = Math.max(days, 1);
-  const now = new Date();
+function isDateKey(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+}
+
+function dateKeyToUtcNoon(dateKey) {
+  const [year, month, day] = String(dateKey).split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+}
+
+function addDaysKey(dateKey, amount) {
+  const date = dateKeyToUtcNoon(dateKey);
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString().slice(0, 10);
+}
+
+function countDaysInclusive(startKey, endKey) {
+  const start = dateKeyToUtcNoon(startKey);
+  const end = dateKeyToUtcNoon(endKey);
+  return Math.max(1, Math.round((end - start) / (24 * 60 * 60 * 1000)) + 1);
+}
+
+function normalizeDateRange(days, start, end) {
+  const safeDays = Math.min(Math.max(Number(days) || 30, 1), 180);
+  const today = dateKeyFor(new Date());
+  let endKey = isDateKey(end) ? String(end) : today;
+  let startKey = isDateKey(start) ? String(start) : addDaysKey(endKey, -(safeDays - 1));
+  if (startKey > endKey) [startKey, endKey] = [endKey, startKey];
+  if (countDaysInclusive(startKey, endKey) > 180) startKey = addDaysKey(endKey, -179);
+  return { startKey, endKey, days: countDaysInclusive(startKey, endKey) };
+}
+
+function buildTimeline(startKey, endKey, granularity = "day") {
   if (granularity === "hour") {
-    const hours = safeDays * 24;
-    return Array.from({ length: hours }, (_, index) => {
-      const date = new Date(now.getTime() - (hours - 1 - index) * 60 * 60 * 1000);
-      date.setUTCMinutes(0, 0, 0);
-      const key = hourKeyFor(date);
-      return { key, date: key, label: formatShortHour(key), total: 0, events: {} };
-    });
+    const buckets = [];
+    for (let day = startKey; day <= endKey; day = addDaysKey(day, 1)) {
+      for (let hour = 0; hour < 24; hour += 1) {
+        const key = `${day}T${String(hour).padStart(2, "0")}`;
+        buckets.push({ key, date: key, label: formatShortHour(key), total: 0, events: {} });
+      }
+    }
+    return buckets;
   }
-  return Array.from({ length: safeDays }, (_, index) => {
-    const date = new Date(now.getTime() - (safeDays - 1 - index) * 24 * 60 * 60 * 1000);
-    const key = dateKeyFor(date);
-    return { key, date: key, label: formatShortDate(key), total: 0, events: {} };
-  });
+  const buckets = [];
+  for (let day = startKey; day <= endKey; day = addDaysKey(day, 1)) {
+    buckets.push({ key: day, date: day, label: formatShortDate(day), total: 0, events: {} });
+  }
+  return buckets;
 }
 
 function parseMetricRow(row = []) {
@@ -191,12 +221,13 @@ function parseMetricRow(row = []) {
   };
 }
 
-function aggregateMetrics(rows = [], days = 30, granularity = "day") {
+function aggregateMetrics(rows = [], options = {}) {
+  const { startKey, endKey, days } = normalizeDateRange(options.days || 30, options.start, options.end);
+  const granularity = options.granularity === "hour" ? "hour" : "day";
   const now = new Date();
   const today = dateKeyFor(now);
-  const since = new Date(now.getTime() - Math.max(days, 1) * 24 * 60 * 60 * 1000);
   const since7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const timelineBuckets = buildTimeline(days, granularity);
+  const timelineBuckets = buildTimeline(startKey, endKey, granularity);
   const timelineIndex = new Map(timelineBuckets.map((bucket) => [bucket.key, bucket]));
 
   const events = new Map();
@@ -214,7 +245,9 @@ function aggregateMetrics(rows = [], days = 30, granularity = "day") {
     .map(parseMetricRow)
     .filter((row) => {
       const date = new Date(row.timestamp);
-      return Number.isFinite(date.getTime()) && date >= since;
+      if (!Number.isFinite(date.getTime())) return false;
+      const rowDateKey = dateKeyFor(date);
+      return rowDateKey >= startKey && rowDateKey <= endKey;
     });
 
   for (const row of metrics) {
@@ -245,6 +278,7 @@ function aggregateMetrics(rows = [], days = 30, granularity = "day") {
 
   return {
     periodDays: days,
+    period: { start: startKey, end: endKey },
     generatedAt: now.toISOString(),
     summary: {
       total: metrics.length,
@@ -272,7 +306,7 @@ function aggregateMetrics(rows = [], days = 30, granularity = "day") {
   };
 }
 
-async function readMetrics(days, granularity) {
+async function readMetrics(options) {
   await ensureMetricsSheet();
   const { spreadsheetId } = getSpreadsheetConfig();
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsRead]);
@@ -281,7 +315,7 @@ async function readMetrics(days, granularity) {
     range: metricsRange("A1:G20000"),
     valueRenderOption: "FORMATTED_VALUE",
   }).catch(() => ({ data: { values: [] } }));
-  return aggregateMetrics((response.data.values || []).slice(1), days, granularity);
+  return aggregateMetrics((response.data.values || []).slice(1), options);
 }
 
 async function handlePost(req, res) {
@@ -345,8 +379,10 @@ async function handleGet(req, res) {
   if (!session.ok) return json(res, session.status, { ok: false, error: session.error });
   const days = Math.min(Math.max(Number.parseInt(req.query.days || "30", 10) || 30, 1), 180);
   const granularity = String(req.query.granularity || "day") === "hour" ? "hour" : "day";
+  const start = isDateKey(req.query.start) ? String(req.query.start) : "";
+  const end = isDateKey(req.query.end) ? String(req.query.end) : "";
   try {
-    return json(res, 200, { ok: true, metrics: await readMetrics(days, granularity) });
+    return json(res, 200, { ok: true, metrics: await readMetrics({ days, granularity, start, end }) });
   } catch (error) {
     console.error(JSON.stringify({
       level: "error",
