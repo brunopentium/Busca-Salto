@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v9";
+const CACHE_NAME = "busca-salto-pwa-v10";
 
 const STATIC_ASSETS = [
   "/",
@@ -61,8 +61,6 @@ async function networkFirst(request) {
 
 async function prepareResponse(request, response) {
   const url = new URL(request.url);
-  const userAgent = request.headers.get("user-agent") || "";
-  const isSamsungInternet = /SamsungBrowser/i.test(userAgent);
   const isHtml = response.headers.get("content-type")?.includes("text/html");
   const isHomePage = url.pathname === "/" || url.pathname === "/index.html";
 
@@ -79,35 +77,6 @@ async function prepareResponse(request, response) {
       /<meta name="apple-mobile-web-app-title" content="[^"]*"\s*\/>/,
       '<meta name="apple-mobile-web-app-title" content="Busca Salto" />'
     );
-
-  if (isSamsungInternet) {
-    html = html
-      .replace(/<link rel="manifest" href="[^"]*"\s*\/>/g, "")
-      .replace(/<link rel="manifest" href="[^"]*">/g, "");
-
-    if (!html.includes("buscaSaltoSamsungInstallBlock")) {
-      const samsungInstallBlock = `<script>
-        (() => {
-          window.buscaSaltoSamsungInstallBlock = true;
-          window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
-          window.addEventListener("beforeinstallprompt", (event) => {
-            event.preventDefault();
-          }, true);
-          document.addEventListener("DOMContentLoaded", () => {
-            const banner = document.getElementById("installBanner");
-            if (banner) banner.hidden = true;
-          });
-        })();
-      </script>`;
-      html = html.replace("</head>", `${samsungInstallBlock}\n</head>`);
-    }
-
-    return new Response(html, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers
-    });
-  }
 
   if (isHomePage && !html.includes('id="installBanner"')) {
     const banner =
@@ -131,7 +100,7 @@ async function prepareResponse(request, response) {
           if (!banner || !title || !text || !button || !banner.hidden) return;
           if (window.sessionStorage.getItem("buscaSaltoInstallDismissedSession") === "1") return;
           title.textContent = "Instale o app do Busca Salto";
-          text.textContent = "Se o botao instalar nao aparecer, toque nos tres pontos do navegador e escolha Adicionar a tela inicial ou Instalar app.";
+          text.textContent = "Se a instalacao nao abrir automaticamente, toque no menu do navegador e escolha Adicionar a tela inicial ou Instalar app.";
           button.textContent = "Entendi";
           banner.dataset.installMode = "android-help";
           banner.hidden = false;

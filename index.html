@@ -30,6 +30,7 @@
 </head>
 <body>
   <header class="hero" id="siteHero"><span id="heroImage" class="hero-dynamic-image fit-cover" aria-hidden="true" hidden></span><span id="heroFrameEffect" class="hero-frame-effect" aria-hidden="true"></span><nav class="site-nav" aria-label="Acesso do comerciante"><a class="merchant-cta" href="comerciantes.html">Área do Comerciante <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor"/></svg></a></nav><div class="hero-shade"><div class="hero-content container"><span id="siteLogo" class="brand-logo hero-logo site-logo-frame fit-cover" role="img" aria-label="Logo Busca Salto"></span><h1>Busca Salto</h1><p class="hero-kicker">Tudo o que você procura em Salto, em um só lugar.</p><p class="subtitle">Encontre comércios, serviços e profissionais da cidade.</p><section class="search-panel hero-search"><div class="actions"><input id="searchInput" class="search-input" type="search" placeholder="O que você procura em Salto?" aria-label="Buscar comércios" /><div class="category-picker"><input id="categoryFilter" type="hidden" value="" /><button id="categoryButton" class="category-button" type="button" aria-haspopup="true" aria-expanded="false"><span>Todas as categorias</span><span aria-hidden="true">⌄</span></button><div id="categoryMenu" class="category-menu" role="menu" hidden></div></div><select id="bairroFilter" aria-label="Filtrar por bairro"><option value="">Todos os bairros</option></select><button id="searchButton" class="btn-search" type="button">Pesquisar</button><button id="clearFilters" class="btn-clear" type="button">Limpar filtros</button></div></section></div></div></header>
+  <section id="installBanner" class="install-banner container" hidden aria-live="polite"><div><strong id="installTitle">Instale o app do Busca Salto</strong><p id="installText">Acesse o Busca Salto pela tela inicial, como um aplicativo.</p></div><div class="install-banner-actions"><button id="installButton" class="install-button" type="button">Instalar</button><button id="installDismiss" class="install-close" type="button">Agora nao</button></div></section>
   <main class="container"><section id="sponsorCarousel" class="sponsor-strip" hidden><div class="sponsor-head">Publicidade</div><div id="sponsorTrack" class="sponsor-track"></div></section><p id="status" class="status">Carregando comércios...</p><section id="results" class="grid" aria-live="polite"></section></main>
   <footer class="container">Busca Salto - o buscador local da cidade. <a class="footer-link" href="quem-somos.html">Quem somos</a></footer>
   <script>
@@ -112,7 +113,7 @@
       let deferredPrompt = null;
       const INSTALL_TITLE = "Instale o Busca Salto";
       const INSTALL_DESCRIPTION = "Acesse o Busca Salto pela tela inicial, como um aplicativo.";
-      const INSTALL_BROWSER_HELP = "Se o botao instalar nao aparecer, toque nos tres pontos do navegador e escolha Adicionar a tela inicial ou Instalar app.";
+      const INSTALL_BROWSER_HELP = "Se a instalacao nao abrir automaticamente, toque no menu do navegador e escolha Adicionar a tela inicial ou Instalar app.";
 
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
@@ -153,7 +154,7 @@
 
         installTitle.textContent = INSTALL_TITLE;
         installText.textContent = INSTALL_DESCRIPTION;
-        installButton.textContent = mode === "prompt" && deferredPrompt ? "Instalar" : "Entendi";
+        installButton.textContent = "Instalar";
         sanitizeInstallText();
 
         banner.dataset.installMode = mode;
@@ -174,8 +175,14 @@
 
       installButton?.addEventListener("click", async () => {
         if (!deferredPrompt) {
-          window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
-          hideInstallBanner();
+          if (banner?.dataset.installMode === "manual-help") {
+            window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
+            hideInstallBanner();
+            return;
+          }
+          installText.textContent = INSTALL_BROWSER_HELP;
+          installButton.textContent = "Entendi";
+          banner.dataset.installMode = "manual-help";
           return;
         }
 
