@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v8";
+const CACHE_NAME = "busca-salto-pwa-v9";
 
 const STATIC_ASSETS = [
   "/",
@@ -89,7 +89,7 @@ async function prepareResponse(request, response) {
       const samsungInstallBlock = `<script>
         (() => {
           window.buscaSaltoSamsungInstallBlock = true;
-          window.localStorage.setItem("buscaSaltoInstallDismissed", "1");
+          window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
           window.addEventListener("beforeinstallprompt", (event) => {
             event.preventDefault();
           }, true);
@@ -121,16 +121,17 @@ async function prepareResponse(request, response) {
         window.buscaSaltoPwaAndroidFallback = true;
         const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
         const isAndroid = /android/i.test(window.navigator.userAgent);
-        if (isStandalone || !isAndroid) return;
+        if (isStandalone) window.localStorage.setItem("buscaSaltoInstalled", "1");
+        if (isStandalone || !isAndroid || window.localStorage.getItem("buscaSaltoInstalled") === "1") return;
         window.setTimeout(() => {
           const banner = document.getElementById("installBanner");
           const title = document.getElementById("installTitle");
           const text = document.getElementById("installText");
           const button = document.getElementById("installButton");
           if (!banner || !title || !text || !button || !banner.hidden) return;
-          if (window.localStorage.getItem("buscaSaltoInstallDismissed") === "1") return;
+          if (window.sessionStorage.getItem("buscaSaltoInstallDismissedSession") === "1") return;
           title.textContent = "Instale o app do Busca Salto";
-          text.textContent = "Se o botao instalar nao aparecer, toque nos tres pontos do Chrome e escolha Adicionar a tela inicial ou Instalar app.";
+          text.textContent = "Se o botao instalar nao aparecer, toque nos tres pontos do navegador e escolha Adicionar a tela inicial ou Instalar app.";
           button.textContent = "Entendi";
           banner.dataset.installMode = "android-help";
           banner.hidden = false;
@@ -139,7 +140,7 @@ async function prepareResponse(request, response) {
           const button = event.target.closest("#installButton");
           const banner = document.getElementById("installBanner");
           if (!button || banner?.dataset.installMode !== "android-help") return;
-          window.localStorage.setItem("buscaSaltoInstallDismissed", "1");
+          window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
           banner.hidden = true;
         }, true);
       })();

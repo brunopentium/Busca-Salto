@@ -112,6 +112,7 @@
       let deferredPrompt = null;
       const INSTALL_TITLE = "Instale o Busca Salto";
       const INSTALL_DESCRIPTION = "Acesse o Busca Salto pela tela inicial, como um aplicativo.";
+      const INSTALL_BROWSER_HELP = "Se o botao instalar nao aparecer, toque nos tres pontos do navegador e escolha Adicionar a tela inicial ou Instalar app.";
 
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
@@ -128,6 +129,17 @@
         return window.localStorage.getItem("buscaSaltoInstalled") === "1";
       }
 
+      function sanitizeInstallText() {
+        if (!installText) return;
+        if (/\b(Chrome|Safari)\b/i.test(installText.textContent || "")) {
+          installText.textContent = INSTALL_BROWSER_HELP;
+        }
+      }
+
+      if (installText) {
+        new MutationObserver(sanitizeInstallText).observe(installText, { childList: true, characterData: true, subtree: true });
+      }
+
       function hideInstallBanner() {
         if (banner) {
           banner.hidden = true;
@@ -142,6 +154,7 @@
         installTitle.textContent = INSTALL_TITLE;
         installText.textContent = INSTALL_DESCRIPTION;
         installButton.textContent = mode === "prompt" && deferredPrompt ? "Instalar" : "Entendi";
+        sanitizeInstallText();
 
         banner.dataset.installMode = mode;
         banner.hidden = false;
