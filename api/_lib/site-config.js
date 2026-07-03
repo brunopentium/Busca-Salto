@@ -13,6 +13,7 @@ const SITE_CONFIG_KEYS = [
   "site_banner_vignette",
   "site_banner_mobile_brightness",
   "site_banner_mobile_vignette",
+  "sponsor_carousel_seconds",
 ];
 
 function siteConfigRange(range = "A1:C") {
@@ -66,6 +67,10 @@ function sanitizeNumber(value, fallback, min, max) {
   const number = Number.parseFloat(String(value || ""));
   const safe = Number.isFinite(number) ? number : fallback;
   return String(Math.round(Math.min(Math.max(safe, min), max)));
+}
+
+function parseClampedNumber(value, fallback, min, max) {
+  return Number.parseInt(sanitizeNumber(value, fallback, min, max), 10);
 }
 
 function normalizeConfigMap(values = []) {
@@ -139,6 +144,7 @@ async function readSiteConfigAdmin() {
     site_banner_vignette: config.site_banner_vignette || "45",
     site_banner_mobile_brightness: config.site_banner_mobile_brightness || config.site_banner_brightness || "100",
     site_banner_mobile_vignette: config.site_banner_mobile_vignette || config.site_banner_vignette || "45",
+    sponsor_carousel_seconds: config.sponsor_carousel_seconds || "5",
   };
 }
 
@@ -168,6 +174,7 @@ function publicSiteConfig(config = {}) {
       brightness: Number.parseInt(config.site_banner_brightness || "100", 10) || 100,
       vignette: Number.parseInt(config.site_banner_vignette || "45", 10) || 45,
     },
+    sponsorCarouselSeconds: parseClampedNumber(config.sponsor_carousel_seconds, 5, 2, 60),
   };
 }
 
@@ -190,6 +197,7 @@ async function updateSiteConfig(payload = {}) {
     site_banner_vignette: sanitizeNumber(payload.site_banner_vignette, 45, 0, 100),
     site_banner_mobile_brightness: sanitizeNumber(payload.site_banner_mobile_brightness || payload.site_banner_brightness, 100, 50, 150),
     site_banner_mobile_vignette: sanitizeNumber(payload.site_banner_mobile_vignette || payload.site_banner_vignette, 45, 0, 100),
+    sponsor_carousel_seconds: sanitizeNumber(payload.sponsor_carousel_seconds, 5, 2, 60),
   };
   const updatedAt = todayDate();
   const rows = [

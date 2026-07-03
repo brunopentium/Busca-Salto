@@ -243,6 +243,11 @@
           <input name="site_banner_vignette" type="hidden" value="45" />
           <input name="site_banner_mobile_brightness" type="hidden" value="100" />
           <input name="site_banner_mobile_vignette" type="hidden" value="45" />
+          <fieldset class="media-group">
+            <legend>Publicidade</legend>
+            <p class="field-hint">Tempo para trocar automaticamente os banners de patrocinio. Use entre 2 e 60 segundos.</p>
+            <label>Tempo do carrossel (segundos)<input name="sponsor_carousel_seconds" type="number" min="2" max="60" step="1" value="5" /></label>
+          </fieldset>
           <div class="editor-actions">
             <button id="saveSiteConfigButton" type="submit">Salvar identidade</button>
             <button id="reloadSiteConfigButton" class="secondary" type="button">Recarregar</button>
@@ -1173,7 +1178,7 @@
     }
 
     function setSiteConfig(config = {}) {
-      const defaults = { site_banner_brightness: "100", site_banner_vignette: "45", site_banner_mobile_brightness: "100", site_banner_mobile_vignette: "45" };
+      const defaults = { site_banner_brightness: "100", site_banner_vignette: "45", site_banner_mobile_brightness: "100", site_banner_mobile_vignette: "45", sponsor_carousel_seconds: "5" };
       for (const field of siteConfigForm.elements) {
         if (!field.name) continue;
         field.value = config[field.name] || defaults[field.name] || "";

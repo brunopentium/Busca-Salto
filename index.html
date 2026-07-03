@@ -89,9 +89,10 @@
     function appendLoadMoreButton(){if(!currentHasMore)return;const button=document.createElement("button");button.type="button";button.className="btn-clear";button.textContent="Carregar mais";button.addEventListener("click",()=>{currentPage+=1;fetchResults({reset:false})});dom.results.appendChild(button)}
     function createSearchSeed(){return`${Date.now()}-${Math.random().toString(36).slice(2,8)}`}
     function trackEvent(event,payload={}){try{navigator.sendBeacon?.("/api/metricas",new Blob([JSON.stringify({event,payload,path:location.pathname})],{type:"application/json"}))}catch(error){}}
-    function initSponsorCarousel(track,items){if(sponsorCarouselTimer)clearInterval(sponsorCarouselTimer);if(!track||items.length<2)return;let isDragging=false,startX=0,startLeft=0,dragged=false;const stopDrag=()=>{isDragging=false;track.classList.remove("is-dragging")};track.addEventListener("pointerdown",event=>{isDragging=true;dragged=false;startX=event.clientX;startLeft=track.scrollLeft;track.classList.add("is-dragging");track.setPointerCapture?.(event.pointerId)});track.addEventListener("pointermove",event=>{if(!isDragging)return;const delta=event.clientX-startX;if(Math.abs(delta)>4)dragged=true;track.scrollLeft=startLeft-delta});track.addEventListener("pointerup",stopDrag);track.addEventListener("pointercancel",stopDrag);track.addEventListener("click",event=>{if(dragged){event.preventDefault();event.stopPropagation()}},true);sponsorCarouselTimer=setInterval(()=>{if(document.hidden||isDragging)return;const width=track.clientWidth,max=track.scrollWidth-track.clientWidth;if(!width||max<=0)return;const next=track.scrollLeft+width>=max-4?0:track.scrollLeft+width;track.scrollTo({left:next,behavior:"smooth"})},4500)}
+    function sponsorCarouselIntervalMs(value){const seconds=Number.parseInt(value,10);return Math.min(Math.max(Number.isFinite(seconds)?seconds:5,2),60)*1000}
+    function initSponsorCarousel(track,items,seconds=5){if(sponsorCarouselTimer)clearInterval(sponsorCarouselTimer);if(!track||items.length<2)return;let isDragging=false,startX=0,startLeft=0,dragged=false;const stopDrag=()=>{isDragging=false;track.classList.remove("is-dragging")};track.addEventListener("pointerdown",event=>{isDragging=true;dragged=false;startX=event.clientX;startLeft=track.scrollLeft;track.classList.add("is-dragging");track.setPointerCapture?.(event.pointerId)});track.addEventListener("pointermove",event=>{if(!isDragging)return;const delta=event.clientX-startX;if(Math.abs(delta)>4)dragged=true;track.scrollLeft=startLeft-delta});track.addEventListener("pointerup",stopDrag);track.addEventListener("pointercancel",stopDrag);track.addEventListener("click",event=>{if(dragged){event.preventDefault();event.stopPropagation()}},true);sponsorCarouselTimer=setInterval(()=>{if(document.hidden||isDragging)return;const width=track.clientWidth,max=track.scrollWidth-track.clientWidth;if(!width||max<=0)return;const next=track.scrollLeft+width>=max-4?0:track.scrollLeft+width;track.scrollTo({left:next,behavior:"smooth"})},sponsorCarouselIntervalMs(seconds))}
     function sponsorSlides(items){const isMobile=window.matchMedia?.("(max-width:679px)")?.matches;return items.flatMap(item=>{const desktop=Array.isArray(item.imagens_desktop)?item.imagens_desktop.filter(Boolean):[item.imagem_url].filter(Boolean),mobile=Array.isArray(item.imagens_mobile)?item.imagens_mobile.filter(Boolean):[],desktopAdjusts=Array.isArray(item.ajustes_desktop)?item.ajustes_desktop:[],mobileAdjusts=Array.isArray(item.ajustes_mobile)?item.ajustes_mobile:[],useMobile=isMobile&&mobile.length,urls=useMobile?mobile:desktop,adjusts=useMobile?mobileAdjusts:desktopAdjusts;return urls.map((url,index)=>({item,url,adjust:adjusts[index]||{}}))})}
-    async function loadSponsors(){try{const res=await fetch(SPONSORS_URL,{cache:"no-store"});if(!res.ok)return;const data=await res.json(),items=data.items||[],slides=sponsorSlides(items),carousel=document.getElementById("sponsorCarousel"),track=document.getElementById("sponsorTrack");if(!slides.length||!carousel||!track)return;track.innerHTML=slides.map(({item,url,adjust})=>{const img=mediaFrame(url,item.texto_alt||item.nome||"Patrocinador",adjust);return item.link_url?'<a class="sponsor-card" href="'+escapeOption(item.link_url)+'" target="_blank" rel="noopener" data-sponsor-id="'+escapeOption(item.id||"")+'" data-sponsor-name="'+escapeOption(item.nome||"")+'">'+img+'</a>':'<div class="sponsor-card">'+img+'</div>'}).join("");carousel.hidden=false;initSponsorCarousel(track,slides)}catch(error){}}
+    async function loadSponsors(){try{const res=await fetch(SPONSORS_URL,{cache:"no-store"});if(!res.ok)return;const data=await res.json(),items=data.items||[],slides=sponsorSlides(items),carousel=document.getElementById("sponsorCarousel"),track=document.getElementById("sponsorTrack"),carouselSeconds=data.config?.sponsorCarouselSeconds||data.config?.sponsor_carousel_seconds||5;if(!slides.length||!carousel||!track)return;track.innerHTML=slides.map(({item,url,adjust})=>{const img=mediaFrame(url,item.texto_alt||item.nome||"Patrocinador",adjust);return item.link_url?'<a class="sponsor-card" href="'+escapeOption(item.link_url)+'" target="_blank" rel="noopener" data-sponsor-id="'+escapeOption(item.id||"")+'" data-sponsor-name="'+escapeOption(item.nome||"")+'">'+img+'</a>':'<div class="sponsor-card">'+img+'</div>'}).join("");carousel.hidden=false;initSponsorCarousel(track,slides,carouselSeconds)}catch(error){}}
     function buildQuery(page){const params=new URLSearchParams({page:String(page),limit:String(PAGE_LIMIT)});const busca=dom.searchInput.value.trim(),categoria=dom.categoryFilter.value,bairro=dom.bairroFilter.value;if(currentSeed)params.set("seed",currentSeed);if(busca)params.set("busca",busca);if(categoria)params.set("categoria",categoria);if(bairro)params.set("bairro",bairro);return params.toString()}
     async function fetchResults({reset=true}={}){if(currentController)currentController.abort();currentController=new AbortController();if(reset){currentPage=1;allItems=[];currentSeed=createSearchSeed();trackEvent("search",{busca:dom.searchInput.value.trim(),categoria:dom.categoryFilter.value,bairro:dom.bairroFilter.value})}dom.status.textContent=UI_TEXTS.loading;try{const res=await fetch(`${API_URL}?${buildQuery(currentPage)}`,{cache:"no-store",signal:currentController.signal});if(!res.ok)throw new Error("Falha de rede");const data=await res.json();if(data.seed)currentSeed=data.seed;const incoming=(data.items||[]).map(item=>({...item,plano:item.tipo_exibicao||item.plano||"gratuito"}));allItems=reset?incoming:[...allItems,...incoming];currentTotal=Number(data.total)||0;currentHasMore=Boolean(data.hasMore);renderCards(allItems);updateStatus()}catch(error){if(error.name==="AbortError")return;dom.results.innerHTML=`<div class="empty">${UI_TEXTS.loadError}</div>`;dom.status.textContent=UI_TEXTS.loadError}}
     async function loadFilters(){const res=await fetch(`${API_URL}?mode=filters`,{cache:"no-store"});if(!res.ok)throw new Error("Falha de rede");const data=await res.json();renderFiltersData(data.filters)}
@@ -109,14 +110,23 @@
       const installTitle = document.getElementById("installTitle");
       const installText = document.getElementById("installText");
       let deferredPrompt = null;
+      const INSTALL_TITLE = "Instale o Busca Salto";
+      const INSTALL_DESCRIPTION = "Acesse o Busca Salto pela tela inicial, como um aplicativo.";
 
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         window.navigator.standalone === true;
-      const isiOS =
-        /iphone|ipad|ipod/i.test(window.navigator.userAgent) ||
-        (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
-      const wasDismissed = window.localStorage.getItem("buscaSaltoInstallDismissed") === "1";
+      if (isStandalone) {
+        window.localStorage.setItem("buscaSaltoInstalled", "1");
+      }
+
+      function isInstallDismissedThisSession() {
+        return window.sessionStorage.getItem("buscaSaltoInstallDismissedSession") === "1";
+      }
+
+      function isAppAlreadyInstalled() {
+        return window.localStorage.getItem("buscaSaltoInstalled") === "1";
+      }
 
       function hideInstallBanner() {
         if (banner) {
@@ -125,20 +135,13 @@
       }
 
       function showInstallBanner(mode) {
-        if (!banner || isStandalone || wasDismissed) {
+        if (!banner || isStandalone || isAppAlreadyInstalled() || isInstallDismissedThisSession()) {
           return;
         }
 
-        if (mode === "ios") {
-          installTitle.textContent = "Adicione o Guia Salto ao iPhone";
-          installText.textContent =
-            'No Safari, toque em Compartilhar e escolha "Adicionar a Tela de Inicio".';
-          installButton.textContent = "Entendi";
-        } else {
-          installTitle.textContent = "Instale o Guia Salto";
-          installText.textContent = "Acesse o Busca Salto pela tela inicial, como um aplicativo.";
-          installButton.textContent = "Instalar";
-        }
+        installTitle.textContent = INSTALL_TITLE;
+        installText.textContent = INSTALL_DESCRIPTION;
+        installButton.textContent = mode === "prompt" && deferredPrompt ? "Instalar" : "Entendi";
 
         banner.dataset.installMode = mode;
         banner.hidden = false;
@@ -153,17 +156,13 @@
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
         deferredPrompt = event;
-        showInstallBanner("android");
+        showInstallBanner("prompt");
       });
 
       installButton?.addEventListener("click", async () => {
-        if (banner?.dataset.installMode === "ios") {
-          window.localStorage.setItem("buscaSaltoInstallDismissed", "1");
-          hideInstallBanner();
-          return;
-        }
-
         if (!deferredPrompt) {
+          window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
+          hideInstallBanner();
           return;
         }
 
@@ -172,23 +171,23 @@
         deferredPrompt = null;
 
         if (choice?.outcome === "accepted") {
+          window.localStorage.setItem("buscaSaltoInstalled", "1");
           hideInstallBanner();
         }
       });
 
       dismissButton?.addEventListener("click", () => {
-        window.localStorage.setItem("buscaSaltoInstallDismissed", "1");
+        window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
         hideInstallBanner();
       });
 
       window.addEventListener("appinstalled", () => {
         window.localStorage.setItem("buscaSaltoInstalled", "1");
+        window.sessionStorage.removeItem("buscaSaltoInstallDismissedSession");
         hideInstallBanner();
       });
 
-      if (isiOS && !isStandalone && !wasDismissed) {
-        window.setTimeout(() => showInstallBanner("ios"), 1200);
-      }
+      window.setTimeout(() => showInstallBanner(deferredPrompt ? "prompt" : "manual"), 1200);
     })();
   </script>
 </body>
