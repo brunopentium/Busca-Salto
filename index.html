@@ -114,12 +114,18 @@
       const INSTALL_TITLE = "Instale o Busca Salto";
       const INSTALL_DESCRIPTION = "Acesse o Busca Salto pela tela inicial, como um aplicativo.";
       const INSTALL_BROWSER_HELP = "Se a instalacao nao abrir automaticamente, toque no menu do navegador e escolha Adicionar a tela inicial ou Instalar app.";
+      const INSTALL_SAMSUNG_HELP = "Neste navegador, use o menu do navegador e escolha Adicionar a tela inicial. Isso cria um atalho sem abrir o instalador do Android.";
+      const isSamsungInternet = /SamsungBrowser/i.test(window.navigator.userAgent || "");
 
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         window.navigator.standalone === true;
       if (isStandalone) {
         window.localStorage.setItem("buscaSaltoInstalled", "1");
+      }
+
+      if (isSamsungInternet) {
+        document.querySelectorAll('link[rel="manifest"]').forEach((link) => link.remove());
       }
 
       function isInstallDismissedThisSession() {
@@ -169,11 +175,28 @@
 
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
+        if (isSamsungInternet) {
+          deferredPrompt = null;
+          showInstallBanner("samsung-manual");
+          return;
+        }
         deferredPrompt = event;
         showInstallBanner("prompt");
       });
 
       installButton?.addEventListener("click", async () => {
+        if (isSamsungInternet) {
+          if (banner?.dataset.installMode === "samsung-help") {
+            window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
+            hideInstallBanner();
+            return;
+          }
+          installText.textContent = INSTALL_SAMSUNG_HELP;
+          installButton.textContent = "Entendi";
+          banner.dataset.installMode = "samsung-help";
+          return;
+        }
+
         if (!deferredPrompt) {
           if (banner?.dataset.installMode === "manual-help") {
             window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");

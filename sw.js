@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v10";
+const CACHE_NAME = "busca-salto-pwa-v11";
 
 const STATIC_ASSETS = [
   "/",
@@ -61,6 +61,8 @@ async function networkFirst(request) {
 
 async function prepareResponse(request, response) {
   const url = new URL(request.url);
+  const userAgent = request.headers.get("user-agent") || "";
+  const isSamsungInternet = /SamsungBrowser/i.test(userAgent);
   const isHtml = response.headers.get("content-type")?.includes("text/html");
   const isHomePage = url.pathname === "/" || url.pathname === "/index.html";
 
@@ -77,6 +79,12 @@ async function prepareResponse(request, response) {
       /<meta name="apple-mobile-web-app-title" content="[^"]*"\s*\/>/,
       '<meta name="apple-mobile-web-app-title" content="Busca Salto" />'
     );
+
+  if (isSamsungInternet) {
+    html = html
+      .replace(/<link rel="manifest" href="[^"]*"\s*\/>/g, "")
+      .replace(/<link rel="manifest" href="[^"]*">/g, "");
+  }
 
   if (isHomePage && !html.includes('id="installBanner"')) {
     const banner =
