@@ -1436,44 +1436,35 @@
       return response;
     }
 
+    function fileToDataBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Nao foi possivel ler a imagem selecionada."));
+        reader.readAsDataURL(file);
+      });
+    }
+
     async function uploadImageFor(kind, file, extra = {}) {
       ensureImageFile(file);
-      const folderId = GOOGLE_DRIVE_FOLDERS[kind] || GOOGLE_DRIVE_FOLDERS.comercio;
-      const name = [
-        safeFileBase(extra.commerceId || "novo"),
-        safeFileBase(extra.commerceName || file.name),
-        Date.now(),
-      ].join("-") + `.${fileExtension(file)}`;
-      const metadata = { name, parents: [folderId] };
-      const boundary = `busca_salto_${Date.now()}`;
-      const body = new Blob([
-        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`,
-        JSON.stringify(metadata),
-        `\r\n--${boundary}\r\nContent-Type: ${file.type}\r\n\r\n`,
-        file,
-        `\r\n--${boundary}--`,
-      ], { type: `multipart/related; boundary=${boundary}` });
-
-      const createResponse = await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink", {
-        method: "POST",
-        headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
-        body,
-      });
-      const created = await createResponse.json().catch(() => ({}));
-      if (!createResponse.ok || !created.id) {
-        throw new Error(created.error?.message || "Nao foi possivel enviar a imagem para o Drive.");
-      }
-
-      const permissionResponse = await driveFetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(created.id)}/permissions`, {
+      const response = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "reader", type: "anyone" }),
+        credentials: "same-origin",
+        body: JSON.stringify({
+          kind,
+          contentType: file.type,
+          fileName: file.name,
+          dataBase64: await fileToDataBase64(file),
+          commerceId: extra.commerceId || "novo",
+          commerceName: extra.commerceName || file.name,
+        }),
       });
-      if (!permissionResponse.ok) {
-        throw new Error("Imagem enviada, mas nao foi possivel torna-la publica.");
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok || !result.file?.url) {
+        throw new Error(result.error || "Nao foi possivel enviar a imagem.");
       }
-
-      return `https://drive.google.com/thumbnail?id=${encodeURIComponent(created.id)}&sz=w1000`;
+      return result.file.url;
     }
 
     function inputByName(form, name) {
