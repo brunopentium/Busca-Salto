@@ -938,6 +938,7 @@
 
     function saveImageAdjustment() {
       if (!activeAdjustment) return;
+      const meta = activeAdjustment.meta;
       const field = adjustmentInput(activeAdjustment.meta);
       const config = normalizeAdjustment(activeAdjustment.config);
       const visual = normalizeVisual(activeAdjustment.visual || {});
@@ -952,9 +953,10 @@
         if (visualFields.brightness) visualFields.brightness.value = String(visual.brightness);
         if (visualFields.vignette) visualFields.vignette.value = String(visual.vignette);
       }
-      panelStatus.textContent = visualFields ? "Enquadramento e tratamento visual aplicados. Salve para confirmar." : "Enquadramento aplicado. Salve o cadastro para confirmar.";
+      panelStatus.textContent = visualFields ? "Enquadramento e tratamento visual aplicados." : "Enquadramento aplicado.";
       panelStatus.className = "status ok";
       closeImageAdjustment();
+      autosaveImageTarget(meta);
     }
 
     function escapeOption(value) {
@@ -1481,6 +1483,29 @@
       if (meta) adjustmentInput(meta).value = "";
       panelStatus.textContent = "Imagem removida do cadastro. Salve para confirmar.";
       panelStatus.className = "status ok";
+    }
+
+    function autosaveImageTarget(meta) {
+      if (!meta) return;
+      window.setTimeout(() => {
+        if (meta.form === "site") {
+          siteConfigForm.requestSubmit(saveSiteConfigButton);
+          return;
+        }
+        if (meta.form === "sponsor") {
+          if (sponsorId.value) sponsorForm.requestSubmit(saveSponsorButton);
+          else {
+            panelStatus.textContent = "Enquadramento aplicado. Salve o patrocinador para confirmar.";
+            panelStatus.className = "status ok";
+          }
+          return;
+        }
+        if (commerceId.value) commerceForm.requestSubmit(saveCommerceButton);
+        else {
+          panelStatus.textContent = "Enquadramento aplicado. Salve o comercio para confirmar.";
+          panelStatus.className = "status ok";
+        }
+      }, 0);
     }
 
     adminPanel.addEventListener("click", (event) => {
