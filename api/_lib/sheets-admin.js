@@ -2,6 +2,7 @@ const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = req
 const { normalizeCommerceCategoryFields } = require("./taxonomy");
 
 const COMMERCE_EXTRA_HEADERS = [
+  "foto_url",
   "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5",
   "foto_ajuste", "foto_ajuste_2", "foto_ajuste_3", "foto_ajuste_4", "foto_ajuste_5",
 ];
@@ -367,6 +368,9 @@ function buildRowValues(headers, existingValues = [], data = {}) {
   return headers.map((header, index) => {
     const key = headerKey(header, index);
     if (Object.prototype.hasOwnProperty.call(data, key)) return data[key];
+    if ((key === "imagem" || key === "imagem_url") && Object.prototype.hasOwnProperty.call(data, "foto_url")) {
+      return data.foto_url;
+    }
     if (key === "tipo_exibicao" && Object.prototype.hasOwnProperty.call(data, "plano")) return data.plano;
     return existingValues[index] || "";
   });
