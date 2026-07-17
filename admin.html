@@ -1485,22 +1485,33 @@
       panelStatus.className = "status ok";
     }
 
+    function submitAdminForm(form, button) {
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit(button);
+        return;
+      }
+      const event = typeof SubmitEvent === "function"
+        ? new SubmitEvent("submit", { bubbles: true, cancelable: true, submitter: button })
+        : new Event("submit", { bubbles: true, cancelable: true });
+      form.dispatchEvent(event);
+    }
+
     function autosaveImageTarget(meta) {
       if (!meta) return;
       window.setTimeout(() => {
         if (meta.form === "site") {
-          siteConfigForm.requestSubmit(saveSiteConfigButton);
+          submitAdminForm(siteConfigForm, saveSiteConfigButton);
           return;
         }
         if (meta.form === "sponsor") {
-          if (sponsorId.value) sponsorForm.requestSubmit(saveSponsorButton);
+          if (sponsorId.value) submitAdminForm(sponsorForm, saveSponsorButton);
           else {
             panelStatus.textContent = "Enquadramento aplicado. Salve o patrocinador para confirmar.";
             panelStatus.className = "status ok";
           }
           return;
         }
-        if (commerceId.value) commerceForm.requestSubmit(saveCommerceButton);
+        if (commerceId.value) submitAdminForm(commerceForm, saveCommerceButton);
         else {
           panelStatus.textContent = "Enquadramento aplicado. Salve o comercio para confirmar.";
           panelStatus.className = "status ok";
