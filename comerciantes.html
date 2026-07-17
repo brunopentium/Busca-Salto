@@ -157,8 +157,19 @@
 
   <script>
     const statusEl=document.getElementById("checkoutStatus");
+    const mercadoPagoLinks={
+      parceiro:"https://mpago.la/2u3qwGJ",
+      destaque:"https://mpago.la/2adTAjs",
+      top:"https://mpago.la/1hLQ2RN"
+    };
     function track(event,payload={}){try{navigator.sendBeacon?.("/api/metricas",new Blob([JSON.stringify({event,payload,path:location.pathname})],{type:"application/json"}))}catch(error){}}
     async function startCheckout(plan){
+      if(mercadoPagoLinks[plan]){
+        statusEl.textContent="Abrindo assinatura pelo Mercado Pago...";
+        track("plan_click",{plan,mode:"mercado_pago_link"});
+        location.href=mercadoPagoLinks[plan];
+        return;
+      }
       statusEl.textContent="Abrindo pagamento pelo Mercado Pago...";
       track("plan_click",{plan});
       try{
