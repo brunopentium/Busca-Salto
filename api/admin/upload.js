@@ -2,6 +2,8 @@ const { Readable } = require("stream");
 const { requireAdminSession } = require("../_lib/admin-auth");
 const { GOOGLE_SCOPES, getDriveClient, getDriveFolderConfig } = require("../_lib/google");
 const { cleanText, json, readJsonBody } = require("../_lib/http");
+const { updateCommerce } = require("../_lib/sheets-admin");
+const { updateSponsor } = require("../_lib/sponsors");
 
 const ALLOWED_IMAGE_TYPES = new Map([
   ["image/jpeg", "jpg"],
@@ -9,6 +11,11 @@ const ALLOWED_IMAGE_TYPES = new Map([
   ["image/webp", "webp"],
 ]);
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const COMMERCE_IMAGE_FIELDS = new Set(["foto_url", "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5"]);
+const SPONSOR_IMAGE_FIELDS = new Set([
+  "imagem_url", "imagem_desktop_2", "imagem_desktop_3", "imagem_desktop_4", "imagem_desktop_5",
+  "imagem_mobile_1", "imagem_mobile_2", "imagem_mobile_3", "imagem_mobile_4", "imagem_mobile_5",
+]);
 
 function safeFileBase(value = "") {
   return cleanText(value, 120)
@@ -65,9 +72,26 @@ function parseImagePayload(body = {}) {
     contentType,
     extension: ALLOWED_IMAGE_TYPES.get(contentType),
     kind: cleanText(body.kind, 30).toLowerCase(),
+    recordId: cleanText(body.recordId || body.commerceId, 40),
+    target: cleanText(body.target, 80),
+    persist: Boolean(body.persist),
     commerceId: safeFileBase(body.commerceId || "sem-id"),
     commerceName: safeFileBase(body.commerceName || body.fileName || "imagem"),
   };
+}
+
+async function persistUploadedImage(payload, publicUrl) {
+  if (!payload.persist || !payload.recordId || !payload.target) return null;
+
+  if (payload.kind === "comercio" && COMMERCE_IMAGE_FIELDS.has(payload.target)) {
+    return updateCommerce(payload.recordId, { [payload.target]: publicUrl });
+  }
+
+  if (payload.kind === "patrocinador" && SPONSOR_IMAGE_FIELDS.has(payload.target)) {
+    return updateSponsor(payload.recordId, { [payload.target]: publicUrl });
+  }
+
+  return null;
 }
 
 module.exports = async function handler(req, res) {
@@ -96,8 +120,11 @@ module.exports = async function handler(req, res) {
     });
 
     const publicUrl = `https://drive.google.com/thumbnail?id=${encodeURIComponent(created.data.id)}&sz=w1000`;
+    const savedItem = await persistUploadedImage(payload, publicUrl);
     return json(res, 201, {
       ok: true,
+      saved: Boolean(savedItem),
+      item: savedItem,
       file: {
         id: created.data.id,
         name: created.data.name,

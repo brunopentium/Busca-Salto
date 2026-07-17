@@ -1346,7 +1346,7 @@
         if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar.");
         panelStatus.textContent = "Cadastro salvo.";
         panelStatus.className = "status ok";
-        setFormItem(result.item);
+        setFormItem({ ...(result.item || {}), ...data });
         await loadComercios();
       } catch (error) {
         panelStatus.textContent = error.message || "Nao foi possivel salvar.";
@@ -1387,13 +1387,16 @@
           dataBase64: await fileToDataBase64(file),
           commerceId: extra.commerceId || "novo",
           commerceName: extra.commerceName || file.name,
+          recordId: extra.recordId || extra.commerceId || "",
+          target: extra.target || "",
+          persist: Boolean(extra.persist),
         }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.ok || !result.file?.url) {
         throw new Error(result.error || "Nao foi possivel enviar a imagem.");
       }
-      return result.file.url;
+      return result;
     }
 
     function inputByName(form, name) {
@@ -1459,10 +1462,14 @@
         await validateImageUploadTarget(target, file);
         panelStatus.textContent = "Enviando imagem...";
         const formData = Object.fromEntries(new FormData(form).entries());
-        field.value = await uploadImageFor(kind, file, {
+        const uploadResult = await uploadImageFor(kind, file, {
           commerceId: formData.id || "novo",
           commerceName: formData.nome || file.name,
+          recordId: formData.id || "",
+          target,
+          persist: Boolean(formData.id && (kind === "comercio" || kind === "patrocinador")),
         });
+        field.value = uploadResult.file.url;
         panelStatus.textContent = "Imagem enviada.";
         panelStatus.className = "status ok";
         openImageAdjustment(target);
@@ -1554,7 +1561,7 @@
         if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar patrocinador.");
         panelStatus.textContent = "Patrocinador salvo.";
         panelStatus.className = "status ok";
-        setSponsorItem(result.item);
+        setSponsorItem({ ...(result.item || {}), ...data });
         await loadSponsors();
       } catch (error) {
         panelStatus.textContent = error.message || "Nao foi possivel salvar.";
