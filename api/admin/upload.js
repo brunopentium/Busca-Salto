@@ -64,11 +64,52 @@ function shouldTryNextFolder(error) {
   return status === 401 || status === 403 || status === 404;
 }
 
+async function inspectDriveFolder(drive, folderId) {
+  const metadata = await drive.files.get({
+    fileId: folderId,
+    supportsAllDrives: true,
+    fields: "id,name,mimeType,capabilities/canAddChildren",
+  });
+  return {
+    folderId,
+    name: metadata.data.name,
+    mimeType: metadata.data.mimeType,
+    canAddChildren: Boolean(metadata.data.capabilities?.canAddChildren),
+  };
+}
+
+async function resolveWritableFolder(drive, kind) {
+  const checks = [];
+
+  for (const folderId of folderCandidatesForKind(kind)) {
+    try {
+      const folder = await inspectDriveFolder(drive, folderId);
+      checks.push({ ...folder, ok: true });
+      if (folder.mimeType === "application/vnd.google-apps.folder" && folder.canAddChildren) {
+        return { folderId, checks };
+      }
+    } catch (error) {
+      checks.push({
+        folderId,
+        ok: false,
+        status: Number(error?.code || error?.response?.status || 0) || null,
+        message: String(error?.message || "").slice(0, 160),
+      });
+    }
+  }
+
+  const error = new Error("Nenhuma pasta do Google Drive permite criar arquivos.");
+  error.code = 403;
+  error.uploadAttempts = checks;
+  throw error;
+}
+
 async function createDriveFileWithFallback(drive, payload, name) {
   let lastError = null;
   const attempts = [];
+  const resolved = await resolveWritableFolder(drive, payload.kind);
 
-  for (const folderId of folderCandidatesForKind(payload.kind)) {
+  for (const folderId of uniqueFolderIds([resolved.folderId, ...folderCandidatesForKind(payload.kind)])) {
     try {
       const created = await drive.files.create({
         supportsAllDrives: true,
@@ -92,7 +133,7 @@ async function createDriveFileWithFallback(drive, payload, name) {
   }
 
   const finalError = lastError || new Error("Nenhuma pasta do Google Drive disponivel para upload.");
-  finalError.uploadAttempts = attempts;
+  finalError.uploadAttempts = [...resolved.checks, ...attempts];
   throw finalError;
 }
 
@@ -196,18 +237,7 @@ module.exports = async function handler(req, res) {
       const checks = [];
       for (const folderId of candidates) {
         try {
-          const metadata = await drive.files.get({
-            fileId: folderId,
-            supportsAllDrives: true,
-            fields: "id,name,mimeType,capabilities/canAddChildren",
-          });
-          checks.push({
-            folderId,
-            ok: true,
-            name: metadata.data.name,
-            mimeType: metadata.data.mimeType,
-            canAddChildren: Boolean(metadata.data.capabilities?.canAddChildren),
-          });
+          checks.push({ ...(await inspectDriveFolder(drive, folderId)), ok: true });
         } catch (error) {
           checks.push({
             folderId,
