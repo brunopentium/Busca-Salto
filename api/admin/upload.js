@@ -11,6 +11,10 @@ const ALLOWED_IMAGE_TYPES = new Map([
   ["image/webp", "webp"],
 ]);
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const KNOWN_WRITABLE_FOLDERS = {
+  businesses: "1SI56xKqxzdxLEgu72Q1G-NL00LuOAPNA",
+  sponsors: "18rKSfu38PHR8NCda6j3V6BS99kuT9NU7",
+};
 const COMMERCE_IMAGE_FIELDS = new Set(["foto_url", "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5"]);
 const SPONSOR_IMAGE_FIELDS = new Set([
   "imagem_url", "imagem_desktop_2", "imagem_desktop_3", "imagem_desktop_4", "imagem_desktop_5",
@@ -41,12 +45,18 @@ function uniqueFolderIds(ids = []) {
 
 function folderCandidatesForKind(kind) {
   const folders = getDriveFolderConfig();
-  return uniqueFolderIds([
+  const preferred = [
     folderForKind(kind),
+    kind === "comercio" ? KNOWN_WRITABLE_FOLDERS.businesses : "",
+    kind === "patrocinador" ? KNOWN_WRITABLE_FOLDERS.sponsors : "",
+    folders.sponsors,
+    KNOWN_WRITABLE_FOLDERS.sponsors,
+    folders.businesses,
+    KNOWN_WRITABLE_FOLDERS.businesses,
     folders.images,
     folders.site,
-    folders.sponsors,
-  ]);
+  ];
+  return uniqueFolderIds(preferred);
 }
 
 function shouldTryNextFolder(error) {
@@ -56,6 +66,7 @@ function shouldTryNextFolder(error) {
 
 async function createDriveFileWithFallback(drive, payload, name) {
   let lastError = null;
+  const attempts = [];
 
   for (const folderId of folderCandidatesForKind(payload.kind)) {
     try {
@@ -70,11 +81,18 @@ async function createDriveFileWithFallback(drive, payload, name) {
       return { created, folderId };
     } catch (error) {
       lastError = error;
+      attempts.push({
+        folderId,
+        status: Number(error?.code || error?.response?.status || 0) || null,
+        message: String(error?.message || "").slice(0, 160),
+      });
       if (!shouldTryNextFolder(error)) throw error;
     }
   }
 
-  throw lastError || new Error("Nenhuma pasta do Google Drive disponivel para upload.");
+  const finalError = lastError || new Error("Nenhuma pasta do Google Drive disponivel para upload.");
+  finalError.uploadAttempts = attempts;
+  throw finalError;
 }
 
 function uploadErrorMessage(error) {
@@ -190,6 +208,7 @@ module.exports = async function handler(req, res) {
       event: "admin_upload_error",
       message: error?.message || "Erro desconhecido",
       status: error?.code || error?.response?.status || null,
+      uploadAttempts: error?.uploadAttempts || null,
       timestamp: new Date().toISOString(),
     }));
     return json(res, error.statusCode || 500, {
