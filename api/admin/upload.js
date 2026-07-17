@@ -136,6 +136,26 @@ async function persistUploadedImage(payload, publicUrl) {
   return null;
 }
 
+async function makeDriveFileReadable(drive, fileId) {
+  try {
+    await drive.permissions.create({
+      fileId,
+      requestBody: { role: "reader", type: "anyone" },
+    });
+    return true;
+  } catch (error) {
+    console.warn(JSON.stringify({
+      level: "warn",
+      service: "busca-salto-admin",
+      event: "admin_upload_public_permission_skipped",
+      message: error?.message || "Nao foi possivel tornar a imagem publica.",
+      status: error?.code || error?.response?.status || null,
+      timestamp: new Date().toISOString(),
+    }));
+    return false;
+  }
+}
+
 module.exports = async function handler(req, res) {
   const session = requireAdminSession(req);
   if (!session.ok) return json(res, session.status, { ok: false, error: session.error });
@@ -147,17 +167,13 @@ module.exports = async function handler(req, res) {
     const name = `${payload.commerceId}-${payload.commerceName}-${Date.now()}.${payload.extension}`;
 
     const { created, folderId } = await createDriveFileWithFallback(drive, payload, name);
-
-    await drive.permissions.create({
-      fileId: created.data.id,
-      requestBody: { role: "reader", type: "anyone" },
-    });
-
-    const publicUrl = `https://drive.google.com/thumbnail?id=${encodeURIComponent(created.data.id)}&sz=w1000`;
+    const publicReadable = await makeDriveFileReadable(drive, created.data.id);
+    const publicUrl = `/api/imagem?id=${encodeURIComponent(created.data.id)}&sz=w1000`;
     const savedItem = await persistUploadedImage(payload, publicUrl);
     return json(res, 201, {
       ok: true,
       saved: Boolean(savedItem),
+      publicReadable,
       item: savedItem,
       file: {
         id: created.data.id,
