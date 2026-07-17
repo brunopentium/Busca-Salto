@@ -871,10 +871,13 @@
       adjustVignette.value = String(visual.vignette);
       adjustBrightnessValue.textContent = `${visual.brightness}%`;
       adjustVignetteValue.textContent = String(visual.vignette);
+      const position = `${config.x}% ${config.y}%`;
       adjustImage.className = `adjust-image fit-${config.fit}`;
       adjustImage.style.setProperty("--img-x", `${config.x}%`);
       adjustImage.style.setProperty("--img-y", `${config.y}%`);
       adjustImage.style.setProperty("--img-zoom", String(config.zoom));
+      adjustImage.style.backgroundPosition = position;
+      adjustImage.style.transformOrigin = position;
       adjustImage.style.setProperty("--preview-brightness", `${visual.brightness}%`);
       adjustFrameEffect.style.setProperty("--preview-vignette-blur", `${Math.round(visual.vignette * 1.4)}px`);
       adjustFrameEffect.style.setProperty("--preview-vignette-spread", `${Math.round(visual.vignette * .36)}px`);
