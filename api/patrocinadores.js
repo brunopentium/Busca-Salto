@@ -3,7 +3,7 @@ const { readSiteConfigPublic } = require("./_lib/site-config");
 const { isSponsorActive, normalize, normalizeDateValue, publicSponsor, readSponsors } = require("./_lib/sponsors");
 
 let cache = { loadedAt: 0, items: [], config: { logo: { url: "", ajuste: {} }, banner: { url: "", ajuste: {} } } };
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 0;
 
 function sponsorImageCount(sponsor) {
   return (sponsor.imagens_desktop || []).length + (sponsor.imagens_mobile || []).length;
@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
     }
 
     return json(res, 200, { ok: true, items: cache.items, config: cache.config, updatedAt: new Date(cache.loadedAt).toISOString() }, {
-      cacheControl: "public, max-age=120",
+      cacheControl: "no-store, max-age=0",
     });
   } catch (error) {
     console.error(JSON.stringify({

@@ -941,7 +941,7 @@
       }
     }
 
-    function saveImageAdjustment() {
+    async function saveImageAdjustment() {
       if (!activeAdjustment) return;
       const meta = activeAdjustment.meta;
       const imageField = inputByName(formForAdjustment(meta), meta.target);
@@ -963,9 +963,17 @@
         if (visualFields.brightness) visualFields.brightness.value = String(visual.brightness);
         if (visualFields.vignette) visualFields.vignette.value = String(visual.vignette);
       }
-      setPanelStatus(visualFields ? "Enquadramento e tratamento visual aplicados." : "Enquadramento aplicado.", "ok");
-      closeImageAdjustment();
-      autosaveImageTarget(meta);
+      adjustSaveButton.disabled = true;
+      try {
+        setPanelStatus("Salvando enquadramento...");
+        const saved = await autosaveImageTarget(meta);
+        setPanelStatus(saved ? "Enquadramento salvo e publicado." : "Enquadramento aplicado. Salve o cadastro para publicar.", "ok");
+        closeImageAdjustment();
+      } catch (error) {
+        setPanelStatus(error.message || "Nao foi possivel salvar o enquadramento.", "error");
+      } finally {
+        adjustSaveButton.disabled = false;
+      }
     }
 
     function escapeOption(value) {
@@ -1726,27 +1734,49 @@
       form.dispatchEvent(event);
     }
 
-    function autosaveImageTarget(meta) {
-      if (!meta) return;
-      window.setTimeout(() => {
-        if (meta.form === "site") {
-          submitAdminForm(siteConfigForm, saveSiteConfigButton);
-          return;
-        }
-        if (meta.form === "sponsor") {
-          if (sponsorId.value) submitAdminForm(sponsorForm, saveSponsorButton);
-          else {
-            panelStatus.textContent = "Enquadramento aplicado. Salve o patrocinador para confirmar.";
-            panelStatus.className = "status ok";
-          }
-          return;
-        }
-        if (commerceId.value) submitAdminForm(commerceForm, saveCommerceButton);
-        else {
-          panelStatus.textContent = "Enquadramento aplicado. Salve o comercio para confirmar.";
-          panelStatus.className = "status ok";
-        }
-      }, 0);
+    async function autosaveImageTarget(meta) {
+      if (!meta) return false;
+      if (meta.form === "site") {
+        const data = Object.fromEntries(new FormData(siteConfigForm).entries());
+        const response = await fetch("/api/admin/patrocinadores?mode=site-config", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar identidade.");
+        setSiteConfig(result.config || {});
+        return true;
+      }
+      if (meta.form === "sponsor") {
+        const data = Object.fromEntries(new FormData(sponsorForm).entries());
+        if (!data.id) return false;
+        const response = await fetch(`/api/admin/patrocinadores?id=${encodeURIComponent(data.id)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar patrocinador.");
+        setSponsorItem({ ...(result.item || {}), ...data });
+        await loadSponsors();
+        return true;
+      }
+      const data = Object.fromEntries(new FormData(commerceForm).entries());
+      if (!data.id) return false;
+      const response = await fetch(`/api/admin/comercios?id=${encodeURIComponent(data.id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar comercio.");
+      setFormItem({ ...(result.item || {}), ...data });
+      await loadComercios();
+      return true;
     }
 
     adminPanel.addEventListener("click", (event) => {
