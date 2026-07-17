@@ -1,4 +1,4 @@
-const SITE_URL = (process.env.SITE_URL || process.env.VERCEL_URL || "https://busca-salto.vercel.app").replace(/\/+$/, "");
+const SITE_URL = (process.env.SITE_URL || process.env.VERCEL_URL || "https://www.buscasalto.com").replace(/\/+$/, "");
 const MERCADO_PAGO_ACCESS_TOKEN = String(process.env.MERCADO_PAGO_ACCESS_TOKEN || "").trim();
 
 const PLANS = {
@@ -53,7 +53,7 @@ async function createMercadoPagoPreference(planKey, plan) {
         currency_id: "BRL",
       }],
       back_urls: {
-        success: `${SITE_URL}/comerciantes.html?checkout=success&plan=${encodeURIComponent(planKey)}`,
+        success: `${SITE_URL}/assinatura-confirmada.html?plan=${encodeURIComponent(planKey)}`,
         pending: `${SITE_URL}/comerciantes.html?checkout=pending&plan=${encodeURIComponent(planKey)}`,
         failure: `${SITE_URL}/comerciantes.html?checkout=failure&plan=${encodeURIComponent(planKey)}`,
       },
