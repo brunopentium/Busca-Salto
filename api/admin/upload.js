@@ -35,6 +35,48 @@ function folderForKind(kind) {
   return folders.businesses;
 }
 
+function uniqueFolderIds(ids = []) {
+  return [...new Set(ids.map((id) => String(id || "").trim()).filter(Boolean))];
+}
+
+function folderCandidatesForKind(kind) {
+  const folders = getDriveFolderConfig();
+  return uniqueFolderIds([
+    folderForKind(kind),
+    folders.images,
+    folders.site,
+    folders.sponsors,
+  ]);
+}
+
+function shouldTryNextFolder(error) {
+  const status = Number(error?.code || error?.response?.status || 0);
+  return status === 401 || status === 403 || status === 404;
+}
+
+async function createDriveFileWithFallback(drive, payload, name) {
+  let lastError = null;
+
+  for (const folderId of folderCandidatesForKind(payload.kind)) {
+    try {
+      const created = await drive.files.create({
+        requestBody: { name, parents: [folderId] },
+        media: {
+          mimeType: payload.contentType,
+          body: Readable.from(payload.buffer),
+        },
+        fields: "id,name,webViewLink",
+      });
+      return { created, folderId };
+    } catch (error) {
+      lastError = error;
+      if (!shouldTryNextFolder(error)) throw error;
+    }
+  }
+
+  throw lastError || new Error("Nenhuma pasta do Google Drive disponivel para upload.");
+}
+
 function uploadErrorMessage(error) {
   const message = String(error?.message || "");
   const status = Number(error?.code || error?.response?.status || 0);
@@ -102,17 +144,9 @@ module.exports = async function handler(req, res) {
   try {
     const payload = parseImagePayload(await readJsonBody(req, { maxBytes: 5 * 1024 * 1024 }));
     const drive = await getDriveClient([GOOGLE_SCOPES.drive]);
-    const folderId = folderForKind(payload.kind);
     const name = `${payload.commerceId}-${payload.commerceName}-${Date.now()}.${payload.extension}`;
 
-    const created = await drive.files.create({
-      requestBody: { name, parents: [folderId] },
-      media: {
-        mimeType: payload.contentType,
-        body: Readable.from(payload.buffer),
-      },
-      fields: "id,name,webViewLink",
-    });
+    const { created, folderId } = await createDriveFileWithFallback(drive, payload, name);
 
     await drive.permissions.create({
       fileId: created.data.id,
@@ -128,6 +162,7 @@ module.exports = async function handler(req, res) {
       file: {
         id: created.data.id,
         name: created.data.name,
+        folderId,
         url: publicUrl,
         webViewLink: created.data.webViewLink,
       },

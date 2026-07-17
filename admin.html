@@ -939,6 +939,12 @@
     function saveImageAdjustment() {
       if (!activeAdjustment) return;
       const meta = activeAdjustment.meta;
+      const imageField = inputByName(formForAdjustment(meta), meta.target);
+      if (!imageField?.value?.trim()) {
+        panelStatus.textContent = "Envie a imagem antes de aplicar o enquadramento.";
+        panelStatus.className = "status error";
+        return;
+      }
       const field = adjustmentInput(activeAdjustment.meta);
       const config = normalizeAdjustment(activeAdjustment.config);
       const visual = normalizeVisual(activeAdjustment.visual || {});
