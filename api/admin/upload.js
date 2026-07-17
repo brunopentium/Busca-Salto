@@ -196,6 +196,28 @@ async function persistUploadedImage(payload, publicUrl) {
   return null;
 }
 
+async function tryPersistUploadedImage(payload, publicUrl) {
+  try {
+    const item = await persistUploadedImage(payload, publicUrl);
+    return { item, error: "" };
+  } catch (error) {
+    console.error(JSON.stringify({
+      level: "error",
+      service: "busca-salto-admin",
+      event: "admin_upload_persist_error",
+      message: error?.message || "Erro desconhecido ao salvar URL da imagem",
+      status: error?.statusCode || error?.code || error?.response?.status || null,
+      target: payload.target,
+      recordId: payload.recordId,
+      timestamp: new Date().toISOString(),
+    }));
+    return {
+      item: null,
+      error: String(error?.message || "Imagem enviada, mas nao foi possivel salvar a URL no cadastro.").slice(0, 180),
+    };
+  }
+}
+
 async function makeDriveFileReadable(drive, fileId) {
   try {
     await drive.permissions.create({
@@ -269,12 +291,13 @@ module.exports = async function handler(req, res) {
     const { created, folderId } = await createDriveFileWithFallback(drive, payload, name);
     const publicReadable = await makeDriveFileReadable(drive, created.data.id);
     const publicUrl = `/api/imagem?id=${encodeURIComponent(created.data.id)}&sz=w1000`;
-    const savedItem = await persistUploadedImage(payload, publicUrl);
+    const persistResult = await tryPersistUploadedImage(payload, publicUrl);
     return json(res, 201, {
       ok: true,
-      saved: Boolean(savedItem),
+      saved: Boolean(persistResult.item),
+      persistError: persistResult.error,
       publicReadable,
-      item: savedItem,
+      item: persistResult.item,
       file: {
         id: created.data.id,
         name: created.data.name,

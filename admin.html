@@ -1448,7 +1448,10 @@
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.ok || !result.file?.url) {
-        throw new Error(result.error || "Nao foi possivel enviar a imagem.");
+        const attempts = Array.isArray(result.attempts) && result.attempts.length
+          ? ` Detalhe: ${result.attempts.map((item) => `${item.folderId || "pasta"} ${item.status || ""} ${item.message || ""}`.trim()).join(" | ")}`
+          : "";
+        throw new Error((result.error || "Nao foi possivel enviar a imagem.") + attempts);
       }
       return result;
     }
@@ -1521,14 +1524,14 @@
           target,
           persist: shouldPersist,
         });
-        if (shouldPersist && !uploadResult.saved) {
-          throw new Error("Imagem enviada, mas nao foi possivel salvar a URL no cadastro.");
-        }
         field.value = uploadResult.file.url;
-        setPanelStatus(shouldPersist ? "Imagem enviada e URL salva no cadastro." : "Imagem enviada.", "ok");
+        if (shouldPersist && !uploadResult.saved) {
+          setPanelStatus(uploadResult.persistError || "Imagem enviada. A URL ficou no campo; clique em Aplicar ou Salvar para gravar no cadastro.", "error");
+        } else {
+          setPanelStatus(shouldPersist ? "Imagem enviada e URL salva no cadastro." : "Imagem enviada.", "ok");
+        }
         openImageAdjustment(target);
       } catch (error) {
-        field.value = "";
         setPanelStatus(error.message || "Nao foi possivel enviar.", "error");
       } finally {
         button.disabled = false;
