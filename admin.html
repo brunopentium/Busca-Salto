@@ -1366,8 +1366,8 @@
       if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
         throw new Error("Tipo de imagem nao permitido.");
       }
-      if (!file.size || file.size > 3 * 1024 * 1024) {
-        throw new Error("Imagem vazia ou maior que 3 MB.");
+      if (!file.size || file.size > 20 * 1024 * 1024) {
+        throw new Error("Imagem vazia ou muito grande. Use uma imagem de ate 20 MB.");
       }
     }
 
@@ -1380,19 +1380,66 @@
       });
     }
 
-    async function uploadImageFor(kind, file, extra = {}) {
+    function canvasToBlob(canvas, type, quality) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Nao foi possivel preparar a imagem para envio."));
+        }, type, quality);
+      });
+    }
+
+    async function compressImageForUpload(file, target = "") {
       ensureImageFile(file);
+      const maxBytes = 2.2 * 1024 * 1024;
+      if (file.size <= maxBytes) return file;
+
+      const dimensions = await imageDimensions(file);
+      const maxWidth = target.startsWith("site_banner") ? 2560 : target.startsWith("imagem_") ? 1920 : 1600;
+      const scale = Math.min(1, maxWidth / Math.max(dimensions.width, 1));
+      const width = Math.max(1, Math.round(dimensions.width * scale));
+      const height = Math.max(1, Math.round(dimensions.height * scale));
+      const imageUrl = URL.createObjectURL(file);
+      try {
+        const image = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("Nao foi possivel carregar a imagem para otimizar."));
+          img.src = imageUrl;
+        });
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, width, height);
+        let quality = .86;
+        let blob = await canvasToBlob(canvas, "image/jpeg", quality);
+        while (blob.size > maxBytes && quality > .58) {
+          quality -= .08;
+          blob = await canvasToBlob(canvas, "image/jpeg", quality);
+        }
+        if (blob.size > maxBytes) {
+          throw new Error("A imagem continua grande apos otimizacao. Tente uma imagem menor.");
+        }
+        return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+      } finally {
+        URL.revokeObjectURL(imageUrl);
+      }
+    }
+
+    async function uploadImageFor(kind, file, extra = {}) {
+      const uploadFile = await compressImageForUpload(file, extra.target || "");
       const response = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({
           kind,
-          contentType: file.type,
-          fileName: file.name,
-          dataBase64: await fileToDataBase64(file),
+          contentType: uploadFile.type,
+          fileName: uploadFile.name,
+          dataBase64: await fileToDataBase64(uploadFile),
           commerceId: extra.commerceId || "novo",
-          commerceName: extra.commerceName || file.name,
+          commerceName: extra.commerceName || uploadFile.name,
           recordId: extra.recordId || extra.commerceId || "",
           target: extra.target || "",
           persist: Boolean(extra.persist),
@@ -1466,17 +1513,21 @@
       panelStatus.className = "status";
       try {
         await validateImageUploadTarget(target, file);
-        panelStatus.textContent = "Enviando imagem...";
+        panelStatus.textContent = "Otimizando e enviando imagem...";
         const formData = Object.fromEntries(new FormData(form).entries());
+        const shouldPersist = Boolean(formData.id && (kind === "comercio" || kind === "patrocinador"));
         const uploadResult = await uploadImageFor(kind, file, {
           commerceId: formData.id || "novo",
           commerceName: formData.nome || file.name,
           recordId: formData.id || "",
           target,
-          persist: Boolean(formData.id && (kind === "comercio" || kind === "patrocinador")),
+          persist: shouldPersist,
         });
+        if (shouldPersist && !uploadResult.saved) {
+          throw new Error("Imagem enviada, mas nao foi possivel salvar a URL no cadastro.");
+        }
         field.value = uploadResult.file.url;
-        panelStatus.textContent = "Imagem enviada.";
+        panelStatus.textContent = shouldPersist ? "Imagem enviada e URL salva no cadastro." : "Imagem enviada.";
         panelStatus.className = "status ok";
         openImageAdjustment(target);
       } catch (error) {
