@@ -71,6 +71,7 @@ async function createDriveFileWithFallback(drive, payload, name) {
   for (const folderId of folderCandidatesForKind(payload.kind)) {
     try {
       const created = await drive.files.create({
+        supportsAllDrives: true,
         requestBody: { name, parents: [folderId] },
         media: {
           mimeType: payload.contentType,
@@ -158,6 +159,7 @@ async function makeDriveFileReadable(drive, fileId) {
   try {
     await drive.permissions.create({
       fileId,
+      supportsAllDrives: true,
       requestBody: { role: "reader", type: "anyone" },
     });
     return true;
@@ -177,6 +179,56 @@ async function makeDriveFileReadable(drive, fileId) {
 module.exports = async function handler(req, res) {
   const session = requireAdminSession(req);
   if (!session.ok) return json(res, session.status, { ok: false, error: session.error });
+  if (req.method === "GET" && req.query.diagnose === "1") {
+    try {
+      const drive = await getDriveClient([GOOGLE_SCOPES.drive]);
+      const folders = getDriveFolderConfig();
+      const configuredEmail = String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "").trim();
+      const candidates = uniqueFolderIds([
+        folders.businesses,
+        KNOWN_WRITABLE_FOLDERS.businesses,
+        folders.sponsors,
+        KNOWN_WRITABLE_FOLDERS.sponsors,
+        folders.images,
+        folders.site,
+        folders.pending,
+      ]);
+      const checks = [];
+      for (const folderId of candidates) {
+        try {
+          const metadata = await drive.files.get({
+            fileId: folderId,
+            supportsAllDrives: true,
+            fields: "id,name,mimeType,capabilities/canAddChildren",
+          });
+          checks.push({
+            folderId,
+            ok: true,
+            name: metadata.data.name,
+            mimeType: metadata.data.mimeType,
+            canAddChildren: Boolean(metadata.data.capabilities?.canAddChildren),
+          });
+        } catch (error) {
+          checks.push({
+            folderId,
+            ok: false,
+            status: Number(error?.code || error?.response?.status || 0) || null,
+            message: String(error?.message || "").slice(0, 160),
+          });
+        }
+      }
+      return json(res, 200, {
+        ok: true,
+        serviceAccountEmail: configuredEmail,
+        folders: checks,
+      });
+    } catch (error) {
+      return json(res, 500, {
+        ok: false,
+        error: error?.message || "Nao foi possivel diagnosticar o upload.",
+      });
+    }
+  }
   if (req.method !== "POST") return json(res, 405, { ok: false, error: "Metodo nao permitido." });
 
   try {
@@ -214,6 +266,8 @@ module.exports = async function handler(req, res) {
     return json(res, error.statusCode || 500, {
       ok: false,
       error: error.statusCode ? error.message : uploadErrorMessage(error),
+      serviceAccountEmail: String(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "").trim(),
+      attempts: error?.uploadAttempts || [],
     });
   }
 };

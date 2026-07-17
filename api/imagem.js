@@ -16,7 +16,7 @@ function cleanSize(value = "") {
 async function fetchOriginalDriveFile(id) {
   const drive = await getDriveClient([GOOGLE_SCOPES.drive]);
   const response = await drive.files.get(
-    { fileId: id, alt: "media" },
+    { fileId: id, alt: "media", supportsAllDrives: true },
     { responseType: "arraybuffer" },
   );
   return {
