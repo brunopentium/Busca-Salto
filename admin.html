@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow" />
   <title>Busca Salto - Admin</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root{--azul:#0b2a4a;--texto:#17324f;--muted:#60738c;--fundo:#f5f7fb;--card:#fff;--borda:#d8e1ec;--ok:#0f766e;--erro:#b42318}
     *{box-sizing:border-box}
@@ -579,6 +580,7 @@
       loadTaxonomia();
       loadComercios();
       loadSponsors();
+      loadGoogleUploadConfig().catch(() => null);
     }
 
     function showLogin(message = "") {
@@ -1390,6 +1392,150 @@
       });
     }
 
+    let googleUploadConfigPromise = null;
+    let googleTokenClient = null;
+    let googleAccessToken = "";
+    let googleAccessTokenExpiresAt = 0;
+
+    async function loadGoogleUploadConfig() {
+      if (!googleUploadConfigPromise) {
+        googleUploadConfigPromise = fetch("/api/admin/upload", { cache: "no-store", credentials: "same-origin" })
+          .then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.ok) throw new Error(data.error || "Nao foi possivel carregar configuracao do upload.");
+            return data;
+          });
+      }
+      return googleUploadConfigPromise;
+    }
+
+    function waitForGoogleIdentity() {
+      return new Promise((resolve, reject) => {
+        const startedAt = Date.now();
+        const timer = window.setInterval(() => {
+          if (window.google?.accounts?.oauth2) {
+            window.clearInterval(timer);
+            resolve();
+            return;
+          }
+          if (Date.now() - startedAt > 8000) {
+            window.clearInterval(timer);
+            reject(new Error("Autenticacao Google nao carregou. Atualize a pagina e tente novamente."));
+          }
+        }, 100);
+      });
+    }
+
+    async function getGoogleAccessToken(clientId) {
+      if (googleAccessToken && Date.now() < googleAccessTokenExpiresAt - 60000) return googleAccessToken;
+      await waitForGoogleIdentity();
+      return new Promise((resolve, reject) => {
+        googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: "https://www.googleapis.com/auth/drive.file",
+          callback: (response) => {
+            if (response?.error) {
+              reject(new Error(response.error_description || response.error || "Autenticacao Google recusada."));
+              return;
+            }
+            googleAccessToken = response.access_token || "";
+            googleAccessTokenExpiresAt = Date.now() + (Number(response.expires_in || 3600) * 1000);
+            if (!googleAccessToken) reject(new Error("Google nao retornou token de upload."));
+            else resolve(googleAccessToken);
+          },
+          error_callback: () => reject(new Error("Nao foi possivel abrir a autenticacao Google.")),
+        });
+        googleTokenClient.requestAccessToken({ prompt: googleAccessToken ? "" : "consent" });
+      });
+    }
+
+    function folderForGoogleUpload(config, kind) {
+      const folders = config.uploadFolders || {};
+      if (kind === "patrocinador") return folders.patrocinador || folders.comercio || folders.site || "";
+      if (kind === "site") return folders.site || folders.patrocinador || folders.comercio || "";
+      return folders.comercio || folders.patrocinador || folders.site || "";
+    }
+
+    function googleDriveFileName(kind, uploadFile, extra = {}) {
+      const base = [extra.commerceId || kind || "imagem", extra.commerceName || uploadFile.name, Date.now()]
+        .join("-")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9.]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      const extension = (uploadFile.type.split("/")[1] || "jpg").replace("jpeg", "jpg");
+      return `${base}.${extension}`;
+    }
+
+    function multipartDriveBody(metadata, file) {
+      const boundary = `busca_salto_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      const body = new Blob([
+        `--${boundary}\r\n`,
+        "Content-Type: application/json; charset=UTF-8\r\n\r\n",
+        JSON.stringify(metadata),
+        `\r\n--${boundary}\r\n`,
+        `Content-Type: ${file.type}\r\n\r\n`,
+        file,
+        `\r\n--${boundary}--`,
+      ], { type: `multipart/related; boundary=${boundary}` });
+      return { body, boundary };
+    }
+
+    async function makeGoogleDriveFilePublic(fileId, accessToken) {
+      await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/permissions?supportsAllDrives=true`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: "reader", type: "anyone" }),
+      }).catch(() => null);
+    }
+
+    async function uploadImageWithGoogleOAuth(kind, uploadFile, extra = {}) {
+      const config = await loadGoogleUploadConfig();
+      const clientId = String(config.oauthClientId || "").trim();
+      if (!clientId) {
+        throw new Error("Upload pela conta Google nao configurado. Configure GOOGLE_OAUTH_CLIENT_ID na Vercel.");
+      }
+      const folderId = folderForGoogleUpload(config, kind);
+      if (!folderId) throw new Error("Pasta de upload do Google Drive nao configurada.");
+
+      setPanelStatus("Autentique sua conta Google para enviar a imagem...");
+      const accessToken = await getGoogleAccessToken(clientId);
+      const metadata = {
+        name: googleDriveFileName(kind, uploadFile, extra),
+        parents: [folderId],
+      };
+      const multipart = multipartDriveBody(metadata, uploadFile);
+      const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,name,webViewLink", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": multipart.body.type,
+        },
+        body: multipart.body,
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.id) {
+        throw new Error(result.error?.message || "Nao foi possivel enviar a imagem pela conta Google.");
+      }
+      await makeGoogleDriveFilePublic(result.id, accessToken);
+      return {
+        ok: true,
+        saved: false,
+        persistError: "Imagem enviada pela sua conta Google. Clique em Aplicar ou Salvar para gravar no cadastro.",
+        file: {
+          id: result.id,
+          name: result.name,
+          folderId,
+          url: `/api/imagem?id=${encodeURIComponent(result.id)}&sz=w1000`,
+          webViewLink: result.webViewLink || "",
+        },
+      };
+    }
+
     async function compressImageForUpload(file, target = "") {
       ensureImageFile(file);
       const maxBytes = 2.2 * 1024 * 1024;
@@ -1428,8 +1574,20 @@
       }
     }
 
+    function uploadNeedsGoogleOAuth(result = {}) {
+      const text = [
+        result.error || "",
+        ...(Array.isArray(result.attempts) ? result.attempts.map((item) => item.message || "") : []),
+      ].join(" ");
+      return text.includes("Service Accounts do not have storage quota");
+    }
+
     async function uploadImageFor(kind, file, extra = {}) {
       const uploadFile = await compressImageForUpload(file, extra.target || "");
+      const uploadConfig = await loadGoogleUploadConfig().catch(() => null);
+      if (uploadConfig?.oauthClientId) {
+        return uploadImageWithGoogleOAuth(kind, uploadFile, extra);
+      }
       const response = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1448,6 +1606,9 @@
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.ok || !result.file?.url) {
+        if (uploadNeedsGoogleOAuth(result)) {
+          return uploadImageWithGoogleOAuth(kind, uploadFile, extra);
+        }
         const attempts = Array.isArray(result.attempts) && result.attempts.length
           ? ` Detalhe: ${result.attempts.map((item) => `${item.folderId || "pasta"} ${item.status || ""} ${item.message || ""}`.trim()).join(" | ")}`
           : "";
@@ -1513,6 +1674,11 @@
       button.disabled = true;
       setPanelStatus("Verificando imagem...");
       try {
+        const uploadConfig = await loadGoogleUploadConfig().catch(() => null);
+        if (uploadConfig?.oauthClientId && !googleAccessToken) {
+          setPanelStatus("Autentique sua conta Google para enviar imagens ao Drive...");
+          await getGoogleAccessToken(uploadConfig.oauthClientId);
+        }
         await validateImageUploadTarget(target, file);
         setPanelStatus("Otimizando e enviando imagem...");
         const formData = Object.fromEntries(new FormData(form).entries());

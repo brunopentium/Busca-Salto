@@ -144,6 +144,9 @@ function uploadErrorMessage(error) {
   if (message.includes("Google credentials are not configured")) {
     return "Credenciais do Google nao configuradas na Vercel.";
   }
+  if (message.includes("Service Accounts do not have storage quota")) {
+    return "A service account do Google nao tem cota de armazenamento. O admin vai tentar enviar pela sua conta Google.";
+  }
   if (status === 401 || status === 403) {
     return "Sem permissao para enviar para a pasta do Google Drive.";
   }
@@ -272,6 +275,12 @@ module.exports = async function handler(req, res) {
       return json(res, 200, {
         ok: true,
         serviceAccountEmail: configuredEmail,
+        oauthClientId: String(process.env.GOOGLE_OAUTH_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || "").trim(),
+        uploadFolders: {
+          comercio: folders.businesses || KNOWN_WRITABLE_FOLDERS.businesses,
+          patrocinador: folders.sponsors || KNOWN_WRITABLE_FOLDERS.sponsors,
+          site: folders.site || folders.images || folders.sponsors || folders.businesses,
+        },
         folders: checks,
       });
     } catch (error) {
