@@ -26,6 +26,23 @@ function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function normalizeDateValue(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  const brMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (brMatch) return `${brMatch[3]}-${brMatch[2].padStart(2, "0")}-${brMatch[1].padStart(2, "0")}`;
+  return text.slice(0, 10);
+}
+
+function compareDateValues(a = "", b = "") {
+  const left = normalizeDateValue(a);
+  const right = normalizeDateValue(b);
+  if (!left || !right) return 0;
+  return left.localeCompare(right);
+}
+
 function columnName(index) {
   let column = "";
   let number = index + 1;
@@ -255,8 +272,9 @@ async function readSponsors() {
 function isSponsorActive(sponsor, now = todayDate()) {
   if (normalize(sponsor.status) !== "ativo") return false;
   if (!sponsor.nome || !sponsor.imagens_desktop.length) return false;
-  if (sponsor.inicio && sponsor.inicio > now) return false;
-  if (sponsor.fim && sponsor.fim < now) return false;
+  const today = normalizeDateValue(now);
+  if (sponsor.inicio && compareDateValues(sponsor.inicio, today) > 0) return false;
+  if (sponsor.fim && compareDateValues(sponsor.fim, today) < 0) return false;
   return true;
 }
 
@@ -416,6 +434,8 @@ module.exports = {
   deleteSponsor,
   ensureSponsorsSheet,
   isSponsorActive,
+  normalize,
+  normalizeDateValue,
   publicSponsor,
   readSponsors,
   sanitizeSponsorPayload,
