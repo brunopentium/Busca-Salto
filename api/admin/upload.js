@@ -179,7 +179,7 @@ async function makeDriveFileReadable(drive, fileId) {
 module.exports = async function handler(req, res) {
   const session = requireAdminSession(req);
   if (!session.ok) return json(res, session.status, { ok: false, error: session.error });
-  if (req.method === "GET" && req.query.diagnose === "1") {
+  if (req.method === "GET") {
     try {
       const drive = await getDriveClient([GOOGLE_SCOPES.drive]);
       const folders = getDriveFolderConfig();
