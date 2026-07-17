@@ -819,14 +819,19 @@
     function currentImageUrlForTarget(meta) {
       const form = formForAdjustment(meta);
       const field = inputByName(form, meta.target);
-      const fileInput = fileInputByTarget(meta.target);
       if (field?.value?.trim()) return { url: previewImageUrl(field.value.trim()), objectUrl: "" };
-      const file = fileInput?.files && fileInput.files[0];
-      if (file) {
-        const objectUrl = URL.createObjectURL(file);
-        return { url: objectUrl, objectUrl };
-      }
       return { url: "", objectUrl: "" };
+    }
+
+    function setPanelStatus(message, type = "") {
+      panelStatus.textContent = message;
+      panelStatus.className = type ? `status ${type}` : "status";
+      if (!imageAdjustModal.hidden && type === "error") {
+        adjustHint.textContent = message;
+      }
+      if (type === "error") {
+        panelStatus.scrollIntoView?.({ behavior: "smooth", block: "center" });
+      }
     }
 
     function visualFieldsForMeta(meta) {
@@ -901,8 +906,7 @@
       if (!meta) return;
       const image = currentImageUrlForTarget(meta);
       if (!image.url) {
-        panelStatus.textContent = "Escolha um arquivo ou informe uma URL antes de enquadrar.";
-        panelStatus.className = "status error";
+        setPanelStatus("Clique em Enviar e aguarde a Foto URL aparecer antes de enquadrar.", "error");
         return;
       }
       if (activePreviewObjectUrl) URL.revokeObjectURL(activePreviewObjectUrl);
@@ -920,8 +924,7 @@
       imageAdjustModal.hidden = false;
       renderAdjustmentPreview();
       preloadAdjustmentImage(image.url).catch(() => {
-        panelStatus.textContent = "Nao foi possivel carregar a imagem no preview. Tente reenviar a imagem ou salvar e atualizar.";
-        panelStatus.className = "status error";
+        setPanelStatus("Nao foi possivel carregar a imagem no preview. Tente reenviar a imagem ou salvar e atualizar.", "error");
       });
     }
 
@@ -941,8 +944,7 @@
       const meta = activeAdjustment.meta;
       const imageField = inputByName(formForAdjustment(meta), meta.target);
       if (!imageField?.value?.trim()) {
-        panelStatus.textContent = "Envie a imagem antes de aplicar o enquadramento.";
-        panelStatus.className = "status error";
+        setPanelStatus("Envie a imagem antes de aplicar o enquadramento.", "error");
         return;
       }
       const field = adjustmentInput(activeAdjustment.meta);
@@ -959,8 +961,7 @@
         if (visualFields.brightness) visualFields.brightness.value = String(visual.brightness);
         if (visualFields.vignette) visualFields.vignette.value = String(visual.vignette);
       }
-      panelStatus.textContent = visualFields ? "Enquadramento e tratamento visual aplicados." : "Enquadramento aplicado.";
-      panelStatus.className = "status ok";
+      setPanelStatus(visualFields ? "Enquadramento e tratamento visual aplicados." : "Enquadramento aplicado.", "ok");
       closeImageAdjustment();
       autosaveImageTarget(meta);
     }
@@ -1498,22 +1499,19 @@
       const fileInput = fileInputByTarget(target);
       const file = fileInput?.files && fileInput.files[0];
       if (!field) {
-        panelStatus.textContent = "Campo de imagem nao encontrado.";
-        panelStatus.className = "status error";
+        setPanelStatus("Campo de imagem nao encontrado.", "error");
         return;
       }
       if (!file) {
-        panelStatus.textContent = "Selecione uma imagem.";
-        panelStatus.className = "status error";
+        setPanelStatus("Selecione uma imagem.", "error");
         return;
       }
 
       button.disabled = true;
-      panelStatus.textContent = "Verificando imagem...";
-      panelStatus.className = "status";
+      setPanelStatus("Verificando imagem...");
       try {
         await validateImageUploadTarget(target, file);
-        panelStatus.textContent = "Otimizando e enviando imagem...";
+        setPanelStatus("Otimizando e enviando imagem...");
         const formData = Object.fromEntries(new FormData(form).entries());
         const shouldPersist = Boolean(formData.id && (kind === "comercio" || kind === "patrocinador"));
         const uploadResult = await uploadImageFor(kind, file, {
@@ -1527,12 +1525,11 @@
           throw new Error("Imagem enviada, mas nao foi possivel salvar a URL no cadastro.");
         }
         field.value = uploadResult.file.url;
-        panelStatus.textContent = shouldPersist ? "Imagem enviada e URL salva no cadastro." : "Imagem enviada.";
-        panelStatus.className = "status ok";
+        setPanelStatus(shouldPersist ? "Imagem enviada e URL salva no cadastro." : "Imagem enviada.", "ok");
         openImageAdjustment(target);
       } catch (error) {
-        panelStatus.textContent = error.message || "Nao foi possivel enviar.";
-        panelStatus.className = "status error";
+        field.value = "";
+        setPanelStatus(error.message || "Nao foi possivel enviar.", "error");
       } finally {
         button.disabled = false;
       }
