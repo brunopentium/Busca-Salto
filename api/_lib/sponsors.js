@@ -271,7 +271,7 @@ async function readSponsors() {
 
 function isSponsorActive(sponsor, now = todayDate()) {
   if (normalize(sponsor.status) !== "ativo") return false;
-  if (!sponsor.nome || !sponsor.imagens_desktop.length) return false;
+  if (!sponsor.nome || !imageList(sponsor.imagem_url).length) return false;
   const today = normalizeDateValue(now);
   if (sponsor.inicio && compareDateValues(sponsor.inicio, today) > 0) return false;
   if (sponsor.fim && compareDateValues(sponsor.fim, today) < 0) return false;
@@ -286,16 +286,18 @@ function driveImageUrl(url = "") {
 }
 
 function publicSponsor(sponsor) {
-  const desktopImages = sponsor.imagens_desktop.length ? sponsor.imagens_desktop : imageList(sponsor.imagem_url);
-  const mobileImages = sponsor.imagens_mobile.length ? sponsor.imagens_mobile : desktopImages;
+  const desktopEntries = imageEntries([sponsor.imagem_url], [sponsor.imagem_ajuste]);
+  const mobileEntries = imageEntries([sponsor.imagem_mobile_1], [sponsor.imagem_mobile_1_ajuste]);
+  const desktopImages = desktopEntries.map((entry) => entry.url);
+  const mobileImages = mobileEntries.length ? mobileEntries.map((entry) => entry.url) : desktopImages;
   return {
     id: sponsor.id,
     nome: sponsor.nome,
     imagem_url: desktopImages[0] || "",
     imagens_desktop: desktopImages,
     imagens_mobile: mobileImages,
-    ajustes_desktop: sponsor.ajustes_desktop || [],
-    ajustes_mobile: sponsor.imagens_mobile.length ? (sponsor.ajustes_mobile || []) : (sponsor.ajustes_desktop || []),
+    ajustes_desktop: desktopEntries.map((entry) => entry.adjust),
+    ajustes_mobile: mobileEntries.length ? mobileEntries.map((entry) => entry.adjust) : desktopEntries.map((entry) => entry.adjust),
     link_url: sponsor.link_url,
     texto_alt: sponsor.texto_alt || sponsor.nome,
   };
@@ -357,8 +359,8 @@ function sanitizeSponsorPayload(payload = {}) {
     data_atualizacao: todayDate(),
   };
 
-  if (!data.nome || !imageList(data.imagem_url, data.imagem_desktop_2, data.imagem_desktop_3, data.imagem_desktop_4, data.imagem_desktop_5).length) {
-    const error = new Error("Nome e ao menos um banner desktop do patrocinador sao obrigatorios.");
+  if (!data.nome || !imageList(data.imagem_url).length) {
+    const error = new Error("Nome e banner desktop do patrocinador sao obrigatorios.");
     error.statusCode = 400;
     throw error;
   }

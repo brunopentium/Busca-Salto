@@ -16,10 +16,7 @@ const KNOWN_WRITABLE_FOLDERS = {
   sponsors: "18rKSfu38PHR8NCda6j3V6BS99kuT9NU7",
 };
 const COMMERCE_IMAGE_FIELDS = new Set(["foto_url", "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5"]);
-const SPONSOR_IMAGE_FIELDS = new Set([
-  "imagem_url", "imagem_desktop_2", "imagem_desktop_3", "imagem_desktop_4", "imagem_desktop_5",
-  "imagem_mobile_1", "imagem_mobile_2", "imagem_mobile_3", "imagem_mobile_4", "imagem_mobile_5",
-]);
+const SPONSOR_IMAGE_FIELDS = new Set(["imagem_url", "imagem_mobile_1"]);
 
 function safeFileBase(value = "") {
   return cleanText(value, 120)

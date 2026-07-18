@@ -130,9 +130,9 @@ Cabecalhos:
 - `imagem_mobile_4`
 - `imagem_mobile_5`
 
-Somente registros com `status` ativo, imagem preenchida e dentro do periodo configurado aparecem na API publica e no carrossel do site.
+Somente registros com `status` ativo, `imagem_url` preenchida e dentro do periodo configurado aparecem na API publica e no carrossel do site.
 
-O campo `imagem_url` permanece como o banner desktop principal por compatibilidade. Para patrocinadores, o painel permite ate 5 banners desktop (`imagem_url` + `imagem_desktop_2` a `imagem_desktop_5`) e ate 5 banners smartphone (`imagem_mobile_1` a `imagem_mobile_5`). No celular, o site usa os banners smartphone quando existirem; se nao existirem, usa os banners desktop.
+Cada linha da aba representa um patrocinador independente. O campo `imagem_url` e o banner desktop oficial desse patrocinador, e `imagem_mobile_1` e o banner smartphone opcional; se `imagem_mobile_1` estiver vazio, o site usa o banner desktop tambem no smartphone. As colunas `imagem_desktop_2` a `imagem_desktop_5` e `imagem_mobile_2` a `imagem_mobile_5` permanecem apenas por compatibilidade com dados antigos e nao sao usadas no site publico nem no painel atual.
 
 Fotos e banners podem ter configuracao de enquadramento salva separadamente da URL. O admin grava modo de encaixe, zoom e posicao em campos de ajuste, preservando o arquivo original no Google Drive e permitindo reajuste posterior sem novo upload.
 

@@ -6,7 +6,7 @@ let cache = { loadedAt: 0, items: [], config: { logo: { url: "", ajuste: {} }, b
 const CACHE_TTL_MS = 0;
 
 function sponsorImageCount(sponsor) {
-  return (sponsor.imagens_desktop || []).length + (sponsor.imagens_mobile || []).length;
+  return (String(sponsor.imagem_url || "").trim() ? 1 : 0) + (String(sponsor.imagem_mobile_1 || "").trim() ? 1 : 0);
 }
 
 function isBetterSponsor(candidate, current) {
