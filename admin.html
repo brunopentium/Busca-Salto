@@ -33,8 +33,8 @@
     .filters{display:grid;grid-template-columns:minmax(260px,1fr) minmax(140px,180px) minmax(140px,180px) 120px;gap:10px;margin-top:8px;padding:14px;border:1px solid var(--borda);border-radius:8px;background:#fbfcfe}
     .toolbar{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
     .toolbar button{width:auto;min-width:96px}
-    .admin-tabs{display:flex;gap:8px;margin:14px 0 16px;border-bottom:1px solid var(--borda);padding-bottom:10px}
-    .admin-tab{width:auto;min-width:120px;background:#eef3fa;color:var(--azul);border:1px solid #d0dceb}
+    .admin-tabs{display:flex;gap:8px;margin:14px 0 16px;border-bottom:1px solid var(--borda);padding-bottom:10px;flex-wrap:wrap}
+    .admin-tab{width:auto;min-width:140px;background:#eef3fa;color:var(--azul);border:1px solid #d0dceb}
     .admin-tab.active{background:var(--azul);color:#fff;border-color:var(--azul)}
     .management-section[hidden],.metrics-panel[hidden]{display:none!important}
     .content-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,440px);gap:16px;align-items:start}
@@ -68,6 +68,10 @@
     .media-group{display:grid;gap:8px;border:1px solid #e4ebf4;border-radius:8px;padding:10px;background:#fff}
     .media-group legend,.media-title{font-weight:800;color:var(--azul);font-size:.82rem}
     .field-hint{margin:-2px 0 2px;color:var(--muted);font-size:.82rem;line-height:1.35}
+    .image-slots{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .image-slot{display:grid;gap:8px;border:1px solid #edf2f8;border-radius:8px;background:#fbfcfe;padding:10px;min-width:0}
+    .image-slot label{font-size:.78rem}
+    .image-slot .media-actions{grid-template-columns:minmax(0,1fr) auto auto}
     .media-actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:end}
     .media-actions button{width:auto;min-width:82px}
     .adjust-modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(7,26,44,.48);padding:16px}
@@ -112,7 +116,7 @@
     .row-action{width:auto;padding:7px 9px;background:#e8eef6;color:var(--azul);border:1px solid var(--borda);font-size:.8rem}
     .metrics-panel{display:grid;gap:14px}.metrics-toolbar{display:flex;justify-content:space-between;gap:10px;align-items:end;flex-wrap:wrap;border:1px solid var(--borda);border-radius:8px;background:#fff;padding:12px}.metrics-toolbar label{font-size:.82rem;min-width:150px}.metrics-toolbar button{width:auto;min-width:120px}.metric-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.metric-card{border:1px solid var(--borda);border-radius:8px;background:#fff;padding:14px}.metric-label{display:block;color:var(--muted);font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.metric-value{display:block;color:var(--azul);font-size:1.9rem;font-weight:950;margin-top:6px}.metric-chart{border:1px solid var(--borda);border-radius:8px;background:#fff;overflow:hidden}.metric-chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:#f6f8fb;border-bottom:1px solid #edf1f6;flex-wrap:wrap}.metric-chart-head h3{margin:0;color:var(--azul);font-size:.95rem}.metric-chart-head span{color:var(--muted);font-size:.84rem;font-weight:800}.metric-plot{padding:12px 14px 10px}.metric-svg{display:block;width:100%;height:auto;min-height:260px}.metric-axis{fill:#6b7b8f;font-size:11px}.metric-grid-line{stroke:#e8eef6;stroke-width:1}.metric-area{fill:rgba(244,179,33,.22)}.metric-line{fill:none;stroke:#0b2a4a;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}.metric-point{fill:#f4b321;stroke:#0b2a4a;stroke-width:2}.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metric-box{border:1px solid var(--borda);border-radius:8px;background:#fff;overflow:hidden}.metric-box h3{margin:0;padding:12px 14px;background:#f6f8fb;border-bottom:1px solid #edf1f6;color:var(--azul);font-size:.95rem}.metric-list{display:grid;gap:0}.metric-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:9px 14px;border-top:1px solid #f0f3f7;font-size:.88rem}.metric-row:first-child{border-top:0}.metric-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.metric-row strong{color:var(--azul)}.metric-empty{padding:12px 14px;color:var(--muted);font-size:.88rem}
     @media(max-width:1180px){.record-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid,.sponsor-grid,.metric-grid{grid-template-columns:1fr}.editor,.sponsor-panel{max-width:none}}
-    @media(max-width:760px){body{padding:10px}main{padding:14px}.topbar{align-items:stretch}.toolbar{width:100%;justify-content:stretch}.toolbar button{flex:1;min-width:0}.admin-tabs{display:grid;grid-template-columns:1fr 1fr}.admin-tab{min-width:0}.filters{grid-template-columns:1fr;padding:10px}.record-card{grid-template-columns:1fr}.record-actions{width:100%;flex-direction:row}.record-actions button{flex:1}.record-meta{grid-template-columns:1fr}.editor-grid,.sponsor-form{grid-template-columns:1fr}.media-actions{grid-template-columns:1fr 1fr}.media-actions label{grid-column:1/-1}.editor-actions{grid-template-columns:1fr}.sponsor-panel{padding:10px}.subcategory-list{grid-template-columns:1fr}.subcategory-tools{grid-template-columns:1fr}.subcategory-tools button{width:100%}.adjust-grid{grid-template-columns:1fr}.adjust-box{padding:10px}.adjust-actions{grid-template-columns:1fr}.metric-cards{grid-template-columns:1fr}.metric-svg{min-height:220px}}
+    @media(max-width:760px){body{padding:10px}main{padding:14px}.topbar{align-items:stretch}.toolbar{width:100%;justify-content:stretch}.toolbar button{flex:1;min-width:0}.admin-tabs{display:grid;grid-template-columns:1fr 1fr}.admin-tab{min-width:0}.filters{grid-template-columns:1fr;padding:10px}.record-card{grid-template-columns:1fr}.record-actions{width:100%;flex-direction:row}.record-actions button{flex:1}.record-meta{grid-template-columns:1fr}.editor-grid,.sponsor-form,.image-slots{grid-template-columns:1fr}.media-actions,.image-slot .media-actions{grid-template-columns:1fr 1fr}.media-actions label{grid-column:1/-1}.editor-actions{grid-template-columns:1fr}.sponsor-panel{padding:10px}.subcategory-list{grid-template-columns:1fr}.subcategory-tools{grid-template-columns:1fr}.subcategory-tools button{width:100%}.adjust-grid{grid-template-columns:1fr}.adjust-box{padding:10px}.adjust-actions{grid-template-columns:1fr}.metric-cards{grid-template-columns:1fr}.metric-svg{min-height:220px}}
   </style>
 </head>
 <body>
@@ -134,7 +138,7 @@
       <div class="topbar">
         <div>
           <h1>Painel administrativo</h1>
-          <p id="summary">Carregando comercios...</p>
+          <p id="summary">Configure logo, banner principal e tempo do carrossel.</p>
         </div>
         <div class="toolbar">
           <button id="refreshButton" class="secondary" type="button">Atualizar</button>
@@ -142,10 +146,12 @@
         </div>
       </div>
       <nav class="admin-tabs" aria-label="Guias do painel">
-        <button class="admin-tab active" type="button" data-admin-tab="gestao">Gestao</button>
+        <button class="admin-tab active" type="button" data-admin-tab="identidade">Identidade</button>
+        <button class="admin-tab" type="button" data-admin-tab="comercios">Comercios</button>
+        <button class="admin-tab" type="button" data-admin-tab="patrocinadores">Patrocinadores</button>
         <button class="admin-tab" type="button" data-admin-tab="indicadores">Indicadores</button>
       </nav>
-      <section id="metricsView" class="metrics-panel" hidden>
+      <section id="metricsView" class="metrics-panel" data-admin-view="indicadores" hidden>
         <div class="metrics-toolbar">
           <div>
             <h2>Indicadores do site</h2>
@@ -189,7 +195,7 @@
           <div class="empty">Abra a guia para carregar os indicadores.</div>
         </div>
       </section>
-      <form id="filtersForm" class="filters management-section">
+      <form id="filtersForm" class="filters management-section" data-admin-view="comercios" hidden>
         <input id="adminSearch" name="busca" type="search" placeholder="Buscar comercio, bairro, contato..." autocomplete="off" />
         <select id="statusFilter" name="status">
           <option value="">Status</option>
@@ -205,7 +211,7 @@
         </select>
         <button id="filterButton" type="submit">Filtrar</button>
       </form>
-      <section class="sponsor-panel management-section">
+      <section class="sponsor-panel management-section" data-admin-view="identidade">
         <h2>Identidade do site</h2>
         <form id="siteConfigForm" class="sponsor-form">
           <fieldset class="media-group">
@@ -255,7 +261,7 @@
           </div>
         </form>
       </section>
-      <div class="content-grid management-section">
+      <div class="content-grid management-section" data-admin-view="comercios" hidden>
         <section class="list-panel">
           <div class="section-head">
             <h2>Comercios</h2>
@@ -293,37 +299,47 @@
             <label>Prioridade<select name="prioridade"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
             <label>Verificado<select name="verificado"><option value="não">não</option><option value="sim">sim</option></select></label>
             <label>Oferta<input name="oferta" maxlength="180" /></label>
-            <fieldset class="media-group">
+            <fieldset class="media-group image-slots">
               <legend>Fotos do comercio</legend>
-              <label>Foto 1 URL<input id="fotoUrlInput" name="foto_url" maxlength="500" /></label>
-              <div class="media-actions">
-                <label>Arquivo foto 1<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url" /></label>
-                <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url">Enviar</button>
-                <button class="secondary danger" type="button" data-clear-target="foto_url">Remover</button>
+              <div class="image-slot">
+                <label>Foto 1 URL<input id="fotoUrlInput" name="foto_url" maxlength="500" /></label>
+                <div class="media-actions">
+                  <label>Arquivo foto 1<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url" /></label>
+                  <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url">Enviar</button>
+                  <button class="secondary danger" type="button" data-clear-target="foto_url">Remover</button>
+                </div>
               </div>
-              <label>Foto 2 URL<input name="foto_url_2" maxlength="500" /></label>
-              <div class="media-actions">
-                <label>Arquivo foto 2<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url_2" /></label>
-                <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url_2">Enviar</button>
-                <button class="secondary danger" type="button" data-clear-target="foto_url_2">Remover</button>
+              <div class="image-slot">
+                <label>Foto 2 URL<input name="foto_url_2" maxlength="500" /></label>
+                <div class="media-actions">
+                  <label>Arquivo foto 2<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url_2" /></label>
+                  <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url_2">Enviar</button>
+                  <button class="secondary danger" type="button" data-clear-target="foto_url_2">Remover</button>
+                </div>
               </div>
-              <label>Foto 3 URL<input name="foto_url_3" maxlength="500" /></label>
-              <div class="media-actions">
-                <label>Arquivo foto 3<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url_3" /></label>
-                <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url_3">Enviar</button>
-                <button class="secondary danger" type="button" data-clear-target="foto_url_3">Remover</button>
+              <div class="image-slot">
+                <label>Foto 3 URL<input name="foto_url_3" maxlength="500" /></label>
+                <div class="media-actions">
+                  <label>Arquivo foto 3<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url_3" /></label>
+                  <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url_3">Enviar</button>
+                  <button class="secondary danger" type="button" data-clear-target="foto_url_3">Remover</button>
+                </div>
               </div>
-              <label>Foto 4 URL<input name="foto_url_4" maxlength="500" /></label>
-              <div class="media-actions">
-                <label>Arquivo foto 4<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url_4" /></label>
-                <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url_4">Enviar</button>
-                <button class="secondary danger" type="button" data-clear-target="foto_url_4">Remover</button>
+              <div class="image-slot">
+                <label>Foto 4 URL<input name="foto_url_4" maxlength="500" /></label>
+                <div class="media-actions">
+                  <label>Arquivo foto 4<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url_4" /></label>
+                  <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url_4">Enviar</button>
+                  <button class="secondary danger" type="button" data-clear-target="foto_url_4">Remover</button>
+                </div>
               </div>
-              <label>Foto 5 URL<input name="foto_url_5" maxlength="500" /></label>
-              <div class="media-actions">
-                <label>Arquivo foto 5<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url_5" /></label>
-                <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url_5">Enviar</button>
-                <button class="secondary danger" type="button" data-clear-target="foto_url_5">Remover</button>
+              <div class="image-slot">
+                <label>Foto 5 URL<input name="foto_url_5" maxlength="500" /></label>
+                <div class="media-actions">
+                  <label>Arquivo foto 5<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="foto_url_5" /></label>
+                  <button class="secondary" type="button" data-upload-kind="comercio" data-upload-target="foto_url_5">Enviar</button>
+                  <button class="secondary danger" type="button" data-clear-target="foto_url_5">Remover</button>
+                </div>
               </div>
             </fieldset>
             <label>Descricao<textarea name="descricao" maxlength="700"></textarea></label>
@@ -335,7 +351,7 @@
           </form>
         </aside>
       </div>
-      <section class="sponsor-panel management-section">
+      <section class="sponsor-panel management-section" data-admin-view="patrocinadores" hidden>
         <h2>Patrocinadores</h2>
         <div class="sponsor-grid">
           <form id="sponsorForm" class="sponsor-form">
@@ -496,6 +512,13 @@
     let activePreviewObjectUrl = "";
     let adjustDrag = null;
     let currentMetrics = null;
+    let activeAdminTab = "identidade";
+    const ADMIN_TAB_SUMMARIES = {
+      identidade: "Configure logo, banner principal e tempo do carrossel.",
+      comercios: "Gerencie cadastros, contatos, planos e fotos dos comercios.",
+      patrocinadores: "Gerencie banners de patrocinadores e periodos de exibicao.",
+      indicadores: "Indicadores e relatorios de uso do site.",
+    };
     const IMAGE_ADJUSTMENTS = [
       { form: "site", target: "site_logo_url", config: "site_logo_ajuste", label: "Logo do site", ratio: "1/1" },
       { form: "site", target: "site_banner_url", config: "site_banner_ajuste", label: "Banner principal desktop", ratio: "16/5", hint: "Preview da area visivel no desktop: 2560 px x 800 px (16:5).", visual: { brightness: "site_banner_brightness", vignette: "site_banner_vignette" } },
@@ -513,11 +536,9 @@
       loginBox.classList.add("hidden");
       adminPanel.classList.add("active");
       panelStatus.textContent = "";
-      loadSiteConfig();
       loadTaxonomia();
-      loadComercios();
-      loadSponsors();
       loadGoogleUploadConfig().catch(() => null);
+      switchAdminTab(activeAdminTab);
     }
 
     function showLogin(message = "") {
@@ -668,13 +689,19 @@
     }
 
     function switchAdminTab(tab) {
-      const isMetrics = tab === "indicadores";
-      document.querySelectorAll("[data-admin-tab]").forEach((button) => button.classList.toggle("active", button.dataset.adminTab === tab));
-      document.querySelectorAll(".management-section").forEach((section) => { section.hidden = isMetrics; });
-      metricsView.hidden = !isMetrics;
-      summary.textContent = isMetrics ? "Indicadores e relatorios de uso do site." : "Carregando comercios...";
-      if (isMetrics) loadMetrics();
-      else loadComercios();
+      const nextTab = ADMIN_TAB_SUMMARIES[tab] ? tab : "identidade";
+      activeAdminTab = nextTab;
+      document.querySelectorAll("[data-admin-tab]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.adminTab === nextTab);
+      });
+      document.querySelectorAll("[data-admin-view]").forEach((section) => {
+        section.hidden = section.dataset.adminView !== nextTab;
+      });
+      summary.textContent = ADMIN_TAB_SUMMARIES[nextTab] || "";
+      if (nextTab === "identidade") loadSiteConfig();
+      if (nextTab === "comercios") loadComercios();
+      if (nextTab === "patrocinadores") loadSponsors();
+      if (nextTab === "indicadores") loadMetrics();
     }
 
     function adjustmentMetaForTarget(target) {
@@ -1792,16 +1819,13 @@
 
     reloadSiteConfigButton.addEventListener("click", loadSiteConfig);
     refreshButton.addEventListener("click", () => {
-      if (!metricsView.hidden) {
-        loadMetrics();
-        return;
-      }
-      loadSiteConfig();
-      loadComercios();
-      loadSponsors();
+      if (activeAdminTab === "identidade") loadSiteConfig();
+      if (activeAdminTab === "comercios") loadComercios();
+      if (activeAdminTab === "patrocinadores") loadSponsors();
+      if (activeAdminTab === "indicadores") loadMetrics();
     });
     document.querySelectorAll("[data-admin-tab]").forEach((button) => {
-      button.addEventListener("click", () => switchAdminTab(button.dataset.adminTab || "gestao"));
+      button.addEventListener("click", () => switchAdminTab(button.dataset.adminTab || "identidade"));
     });
     refreshMetricsButton.addEventListener("click", loadMetrics);
     metricsDays.addEventListener("change", () => {
@@ -1876,7 +1900,7 @@
       loadComercios();
     });
     filtersForm.addEventListener("input", () => {
-      if (!metricsView.hidden) return;
+      if (activeAdminTab !== "comercios") return;
       clearTimeout(filterTimer);
       filterTimer = setTimeout(loadComercios, 350);
     });
