@@ -1,16 +1,18 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
-const { normalizeCommerceCategoryFields } = require("./taxonomy");
+const { TAXONOMY, normalizeCommerceCategoryFields } = require("./taxonomy");
 
 const COMMERCE_EXTRA_HEADERS = [
   "foto_url",
   "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5",
   "foto_ajuste", "foto_ajuste_2", "foto_ajuste_3", "foto_ajuste_4", "foto_ajuste_5",
+  "fonte_url", "data_verificacao",
 ];
 const COMMERCE_CONTENT_KEYS = new Set([
   "id", "nome", "categoria", "subcategoria", "bairro", "endereco", "whatsapp", "instagram", "site",
   "descricao", "palavras_chave", "facebook", "telefone", "oferta", "foto_url", "imagem", "imagem_url",
   "foto_url_2", "foto_url_3", "foto_url_4", "foto_url_5",
   "foto_ajuste", "foto_ajuste_2", "foto_ajuste_3", "foto_ajuste_4", "foto_ajuste_5",
+  "fonte_url", "data_verificacao",
 ]);
 const REQUIRED_HEADER_KEYS = new Set(["id", "nome", "categoria"]);
 
@@ -108,37 +110,6 @@ async function ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, minRows)
   });
 }
 
-async function copyRowPattern(sheets, spreadsheetId, sheetName, sourceRowNumber, targetRowNumber, columnCount) {
-  if (sourceRowNumber < 1 || targetRowNumber < 1 || sourceRowNumber === targetRowNumber) return;
-  const properties = await getSheetProperties(sheets, spreadsheetId, sheetName);
-  if (typeof properties?.sheetId !== "number") return;
-
-  const source = {
-    sheetId: properties.sheetId,
-    startRowIndex: sourceRowNumber - 1,
-    endRowIndex: sourceRowNumber,
-    startColumnIndex: 0,
-    endColumnIndex: columnCount,
-  };
-  const destination = {
-    sheetId: properties.sheetId,
-    startRowIndex: targetRowNumber - 1,
-    endRowIndex: targetRowNumber,
-    startColumnIndex: 0,
-    endColumnIndex: columnCount,
-  };
-
-  await sheets.spreadsheets.batchUpdate({
-    spreadsheetId,
-    requestBody: {
-      requests: [
-        { copyPaste: { source, destination, pasteType: "PASTE_FORMAT" } },
-        { copyPaste: { source, destination, pasteType: "PASTE_DATA_VALIDATION" } },
-      ],
-    },
-  });
-}
-
 function commerceImageUrls(raw = {}) {
   return [
     raw.foto_url || raw.imagem || raw.imagem_url || "",
@@ -210,6 +181,8 @@ function rowToAdminObject(headers, row, index) {
     fotos: commerceImageUrls(raw),
     foto_ajustes: commerceImageAdjustments(raw),
     verificado: raw.verificado || "não",
+    fonte_url: raw.fonte_url || "",
+    data_verificacao: raw.data_verificacao || "",
   };
 }
 
@@ -339,6 +312,8 @@ function sanitizeCommercePayload(payload = {}, options = {}) {
     foto_ajuste_4: sanitizeImageAdjustment(valueForKey(payload, "foto_ajuste_4")),
     foto_ajuste_5: sanitizeImageAdjustment(valueForKey(payload, "foto_ajuste_5")),
     data_atualizacao: valueForKey(payload, "data_atualizacao", now).slice(0, 30),
+    fonte_url: valueForKey(payload, "fonte_url").slice(0, 500),
+    data_verificacao: valueForKey(payload, "data_verificacao", payload.fonte_url ? now : "").slice(0, 30),
   };
 
   if (!data.nome) {
@@ -377,14 +352,73 @@ function buildRowValues(headers, existingValues = [], data = {}) {
 }
 
 async function appendCommerce(payload) {
+  const [item] = await appendCommerces([payload], { requireSource: false, deduplicate: false, forceUnverified: false, validateCategory: false });
+  return item;
+}
+
+function isSameCommerce(left = {}, right = {}) {
+  const leftName = normalizeSearchText(left.nome);
+  const rightName = normalizeSearchText(right.nome);
+  if (!leftName || leftName !== rightName) return false;
+  const leftAddress = normalizeSearchText(left.endereco);
+  const rightAddress = normalizeSearchText(right.endereco);
+  if (leftAddress && rightAddress) return leftAddress === rightAddress;
+  const leftContact = normalizeSearchText(left.whatsapp || left.telefone);
+  const rightContact = normalizeSearchText(right.whatsapp || right.telefone);
+  if (leftContact && rightContact) return leftContact === rightContact;
+  return true;
+}
+
+async function appendCommerces(payloads = [], options = {}) {
+  if (!Array.isArray(payloads) || payloads.length < 1 || payloads.length > 25) {
+    const error = new Error("O lote deve ter entre 1 e 25 comercios.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const { spreadsheetId, sheetName } = getSpreadsheetConfig();
   const current = await readAdminSheetRows();
-  const data = sanitizeCommercePayload({
+  const allowedCategories = new Set(TAXONOMY.map((group) => normalizeSearchText(group.categoria)));
+  const dataRows = payloads.map((payload) => sanitizeCommercePayload({
     ...payload,
-    id: payload.id || nextCommerceId(current.rows),
-  });
+    ...(options.forceUnverified === false ? {} : { verificado: "nao" }),
+  }));
+  for (const data of dataRows) {
+    if (!data.categoria || (options.validateCategory !== false && !allowedCategories.has(normalizeSearchText(data.categoria)))) {
+      const error = new Error(`Categoria oficial obrigatoria para ${data.nome}.`);
+      error.statusCode = 400;
+      throw error;
+    }
+    let sourceIsValid = false;
+    try {
+      const source = new URL(data.fonte_url);
+      sourceIsValid = ["http:", "https:"].includes(source.protocol) && Boolean(source.hostname);
+    } catch (error) {}
+    if (options.requireSource !== false && !sourceIsValid) {
+      const error = new Error(`Fonte web obrigatoria para ${data.nome}.`);
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+  const duplicates = [];
+  const accepted = [];
+  for (const data of dataRows) {
+    const duplicate = options.deduplicate !== false && (
+      current.rows.some((row) => isSameCommerce(row, data)) || accepted.some((item) => isSameCommerce(item, data))
+    );
+    if (duplicate) duplicates.push(data.nome);
+    else accepted.push(data);
+  }
+  if (duplicates.length) {
+    const error = new Error("O lote contem comercios ja cadastrados ou repetidos.");
+    error.statusCode = 409;
+    error.duplicates = [...new Set(duplicates)];
+    throw error;
+  }
+
+  let nextId = Number.parseInt(nextCommerceId(current.rows), 10);
+  const rowValues = dataRows.map((data) => buildRowValues(current.headers, [], { ...data, id: String(nextId++) }));
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
-  const values = buildRowValues(current.headers, [], data);
   const allRowsResponse = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: sheetRange("A1:ZZ"),
@@ -395,19 +429,48 @@ async function appendCommerce(payload) {
     current.headers,
     (current.headerRowNumber || 1) - 1,
   ) + 1, (current.headerRowNumber || 1) + 1);
+  const lastRowNumber = nextRowNumber + rowValues.length - 1;
   const lastColumn = columnName(current.headers.length - 1);
 
-  await ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, nextRowNumber);
-  await copyRowPattern(sheets, spreadsheetId, sheetName, Math.max((current.headerRowNumber || 1) + 1, nextRowNumber - 1), nextRowNumber, current.headers.length);
+  await ensureSheetRowCapacity(sheets, spreadsheetId, sheetName, lastRowNumber);
+  const properties = await getSheetProperties(sheets, spreadsheetId, sheetName);
+  const sourceRowNumber = Math.max((current.headerRowNumber || 1) + 1, nextRowNumber - 1);
+  if (typeof properties?.sheetId === "number" && sourceRowNumber !== nextRowNumber) {
+    const source = {
+      sheetId: properties.sheetId,
+      startRowIndex: sourceRowNumber - 1,
+      endRowIndex: sourceRowNumber,
+      startColumnIndex: 0,
+      endColumnIndex: current.headers.length,
+    };
+    const rowDestinations = rowValues.map((_, index) => ({
+      sheetId: properties.sheetId,
+      startRowIndex: nextRowNumber + index - 1,
+      endRowIndex: nextRowNumber + index,
+      startColumnIndex: 0,
+      endColumnIndex: current.headers.length,
+    }));
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: ["PASTE_FORMAT", "PASTE_DATA_VALIDATION"].flatMap((pasteType) => rowDestinations.map((destination) => ({
+          copyPaste: { source, destination, pasteType },
+        }))),
+      },
+    });
+  }
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: sheetRange(`A${nextRowNumber}:${lastColumn}${nextRowNumber}`),
+    range: sheetRange(`A${nextRowNumber}:${lastColumn}${lastRowNumber}`),
     valueInputOption: "USER_ENTERED",
-    requestBody: { values: [values] },
+    requestBody: { values: rowValues },
   });
 
-  return { ...rowToAdminObject(current.headers, values, current.rows.length), rowNumber: nextRowNumber };
+  return dataRows.map((_, index) => ({
+    ...rowToAdminObject(current.headers, rowValues[index], nextRowNumber + index - 2),
+    rowNumber: nextRowNumber + index,
+  }));
 }
 
 async function updateCommerce(id, payload) {
@@ -467,6 +530,7 @@ function adminSearchMatches(row, query = "") {
 module.exports = {
   adminSearchMatches,
   appendCommerce,
+  appendCommerces,
   buildRowValues,
   deleteCommerce,
   ensureCommerceHeaders,

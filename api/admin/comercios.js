@@ -1,6 +1,6 @@
 const { requireAdminSession } = require("../_lib/admin-auth");
 const { cleanText, json, readJsonBody } = require("../_lib/http");
-const { adminSearchMatches, appendCommerce, deleteCommerce, normalizeSearchText, readAdminSheetRows, updateCommerce } = require("../_lib/sheets-admin");
+const { adminSearchMatches, appendCommerce, appendCommerces, deleteCommerce, normalizeSearchText, readAdminSheetRows, updateCommerce } = require("../_lib/sheets-admin");
 
 function parsePositiveInt(value, fallback, max) {
   const number = Number.parseInt(value, 10);
@@ -27,7 +27,11 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === "POST") {
-      const body = await readJsonBody(req, { maxBytes: 32 * 1024 });
+      const body = await readJsonBody(req, { maxBytes: 256 * 1024 });
+      if (Array.isArray(body.items)) {
+        const items = await appendCommerces(body.items);
+        return json(res, 201, { ok: true, count: items.length, items });
+      }
       const item = await appendCommerce(body);
       return json(res, 201, { ok: true, item });
     }
@@ -74,6 +78,7 @@ module.exports = async function handler(req, res) {
     return json(res, error.statusCode || 500, {
       ok: false,
       error: error.statusCode ? error.message : "Nao foi possivel processar os comercios.",
+      ...(error.duplicates ? { duplicates: error.duplicates } : {}),
     });
   }
 };

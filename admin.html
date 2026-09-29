@@ -114,9 +114,10 @@
     .sponsor-panel .list-panel{height:100%}
     .sponsor-form label{font-size:.82rem}
     .row-action{width:auto;padding:7px 9px;background:#e8eef6;color:var(--azul);border:1px solid var(--borda);font-size:.8rem}
+    .import-panel{display:grid;gap:14px;border:1px solid var(--borda);border-radius:8px;background:#fff;padding:16px}.import-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.import-actions button,.import-actions label{width:auto}.import-table-wrap{overflow:auto;border:1px solid var(--borda);border-radius:8px}.import-table{width:100%;border-collapse:collapse;min-width:820px}.import-table th,.import-table td{padding:9px 10px;text-align:left;vertical-align:top;border-bottom:1px solid #edf1f6;font-size:.84rem}.import-table th{background:#f6f8fb;color:var(--azul);position:sticky;top:0}.import-row-error{background:#fff1f0}.import-row-duplicate{background:#fff8e6}.import-note{margin:0;font-size:.9rem;color:var(--muted)}
     .metrics-panel{display:grid;gap:14px}.metrics-toolbar{display:flex;justify-content:space-between;gap:10px;align-items:end;flex-wrap:wrap;border:1px solid var(--borda);border-radius:8px;background:#fff;padding:12px}.metrics-toolbar label{font-size:.82rem;min-width:150px}.metrics-toolbar button{width:auto;min-width:120px}.metric-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.metric-card{border:1px solid var(--borda);border-radius:8px;background:#fff;padding:14px}.metric-label{display:block;color:var(--muted);font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.metric-value{display:block;color:var(--azul);font-size:1.9rem;font-weight:950;margin-top:6px}.metric-chart{border:1px solid var(--borda);border-radius:8px;background:#fff;overflow:hidden}.metric-chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:#f6f8fb;border-bottom:1px solid #edf1f6;flex-wrap:wrap}.metric-chart-head h3{margin:0;color:var(--azul);font-size:.95rem}.metric-chart-head span{color:var(--muted);font-size:.84rem;font-weight:800}.metric-plot{padding:12px 14px 10px}.metric-svg{display:block;width:100%;height:auto;min-height:260px}.metric-axis{fill:#6b7b8f;font-size:11px}.metric-grid-line{stroke:#e8eef6;stroke-width:1}.metric-area{fill:rgba(244,179,33,.22)}.metric-line{fill:none;stroke:#0b2a4a;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}.metric-point{fill:#f4b321;stroke:#0b2a4a;stroke-width:2}.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metric-box{border:1px solid var(--borda);border-radius:8px;background:#fff;overflow:hidden}.metric-box h3{margin:0;padding:12px 14px;background:#f6f8fb;border-bottom:1px solid #edf1f6;color:var(--azul);font-size:.95rem}.metric-list{display:grid;gap:0}.metric-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:9px 14px;border-top:1px solid #f0f3f7;font-size:.88rem}.metric-row:first-child{border-top:0}.metric-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.metric-row strong{color:var(--azul)}.metric-empty{padding:12px 14px;color:var(--muted);font-size:.88rem}
     @media(max-width:1180px){.record-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid,.sponsor-grid,.metric-grid{grid-template-columns:1fr}.editor,.sponsor-panel{max-width:none}}
-    @media(max-width:760px){body{padding:10px}main{padding:14px}.topbar{align-items:stretch}.toolbar{width:100%;justify-content:stretch}.toolbar button{flex:1;min-width:0}.admin-tabs{display:grid;grid-template-columns:1fr 1fr}.admin-tab{min-width:0}.filters{grid-template-columns:1fr;padding:10px}.record-card{grid-template-columns:1fr}.record-actions{width:100%;flex-direction:row}.record-actions button{flex:1}.record-meta{grid-template-columns:1fr}.editor-grid,.sponsor-form,.image-slots{grid-template-columns:1fr}.media-actions,.image-slot .media-actions{grid-template-columns:1fr 1fr}.media-actions label{grid-column:1/-1}.editor-actions{grid-template-columns:1fr}.sponsor-panel{padding:10px}.subcategory-list{grid-template-columns:1fr}.subcategory-tools{grid-template-columns:1fr}.subcategory-tools button{width:100%}.adjust-grid{grid-template-columns:1fr}.adjust-box{padding:10px}.adjust-actions{grid-template-columns:1fr}.metric-cards{grid-template-columns:1fr}.metric-svg{min-height:220px}}
+    @media(max-width:760px){body{padding:10px}main{padding:14px}.topbar{align-items:stretch}.toolbar{width:100%;justify-content:stretch}.toolbar button{flex:1;min-width:0}.admin-tabs{display:grid;grid-template-columns:1fr 1fr}.admin-tab{min-width:0}.filters{grid-template-columns:1fr;padding:10px}.record-card{grid-template-columns:1fr}.record-actions{width:100%;flex-direction:row}.record-actions button{flex:1}.record-meta{grid-template-columns:1fr}.editor-grid,.sponsor-form,.image-slots{grid-template-columns:1fr}.media-actions,.image-slot .media-actions{grid-template-columns:1fr 1fr}.media-actions label{grid-column:1/-1}.editor-actions{grid-template-columns:1fr}.sponsor-panel{padding:10px}.subcategory-list{grid-template-columns:1fr}.subcategory-tools{grid-template-columns:1fr}.subcategory-tools button{width:100%}.adjust-grid{grid-template-columns:1fr}.adjust-box{padding:10px}.adjust-actions{grid-template-columns:1fr}.metric-cards{grid-template-columns:1fr}.metric-svg{min-height:220px}.import-actions{align-items:stretch;flex-direction:column}.import-actions button,.import-actions label{width:100%}}
   </style>
 </head>
 <body>
@@ -148,6 +149,7 @@
       <nav class="admin-tabs" aria-label="Guias do painel">
         <button class="admin-tab active" type="button" data-admin-tab="identidade">Identidade</button>
         <button class="admin-tab" type="button" data-admin-tab="comercios">Comercios</button>
+        <button class="admin-tab" type="button" data-admin-tab="importacao">Importar lote</button>
         <button class="admin-tab" type="button" data-admin-tab="patrocinadores">Patrocinadores</button>
         <button class="admin-tab" type="button" data-admin-tab="indicadores">Indicadores</button>
       </nav>
@@ -194,6 +196,19 @@
         <div id="metricsContent">
           <div class="empty">Abra a guia para carregar os indicadores.</div>
         </div>
+      </section>
+      <section id="commerceImportView" class="import-panel management-section" data-admin-view="importacao" hidden>
+        <div>
+          <h2>Importar comercios por categoria</h2>
+          <p class="import-note">Carregue um CSV revisado com informacoes publicas e a fonte consultada. O painel valida nome, categoria e duplicados. Limite: 25 por importacao; por padrao entram gratuitos, ativos e nao verificados. Fotos sao adicionadas depois pelo cadastro normal.</p>
+        </div>
+        <div class="import-actions">
+          <button id="downloadImportTemplate" class="secondary" type="button">Baixar modelo CSV</button>
+          <label>Arquivo CSV<input id="commerceImportFile" type="file" accept=".csv,text/csv" /></label>
+          <button id="commitCommerceImport" type="button" disabled>Importar selecionados</button>
+        </div>
+        <div id="commerceImportStatus" class="status" role="status">Use fonte_url para registrar o site ou perfil consultado e data_verificacao para anotar quando os dados foram conferidos.</div>
+        <div id="commerceImportPreview" class="import-table-wrap" hidden></div>
       </section>
       <form id="filtersForm" class="filters management-section" data-admin-view="comercios" hidden>
         <input id="adminSearch" name="busca" type="search" placeholder="Buscar comercio, bairro, contato..." autocomplete="off" />
@@ -481,6 +496,10 @@
     const metricsEvent = document.getElementById("metricsEvent");
     const metricsGranularity = document.getElementById("metricsGranularity");
     const refreshMetricsButton = document.getElementById("refreshMetricsButton");
+    const commerceImportFile = document.getElementById("commerceImportFile");
+    const commerceImportStatus = document.getElementById("commerceImportStatus");
+    const commerceImportPreview = document.getElementById("commerceImportPreview");
+    const commitCommerceImport = document.getElementById("commitCommerceImport");
     const loginStatus = document.getElementById("loginStatus");
     const panelStatus = document.getElementById("panelStatus");
     const imageAdjustModal = document.getElementById("imageAdjustModal");
@@ -516,6 +535,7 @@
     const ADMIN_TAB_SUMMARIES = {
       identidade: "Configure logo, banner principal e tempo do carrossel.",
       comercios: "Gerencie cadastros, contatos, planos e fotos dos comercios.",
+      importacao: "Revise e importe novos comercios em lotes, com verificacao de duplicados.",
       patrocinadores: "Gerencie banners de patrocinadores e periodos de exibicao.",
       indicadores: "Indicadores e relatorios de uso do site.",
     };
@@ -700,6 +720,7 @@
       summary.textContent = ADMIN_TAB_SUMMARIES[nextTab] || "";
       if (nextTab === "identidade") loadSiteConfig();
       if (nextTab === "comercios") loadComercios();
+      if (nextTab === "importacao") commerceImportStatus.textContent = "Carregue o CSV revisado para iniciar a conferencia.";
       if (nextTab === "patrocinadores") loadSponsors();
       if (nextTab === "indicadores") loadMetrics();
     }
@@ -1124,6 +1145,191 @@
         panelStatus.textContent = error.message || "Nao foi possivel carregar.";
         panelStatus.className = "status error";
       }
+    }
+
+    function normalizeImportHeader(value = "") {
+      return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    }
+
+    function parseImportCsv(text) {
+      const source = String(text || "").replace(/^\uFEFF/, "");
+      const firstLine = source.split(/\r?\n/, 1)[0] || "";
+      const delimiter = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ";" : ",";
+      const rows = [];
+      let row = [], field = "", quoted = false;
+      for (let i = 0; i < source.length; i += 1) {
+        const char = source[i];
+        if (char === '"') {
+          if (quoted && source[i + 1] === '"') { field += '"'; i += 1; }
+          else quoted = !quoted;
+        } else if (char === delimiter && !quoted) {
+          row.push(field.trim()); field = "";
+        } else if ((char === "\n" || char === "\r") && !quoted) {
+          if (char === "\r" && source[i + 1] === "\n") i += 1;
+          row.push(field.trim());
+          if (row.some((value) => value)) rows.push(row);
+          row = []; field = "";
+        } else field += char;
+      }
+      row.push(field.trim());
+      if (row.some((value) => value)) rows.push(row);
+      if (rows.length < 2) throw new Error("O CSV precisa ter uma linha de cabecalho e ao menos um comercio.");
+      if (rows.length > 101) throw new Error("Revise no maximo 100 linhas por arquivo; cada importacao aceita ate 25 cadastros.");
+
+      const aliases = { nome_comercial: "nome", comercio: "nome", nome_do_comercio: "nome", palavras_chave: "palavras_chave", fonte: "fonte_url", origem: "fonte_url", data_consulta: "data_verificacao" };
+      const headers = rows[0].map((header) => aliases[normalizeImportHeader(header)] || normalizeImportHeader(header));
+      const required = ["nome", "categoria"];
+      if (required.some((name) => !headers.includes(name))) throw new Error("Inclua as colunas obrigatorias nome e categoria no cabecalho.");
+
+      return rows.slice(1).map((values, index) => {
+        const record = Object.fromEntries(headers.map((header, column) => [header, values[column] || ""]));
+        const item = {
+          nome: record.nome || "",
+          categoria: record.categoria || "",
+          subcategoria: record.subcategoria || "",
+          bairro: record.bairro || "",
+          endereco: record.endereco || "",
+          whatsapp: record.whatsapp || "",
+          telefone: record.telefone || "",
+          instagram: record.instagram || "",
+          facebook: record.facebook || "",
+          site: record.site || "",
+          descricao: record.descricao || "",
+          palavras_chave: record.palavras_chave || "",
+          oferta: record.oferta || "",
+          fonte_url: record.fonte_url || "",
+          data_verificacao: record.data_verificacao || new Date().toISOString().slice(0, 10),
+          plano: record.plano || "gratuito",
+          prioridade: record.prioridade || "0",
+          status: record.status || "ativo",
+          verificado: record.verificado || "nao",
+          rowNumber: index + 2,
+          selected: false,
+          errors: [],
+          duplicate: false,
+        };
+        return item;
+      });
+    }
+
+    function sameImportedCommerce(left, right) {
+      const leftName = normalizeImportHeader(left.nome);
+      if (!leftName || leftName !== normalizeImportHeader(right.nome)) return false;
+      const leftAddress = normalizeImportHeader(left.endereco);
+      const rightAddress = normalizeImportHeader(right.endereco);
+      if (leftAddress && rightAddress) return leftAddress === rightAddress;
+      const leftContact = normalizeImportHeader(left.whatsapp || left.telefone);
+      const rightContact = normalizeImportHeader(right.whatsapp || right.telefone);
+      return leftContact && rightContact ? leftContact === rightContact : true;
+    }
+
+    async function readAllCommercesForImport() {
+      const first = await fetch("/api/admin/comercios?page=1&limit=100", { cache: "no-store", credentials: "same-origin" });
+      const firstData = await first.json();
+      if (!first.ok || !firstData.ok) throw new Error(firstData.error || "Nao foi possivel conferir os cadastros existentes.");
+      const items = [...(firstData.items || [])];
+      const pages = Math.ceil((Number(firstData.total) || 0) / 100);
+      for (let page = 2; page <= pages; page += 1) {
+        const response = await fetch(`/api/admin/comercios?page=${page}&limit=100`, { cache: "no-store", credentials: "same-origin" });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || "Nao foi possivel conferir os cadastros existentes.");
+        items.push(...(data.items || []));
+      }
+      return items;
+    }
+
+    function renderCommerceImportPreview() {
+      const selectedCount = commerceImportRows.filter((item) => item.selected && !item.errors.length && !item.duplicate).length;
+      commitCommerceImport.disabled = selectedCount < 1 || selectedCount > 25;
+      commitCommerceImport.textContent = selectedCount > 25 ? "Selecione ate 25 comercios" : `Importar selecionados (${selectedCount})`;
+      commerceImportPreview.hidden = !commerceImportRows.length;
+      commerceImportPreview.innerHTML = `<table class="import-table"><thead><tr><th>Incluir</th><th>Comercio / categoria</th><th>Bairro / endereco</th><th>Contato</th><th>Fonte / conferencia</th><th>Revisao</th></tr></thead><tbody>${commerceImportRows.map((item, index) => {
+        const issue = item.errors.join("; ") || (item.duplicate ? "Possivel duplicado" : "Pronto");
+        const checked = item.selected && !item.errors.length && !item.duplicate ? " checked" : "";
+        const disabled = item.errors.length || item.duplicate ? " disabled" : "";
+        const rowClass = item.errors.length ? "import-row-error" : item.duplicate ? "import-row-duplicate" : "";
+        const source = item.fonte_url ? escapeHtml(item.fonte_url) : "Sem fonte";
+        return `<tr class="${rowClass}"><td><input type="checkbox" data-import-index="${index}"${checked}${disabled} aria-label="Incluir ${escapeOption(item.nome)}" /></td><td><strong>${escapeHtml(item.nome || "Sem nome")}</strong><br>${escapeHtml(item.categoria || "Sem categoria")}${item.subcategoria ? `<br><span class="muted">${escapeHtml(item.subcategoria)}</span>` : ""}</td><td>${escapeHtml(item.bairro || "Sem bairro")}<br>${escapeHtml(item.endereco || "Sem endereco")}</td><td>${escapeHtml(item.whatsapp || item.telefone || "Sem contato")}</td><td>${source}<br>${escapeHtml(item.data_verificacao)}</td><td>${escapeHtml(issue)}</td></tr>`;
+      }).join("")}</tbody></table>`;
+      const invalidCount = commerceImportRows.filter((item) => item.errors.length).length;
+      const duplicateCount = commerceImportRows.filter((item) => item.duplicate).length;
+      commerceImportStatus.textContent = `${commerceImportRows.length} linhas; ${invalidCount} com erros; ${duplicateCount} possiveis duplicados; ${selectedCount} selecionados.`;
+      commerceImportStatus.className = invalidCount || duplicateCount ? "status" : "status ok";
+    }
+
+    let commerceImportRows = [];
+
+    async function prepareCommerceImport(file) {
+      commerceImportStatus.textContent = "Lendo CSV e comparando com a planilha...";
+      commerceImportStatus.className = "status";
+      commitCommerceImport.disabled = true;
+      try {
+        commerceImportRows = parseImportCsv(await file.text());
+        if (!taxonomia.length) await loadTaxonomia();
+        const categoryKeys = new Set(taxonomia.map((group) => normalizeImportHeader(group.categoria)));
+        const existing = await readAllCommercesForImport();
+        for (const item of commerceImportRows) {
+          if (!item.nome.trim()) item.errors.push("Nome obrigatorio");
+          if (!item.categoria.trim()) item.errors.push("Categoria obrigatoria");
+          else if (categoryKeys.size && !categoryKeys.has(normalizeImportHeader(item.categoria))) item.errors.push("Categoria fora da taxonomia");
+          const group = taxonomia.find((candidate) => normalizeImportHeader(candidate.categoria) === normalizeImportHeader(item.categoria));
+          const allowedSubcategories = new Set((group?.subcategorias || []).map(normalizeImportHeader));
+          const invalidSubcategory = splitSubcategoryValue(item.subcategoria).find((name) => !allowedSubcategories.has(normalizeImportHeader(name)));
+          if (invalidSubcategory) item.errors.push(`Subcategoria fora da categoria: ${invalidSubcategory}`);
+          try {
+            const source = new URL(item.fonte_url);
+            if (!["http:", "https:"].includes(source.protocol)) throw new Error();
+          } catch (error) { item.errors.push("Fonte URL http/https obrigatoria"); }
+          if (item.status && !["ativo", "inativo"].includes(normalizeImportHeader(item.status))) item.errors.push("Status deve ser ativo ou inativo");
+          if (item.plano && !["gratuito", "parceiro", "destaque", "top"].includes(normalizeImportHeader(item.plano))) item.errors.push("Plano invalido");
+          item.duplicate = existing.some((candidate) => sameImportedCommerce(candidate, item)) || commerceImportRows.slice(0, item.rowNumber - 2).some((candidate) => sameImportedCommerce(candidate, item));
+          item.selected = !item.errors.length && !item.duplicate;
+        }
+        renderCommerceImportPreview();
+      } catch (error) {
+        commerceImportRows = [];
+        commerceImportPreview.hidden = true;
+        commerceImportStatus.textContent = error.message || "Nao foi possivel ler o CSV.";
+        commerceImportStatus.className = "status error";
+      }
+    }
+
+    async function submitCommerceImport() {
+      const items = commerceImportRows.filter((item) => item.selected && !item.errors.length && !item.duplicate).map(({ rowNumber, selected, errors, duplicate, ...item }) => item);
+      if (!items.length || items.length > 25) return;
+      commitCommerceImport.disabled = true;
+      commerceImportStatus.textContent = "Gravando o lote na planilha...";
+      commerceImportStatus.className = "status";
+      try {
+        const response = await fetch("/api/admin/comercios", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ items }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.duplicates?.length ? `Revisao necessaria; possiveis duplicados: ${result.duplicates.join(", ")}` : result.error || "Falha ao importar o lote.");
+        commerceImportRows = [];
+        commerceImportFile.value = "";
+        commerceImportPreview.hidden = true;
+        commerceImportStatus.textContent = `${result.count} comercio(s) importado(s). Os cadastros foram gravados como nao verificados.`;
+        commerceImportStatus.className = "status ok";
+        await loadComercios();
+      } catch (error) {
+        commerceImportStatus.textContent = error.message || "Nao foi possivel importar o lote.";
+        commerceImportStatus.className = "status error";
+        commitCommerceImport.disabled = false;
+      }
+    }
+
+    function downloadCommerceImportTemplate() {
+      const csv = "nome,categoria,subcategoria,bairro,endereco,whatsapp,telefone,instagram,facebook,site,descricao,palavras_chave,oferta,fonte_url,data_verificacao,status,plano\r\n";
+      const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "modelo-importacao-comercios.csv";
+      link.click();
+      URL.revokeObjectURL(url);
     }
 
     function setFormItem(item = {}) {
@@ -1821,9 +2027,22 @@
     refreshButton.addEventListener("click", () => {
       if (activeAdminTab === "identidade") loadSiteConfig();
       if (activeAdminTab === "comercios") loadComercios();
+      if (activeAdminTab === "importacao" && commerceImportFile.files?.[0]) prepareCommerceImport(commerceImportFile.files[0]);
       if (activeAdminTab === "patrocinadores") loadSponsors();
       if (activeAdminTab === "indicadores") loadMetrics();
     });
+    document.getElementById("downloadImportTemplate").addEventListener("click", downloadCommerceImportTemplate);
+    commerceImportFile.addEventListener("change", () => {
+      if (commerceImportFile.files?.[0]) prepareCommerceImport(commerceImportFile.files[0]);
+    });
+    commerceImportPreview.addEventListener("change", (event) => {
+      const checkbox = event.target.closest("input[data-import-index]");
+      if (!checkbox) return;
+      const item = commerceImportRows[Number(checkbox.dataset.importIndex)];
+      if (item) item.selected = checkbox.checked;
+      renderCommerceImportPreview();
+    });
+    commitCommerceImport.addEventListener("click", submitCommerceImport);
     document.querySelectorAll("[data-admin-tab]").forEach((button) => {
       button.addEventListener("click", () => switchAdminTab(button.dataset.adminTab || "identidade"));
     });

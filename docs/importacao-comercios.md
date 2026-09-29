@@ -1,0 +1,31 @@
+# Importacao de comercios por categoria
+
+## Fluxo de trabalho
+
+1. Defina uma categoria oficial e uma regiao ou bairro de Salto para a pesquisa.
+2. Pesquise comercios e confirme os dados em uma pagina publica do proprio estabelecimento, como site ou perfil social oficial. Use resultados do Google como ponto de partida; nao copie fotos, avaliacoes ou descricoes do Google Maps.
+3. Organize os dados no modelo CSV disponivel na guia `Importar lote` do admin. Preencha `fonte_url` e `data_verificacao` em cada linha.
+4. Carregue o arquivo no admin, revise campos incompletos e possiveis duplicados e selecione apenas os registros corretos.
+5. Importe ate 25 registros por vez. A API confere duplicados novamente e grava as linhas mantendo formatacao e validacoes da planilha.
+
+## Colunas aceitas
+
+Obrigatorias: `nome`, `categoria`, `fonte_url`.
+
+Opcionais: `subcategoria`, `bairro`, `endereco`, `whatsapp`, `telefone`, `instagram`, `facebook`, `site`, `descricao`, `palavras_chave`, `oferta`, `data_verificacao`, `status` e `plano`.
+
+Por padrao, o comercio entra como gratuito, ativo, prioridade zero e nao verificado. A importacao em lote sempre grava `verificado` como `nao`; a presenca de uma pagina publica nao comprova que o responsavel pelo comercio confirmou o cadastro. Fotos devem ser adicionadas depois pelo cadastro normal do admin.
+
+As colunas `fonte_url` e `data_verificacao` sao mantidas na planilha para facilitar revisoes. O site publico nao as exibe.
+
+## Conferencias
+
+- Nome e categoria precisam estar preenchidos; a categoria deve existir na taxonomia do admin.
+- A fonte precisa ser uma URL `http` ou `https`.
+- Registros repetidos no arquivo ou ja existentes na planilha ficam bloqueados para revisao.
+- Se o mesmo nome for usado por filiais diferentes, informe endereco ou contato para distinguir os cadastros.
+- Um erro de duplicidade no momento da gravacao cancela o lote inteiro; revise a lista e envie novamente.
+
+## Pesquisa de dados
+
+O Busca Salto deve pesquisar manualmente e confirmar informacoes publicas em fontes do proprio estabelecimento antes de preparar cada lote. Nao usar a Places API para copiar conteudo para o diretorio: as regras do Google restringem armazenamento e uso de dados do Places em servicos de listagem. Tambem nao criar um coletor automatizado de resultados do Google Search.
