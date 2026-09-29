@@ -200,7 +200,7 @@
       <section id="commerceImportView" class="import-panel management-section" data-admin-view="importacao" hidden>
         <div>
           <h2>Importar comercios por categoria</h2>
-          <p class="import-note">Carregue um CSV revisado com informacoes publicas e a fonte consultada. O painel valida nome, categoria e duplicados. Limite: 25 por importacao; por padrao entram gratuitos, ativos e nao verificados. Fotos sao adicionadas depois pelo cadastro normal.</p>
+          <p class="import-note">O modelo inclui uma linha preenchida do Scallet apenas como referencia de formato. Remova essa linha antes de importar e mantenha somente os novos comercios. Ela esta marcada como EXEMPLO - NAO IMPORTAR e o plano invalido impede sua inclusao acidental. O painel valida nome, categoria, fonte e possiveis duplicados. Limite: 25 por importacao; por padrao entram gratuitos, ativos e nao verificados. Fotos sao adicionadas depois pelo cadastro normal.</p>
         </div>
         <div class="import-actions">
           <button id="downloadImportTemplate" class="secondary" type="button">Baixar modelo CSV</button>
@@ -1323,7 +1323,10 @@
     }
 
     function downloadCommerceImportTemplate() {
-      const csv = "nome,categoria,subcategoria,bairro,endereco,whatsapp,telefone,instagram,facebook,site,descricao,palavras_chave,oferta,fonte_url,data_verificacao,status,plano\r\n";
+      const csv = [
+        "nome,categoria,subcategoria,bairro,endereco,whatsapp,telefone,instagram,facebook,site,descricao,palavras_chave,oferta,fonte_url,data_verificacao,status,plano",
+        'EXEMPLO - NAO IMPORTAR (Scallet),Alimentação,Restaurante; Pizzaria,Centro,"Rua Nove de Julho, 752, Centro, Salto/SP",(11) 98978-7585,(11) 98978-7585,@restaurantescallet,Restaurante Scallet,https://scallet.com.br/,"Restaurante e pizzaria em Salto com delivery de pizzas, refeições, massas e pratos variados.","delivery, pizzaria, restaurante, pizza, massas, refeições",Restaurante Scallet,https://scallet.com.br/,,ativo,EXEMPLO - NAO IMPORTAR',
+      ].join("\r\n") + "\r\n";
       const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
       const link = document.createElement("a");
       link.href = url;
