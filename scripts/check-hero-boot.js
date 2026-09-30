@@ -47,8 +47,12 @@ function makeCdp(socket) {
 }
 
 async function main() {
+  const live = process.argv.includes("--live");
+  const expectedConfig = live
+    ? (await fetch("https://www.buscasalto.com/api/patrocinadores").then((res) => res.json())).config
+    : config;
   const requestedImages = [];
-  const server = http.createServer(async (req, res) => {
+  const server = live ? null : http.createServer(async (req, res) => {
     const pathname = new URL(req.url, "http://localhost").pathname;
     if (pathname === "/" || pathname === "/index.html") {
       res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -67,7 +71,7 @@ async function main() {
       res.end();
     }
   });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  if (server) await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), "busca-salto-hero-"));
   const chrome = spawn(chromePath, [
     "--headless=new", "--no-first-run", "--no-default-browser-check",
@@ -100,41 +104,41 @@ async function main() {
       return response.result.value;
     };
     const metrics = async (width) => call("Emulation.setDeviceMetricsOverride", { width, height: 900, deviceScaleFactor: 1, mobile: width < 680 });
-    const assertReady = (value, suffix, position, brightness) => {
+    const assertReady = (value, banner) => {
       assert.equal(value.pending, false);
       assert.equal(value.visibility, "visible");
       assert.equal(value.imageHidden, false);
-      assert.ok(value.image.includes(`/hero-${suffix}.png`));
-      assert.equal(value.position, position);
-      assert.equal(value.brightness, brightness);
-      assert.ok(value.logo.includes("/hero-logo.png"));
+      assert.ok(value.image.includes(banner.url));
+      assert.equal(value.position, `${banner.ajuste.x}% ${banner.ajuste.y}%`);
+      assert.equal(value.brightness, `${banner.visual.brightness}%`);
+      assert.ok(value.logo.includes(expectedConfig.logo.url));
     };
 
     await metrics(1280);
-    await call("Network.emulateNetworkConditions", { offline: false, latency: 300, downloadThroughput: 200000, uploadThroughput: 200000 });
-    await call("Page.navigate", { url: `http://127.0.0.1:${server.address().port}/` });
+    await call("Network.emulateNetworkConditions", { offline: false, latency: live ? 100 : 300, downloadThroughput: live ? 2000000 : 200000, uploadThroughput: 200000 });
+    await call("Page.navigate", { url: live ? "https://www.buscasalto.com/" : `http://127.0.0.1:${server.address().port}/` });
     await until(state);
     const initial = await state();
     assert.equal(initial.pending, true);
     assert.equal(initial.visibility, "hidden");
     assert.equal(initial.imageHidden, true);
-    const desktop = await until(async () => { const value = await state(); return !value.pending && value; });
-    assertReady(desktop, "desktop", "34% 61%", "66%");
-    assert.equal(requestedImages.includes("/hero-mobile.png"), false);
+    const desktop = await until(async () => { const value = await state(); return !value.pending && value; }, 45000);
+    assertReady(desktop, expectedConfig.banner);
+    if (!live) assert.equal(requestedImages.includes("/hero-mobile.png"), false);
 
     await metrics(390);
     const mobilePending = await state();
     assert.equal(mobilePending.visibility, "hidden");
-    const mobile = await until(async () => { const value = await state(); return !value.pending && value; });
-    assertReady(mobile, "mobile", "77% 90%", "103%");
+    const mobile = await until(async () => { const value = await state(); return value.visibility === "visible" && value.image.includes(expectedConfig.bannerMobile.url) && value; }, 45000);
+    assertReady(mobile, expectedConfig.bannerMobile);
 
     requestedImages.length = 0;
     await call("Page.reload", { ignoreCache: true });
     await until(async () => { const value = await state(); return value?.pending && value; });
-    const mobileReload = await until(async () => { const value = await state(); return !value.pending && value; });
-    assertReady(mobileReload, "mobile", "77% 90%", "103%");
-    assert.equal(requestedImages.includes("/hero-desktop.png"), false);
-    console.log("Hero boot: desktop, mobile, resize and empty-cache reload passed.");
+    const mobileReload = await until(async () => { const value = await state(); return !value.pending && value; }, 45000);
+    assertReady(mobileReload, expectedConfig.bannerMobile);
+    if (!live) assert.equal(requestedImages.includes("/hero-desktop.png"), false);
+    console.log(`Hero boot (${live ? "production" : "mock"}): desktop, mobile, resize and empty-cache reload passed.`);
   } finally {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ id: 99999, method: "Browser.close" }));
@@ -142,7 +146,7 @@ async function main() {
     }
     socket?.close();
     chrome.kill();
-    await new Promise((resolve) => server.close(resolve));
+    if (server) await new Promise((resolve) => server.close(resolve));
     if (path.resolve(profile).startsWith(path.resolve(os.tmpdir()) + path.sep)) {
       try { fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); }
       catch (error) { console.warn(`Could not remove Chrome test profile: ${profile}`); }
