@@ -9,13 +9,18 @@ const PLANS = {
   },
   parceiro: {
     title: "Busca Salto - Plano Parceiro",
-    price: 39.9,
+    price: 49.9,
     description: "Prioridade acima dos gratuitos, imagem no card, selo de parceiro e descricao revisada.",
   },
   destaque: {
     title: "Busca Salto - Plano Destaque",
-    price: 59.9,
+    price: 89.9,
     description: "Destaque visual, oferta/promocao, imagem e prioridade acima do plano parceiro.",
+  },
+  top: {
+    title: "Busca Salto - Top Categoria",
+    price: 149.9,
+    description: "Maior prioridade na categoria, selo Top Categoria e disponibilidade sujeita a validacao.",
   },
 };
 
