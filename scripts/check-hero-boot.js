@@ -48,6 +48,7 @@ function makeCdp(socket) {
 
 async function main() {
   const live = process.argv.includes("--live");
+  const slow = process.argv.includes("--slow");
   const expectedConfig = live
     ? (await fetch("https://www.buscasalto.com/api/patrocinadores").then((res) => res.json())).config
     : config;
@@ -115,7 +116,7 @@ async function main() {
     };
 
     await metrics(1280);
-    await call("Network.emulateNetworkConditions", { offline: false, latency: live ? 100 : 300, downloadThroughput: live ? 2000000 : 200000, uploadThroughput: 200000 });
+    await call("Network.emulateNetworkConditions", { offline: false, latency: slow ? 450 : live ? 100 : 300, downloadThroughput: slow ? 400000 : live ? 2000000 : 200000, uploadThroughput: 200000 });
     await call("Page.navigate", { url: live ? "https://www.buscasalto.com/" : `http://127.0.0.1:${server.address().port}/` });
     await until(state);
     const initial = await state();
@@ -138,7 +139,27 @@ async function main() {
     const mobileReload = await until(async () => { const value = await state(); return !value.pending && value; }, 45000);
     assertReady(mobileReload, expectedConfig.bannerMobile);
     if (!live) assert.equal(requestedImages.includes("/hero-desktop.png"), false);
-    console.log(`Hero boot (${live ? "production" : "mock"}): desktop, mobile, resize and empty-cache reload passed.`);
+
+    if (live) {
+      await call("Page.navigate", { url: "https://www.buscasalto.com/comerciantes.html" });
+      await until(async () => {
+        const page = await call("Runtime.evaluate", { expression: "document.querySelector('a[href=\"index.html\"]') !== null", returnByValue: true });
+        return page.result.value;
+      });
+      await call("Runtime.evaluate", { expression: "document.querySelector('a[href=\"index.html\"]').click()" });
+      const mobileReturn = await until(async () => { const value = await state(); return value?.visibility === "visible" && value.image.includes(expectedConfig.bannerMobile.url) && value; }, 45000);
+      assertReady(mobileReturn, expectedConfig.bannerMobile);
+
+      await metrics(1280);
+      const desktopPending = await state();
+      assert.equal(desktopPending.visibility, "hidden");
+      const desktopReturn = await until(async () => { const value = await state(); return value?.visibility === "visible" && value.image.includes(expectedConfig.banner.url) && value; }, 45000);
+      assertReady(desktopReturn, expectedConfig.banner);
+      await call("Page.reload", { ignoreCache: true });
+      const desktopReload = await until(async () => { const value = await state(); return value?.visibility === "visible" && value.image.includes(expectedConfig.banner.url) && value; }, 45000);
+      assertReady(desktopReload, expectedConfig.banner);
+    }
+    console.log(`Hero boot (${live ? "production" : "mock"}${slow ? ", slow network" : ""}): desktop, mobile, resize, reload${live ? ", internal navigation" : ""} passed.`);
   } finally {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ id: 99999, method: "Browser.close" }));
