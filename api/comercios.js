@@ -3,7 +3,8 @@ const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 30;
 const CONTACT_TYPES = new Set(["whatsapp", "telefone", "instagram", "facebook", "site"]);
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./_lib/google");
-const { canonicalCategory, canonicalSubcategories } = require("./_lib/taxonomy");
+const { TAXONOMY, canonicalCategory, canonicalSubcategories } = require("./_lib/taxonomy");
+const { readTaxonomy } = require("./_lib/taxonomy-store");
 const { spreadsheetId: SPREADSHEET_ID } = getSpreadsheetConfig();
 const RANGE = sheetRange("A1:ZZ");
 const RANDOM_BUCKET_MS = 5 * 60 * 1000;
@@ -59,7 +60,7 @@ const SEARCH_STOPWORDS = new Set([
   "aqui", "encontrar", "mim", "onde", "perto", "preciso", "procuro", "procurar", "proxima", "proximo", "quero",
   "salto", "sp",
 ]);
-let cache = { loadedAt: 0, rows: [] };
+let cache = { loadedAt: 0, rows: [], taxonomy: TAXONOMY };
 const rateLimitStore = new Map();
 
 function createRequestId() {
@@ -202,16 +203,16 @@ function searchTerms(value = "") {
     .filter((term) => term.length >= 2 && !SEARCH_STOPWORDS.has(term));
 }
 
-function categoryMatches(item, selectedCategory = "") {
+function categoryMatches(item, selectedCategory = "", taxonomy = TAXONOMY) {
   if (!selectedCategory) return true;
   const selected = normalizeSearchText(selectedCategory);
   if (!selected) return true;
   const categoryValues = [
     item.categoria,
-    canonicalCategory(item.categoria),
+    canonicalCategory(item.categoria, taxonomy),
   ].map(normalizeSearchText);
   if (categoryValues.includes(selected)) return true;
-  return canonicalSubcategories(item.subcategoria).some((subcategoria) => normalizeSearchText(subcategoria) === selected);
+  return canonicalSubcategories(item.subcategoria, item.categoria, taxonomy).some((subcategoria) => normalizeSearchText(subcategoria) === selected);
 }
 
 function bairroMatches(item, selectedBairro = "") {
@@ -432,11 +433,14 @@ async function loadRows() {
   if (cache.rows.length && now - cache.loadedAt < CACHE_TTL_MS) return cache.rows;
 
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsRead]);
-  const response = await sheets.spreadsheets.values.get({
+  const [response, taxonomy] = await Promise.all([sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range: RANGE,
     valueRenderOption: "FORMATTED_VALUE",
-  });
+  }), readTaxonomy(sheets).catch((error) => {
+    logApiEvent("warn", "taxonomy_fallback", { message: error?.message || "Falha na taxonomia" });
+    return TAXONOMY;
+  })]);
 
   const values = response.data.values || [];
   const headerIndex = findHeaderIndex(values);
@@ -446,17 +450,17 @@ async function loadRows() {
     .map((row, index) => rowToObject(headers, row, index))
     .filter((row) => row.nome && normalize(row.status) === "ativo");
 
-  cache = { loadedAt: now, rows };
+  cache = { loadedAt: now, rows, taxonomy };
   return rows;
 }
 
-function publicItem(item) {
+function publicItem(item, taxonomy = TAXONOMY) {
   const plan = normalizePlan(item.tipo_exibicao);
-  const subcategorias = canonicalSubcategories(item.subcategoria);
+  const subcategorias = canonicalSubcategories(item.subcategoria, item.categoria, taxonomy);
   return {
     id: item.id,
     nome: item.nome,
-    categoria: canonicalCategory(item.categoria),
+    categoria: canonicalCategory(item.categoria, taxonomy),
     subcategoria: subcategorias.join("; "),
     bairro: item.bairro,
     endereco: item.endereco,
@@ -483,11 +487,11 @@ function planWeight(plan = "") {
   return 0;
 }
 
-function computeScore(item, terms) {
+function computeScore(item, terms, taxonomy = TAXONOMY) {
   const fields = {
     nome: prepareSearchField(item.nome),
-    categoria: prepareSearchField(`${item.categoria} ${canonicalCategory(item.categoria)}`),
-    subcategoria: prepareSearchField(`${item.subcategoria} ${canonicalSubcategories(item.subcategoria).join(" ")}`),
+    categoria: prepareSearchField(`${item.categoria} ${canonicalCategory(item.categoria, taxonomy)}`),
+    subcategoria: prepareSearchField(`${item.subcategoria} ${canonicalSubcategories(item.subcategoria, item.categoria, taxonomy).join(" ")}`),
     bairro: prepareSearchField(item.bairro),
     descricao: prepareSearchField(item.descricao),
     palavras: prepareSearchField(item.palavras_chave),
@@ -509,11 +513,11 @@ function computeScore(item, terms) {
   return relevance ? relevance + base : 0;
 }
 
-function sortItems(items, terms, seed) {
+function sortItems(items, terms, seed, taxonomy = TAXONOMY) {
   return items
     .map((item) => ({
       item,
-      score: computeScore(item, terms),
+      score: computeScore(item, terms, taxonomy),
       random: normalizePlan(item.tipo_exibicao) === "gratuito" ? seededRandom(`${seed}:${item.id}:${item.nome}`) : 0,
     }))
     .filter(({ score }) => !terms.length || score > 0)
@@ -530,10 +534,10 @@ function sortItems(items, terms, seed) {
     .map(({ item }) => item);
 }
 
-function buildFilters(rows) {
+function buildFilters(rows, taxonomy = TAXONOMY) {
   const categoryGroups = new Map();
   for (const row of rows) {
-    const categoria = canonicalCategory(row.categoria);
+    const categoria = canonicalCategory(row.categoria, taxonomy);
     if (!categoria) continue;
 
     const categoryKey = normalizeSearchText(categoria);
@@ -542,7 +546,7 @@ function buildFilters(rows) {
     }
 
     const group = categoryGroups.get(categoryKey);
-    for (const subcategoria of canonicalSubcategories(row.subcategoria)) {
+    for (const subcategoria of canonicalSubcategories(row.subcategoria, row.categoria, taxonomy)) {
       const subKey = normalizeSearchText(subcategoria);
       if (!subKey || subKey === categoryKey) continue;
       group.subcategorias.set(subKey, subcategoria);
@@ -600,9 +604,10 @@ module.exports = async function handler(req, res) {
 
   try {
     const rows = await loadRows();
+    const taxonomy = cache.taxonomy;
 
     if (mode === "filters") {
-      return json(res, 200, { filters: buildFilters(rows), updatedAt: new Date(cache.loadedAt).toISOString() });
+      return json(res, 200, { filters: buildFilters(rows, taxonomy), updatedAt: new Date(cache.loadedAt).toISOString() });
     }
 
     if (mode === "contact") {
@@ -625,12 +630,12 @@ module.exports = async function handler(req, res) {
     const effectivePage = hasRefinement ? page : 1;
     const pagePolicy = paginationPolicy({ busca, categoria, bairro });
 
-    let filtered = rows.filter((item) => categoryMatches(item, categoria) && bairroMatches(item, bairro));
-    filtered = sortItems(filtered, terms, seed);
+    let filtered = rows.filter((item) => categoryMatches(item, categoria, taxonomy) && bairroMatches(item, bairro));
+    filtered = sortItems(filtered, terms, seed, taxonomy);
 
     const publicTotal = Math.min(filtered.length, pagePolicy.maxPage * limit);
     const start = (effectivePage - 1) * limit;
-    const items = filtered.slice(0, publicTotal).slice(start, start + limit).map(publicItem);
+    const items = filtered.slice(0, publicTotal).slice(start, start + limit).map((item) => publicItem(item, taxonomy));
     const paginationLimited = filtered.length > publicTotal;
 
     if (page > pagePolicy.maxPage && hasRefinement) {

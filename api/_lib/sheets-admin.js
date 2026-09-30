@@ -1,5 +1,6 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
-const { TAXONOMY, normalizeCommerceCategoryFields } = require("./taxonomy");
+const { normalizeCommerceCategoryFields } = require("./taxonomy");
+const { readTaxonomy } = require("./taxonomy-store");
 
 const COMMERCE_EXTRA_HEADERS = [
   "foto_url",
@@ -280,7 +281,7 @@ function sanitizeCommercePayload(payload = {}, options = {}) {
   const categoryFields = normalizeCommerceCategoryFields({
     categoria: valueForKey(payload, "categoria").slice(0, 80),
     subcategoria: valueForKey(payload, "subcategoria").slice(0, 180),
-  });
+  }, options.taxonomy);
 
   const data = {
     id: valueForKey(payload, "id"),
@@ -377,12 +378,12 @@ async function appendCommerces(payloads = [], options = {}) {
   }
 
   const { spreadsheetId, sheetName } = getSpreadsheetConfig();
-  const current = await readAdminSheetRows();
-  const allowedCategories = new Set(TAXONOMY.map((group) => normalizeSearchText(group.categoria)));
+  const [current, taxonomy] = await Promise.all([readAdminSheetRows(), readTaxonomy()]);
+  const allowedCategories = new Set(taxonomy.map((group) => normalizeSearchText(group.categoria)));
   const dataRows = payloads.map((payload) => sanitizeCommercePayload({
     ...payload,
     ...(options.forceUnverified === false ? {} : { verificado: "nao" }),
-  }));
+  }, { taxonomy }));
   for (const data of dataRows) {
     if (!data.categoria || (options.validateCategory !== false && !allowedCategories.has(normalizeSearchText(data.categoria)))) {
       const error = new Error(`Categoria oficial obrigatoria para ${data.nome}.`);
@@ -475,7 +476,7 @@ async function appendCommerces(payloads = [], options = {}) {
 
 async function updateCommerce(id, payload) {
   const { spreadsheetId } = getSpreadsheetConfig();
-  const current = await readAdminSheetRows();
+  const [current, taxonomy] = await Promise.all([readAdminSheetRows(), readTaxonomy()]);
   const row = current.rows.find((item) => String(item.id) === String(id));
   if (!row) {
     const error = new Error("Comercio nao encontrado.");
@@ -487,7 +488,7 @@ async function updateCommerce(id, payload) {
     ...row.raw,
     ...payload,
     id: row.id,
-  }, { requireId: true });
+  }, { requireId: true, taxonomy });
   const values = buildRowValues(current.headers, row.values, data);
   const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
   const lastColumn = columnName(current.headers.length - 1);

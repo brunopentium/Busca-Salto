@@ -358,41 +358,54 @@ for (const group of TAXONOMY) {
   SUBCATEGORY_BY_CATEGORY.set(normalizeKey(group.categoria), map);
 }
 
-function canonicalCategory(value = "") {
+function canonicalCategory(value = "", taxonomy = TAXONOMY) {
   const key = normalizeKey(value);
   if (!key) return "";
+  const group = taxonomy.find((item) => normalizeKey(item.categoria) === key);
+  if (group) return group.categoria;
   return CATEGORY_BY_KEY.get(key) || CATEGORY_ALIASES[key] || titleCase(value);
 }
 
-function canonicalSubcategories(value = "", category = "") {
-  const categoryKey = normalizeKey(canonicalCategory(category));
-  const categoryMap = SUBCATEGORY_BY_CATEGORY.get(categoryKey);
+function canonicalSubcategories(value = "", category = "", taxonomy = TAXONOMY) {
+  const categoryKey = normalizeKey(canonicalCategory(category, taxonomy));
+  const group = taxonomy.find((item) => normalizeKey(item.categoria) === categoryKey);
+  const categoryMap = group
+    ? new Map(group.subcategorias.map((name) => [normalizeKey(name), name]))
+    : SUBCATEGORY_BY_CATEGORY.get(categoryKey);
   const result = [];
 
   for (const part of splitSubcategories(value)) {
     const key = normalizeKey(part);
+    const exact = categoryMap?.get(key);
+    if (exact) {
+      result.push(exact);
+      continue;
+    }
     const alias = SUBCATEGORY_ALIASES[key];
     if (alias) {
       result.push(...alias);
       continue;
     }
-    result.push(categoryMap?.get(key) || SUBCATEGORY_BY_KEY.get(key) || titleCase(part));
+    const globalMatch = taxonomy.flatMap((item) => item.subcategorias).find((name) => normalizeKey(name) === key);
+    result.push(globalMatch || SUBCATEGORY_BY_KEY.get(key) || titleCase(part));
   }
 
   return unique(result);
 }
 
-function inferCategoryFromSubcategories(subcategories = []) {
+function inferCategoryFromSubcategories(subcategories = [], taxonomy = TAXONOMY) {
   for (const subcategory of subcategories) {
+    const group = taxonomy.find((item) => item.subcategorias.some((name) => normalizeKey(name) === normalizeKey(subcategory)));
+    if (group) return group.categoria;
     const category = CATEGORY_FOR_SUBCATEGORY.get(normalizeKey(subcategory));
     if (category) return category;
   }
   return "";
 }
 
-function normalizeCommerceCategoryFields(data = {}) {
-  const subcategorias = canonicalSubcategories(data.subcategoria || "", data.categoria || "");
-  const categoria = canonicalCategory(data.categoria || "") || inferCategoryFromSubcategories(subcategorias);
+function normalizeCommerceCategoryFields(data = {}, taxonomy = TAXONOMY) {
+  const subcategorias = canonicalSubcategories(data.subcategoria || "", data.categoria || "", taxonomy);
+  const categoria = canonicalCategory(data.categoria || "", taxonomy) || inferCategoryFromSubcategories(subcategorias, taxonomy);
   return {
     categoria,
     subcategoria: subcategorias.join("; "),
