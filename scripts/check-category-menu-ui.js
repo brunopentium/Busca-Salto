@@ -42,6 +42,9 @@ function makeCdp(socket) {
 
 async function main() {
   const live = process.argv.includes("--live");
+  const realFilters = process.argv.includes("--real-filters")
+    ? (await fetch("https://www.buscasalto.com/api/comercios?mode=filters").then((response) => response.json())).filters
+    : null;
   const server = live ? null : http.createServer((req, res) => {
     const pathname = new URL(req.url, "http://localhost").pathname;
     if (pathname === "/" || pathname === "/index.html") {
@@ -58,7 +61,7 @@ async function main() {
     if (pathname === "/api/comercios") {
       const mode = new URL(req.url, "http://localhost").searchParams.get("mode");
       res.end(JSON.stringify(mode === "filters"
-        ? { filters: { categoriasAgrupadas: TAXONOMY, bairros: [] } }
+        ? { filters: realFilters || { categoriasAgrupadas: TAXONOMY, bairros: [] } }
         : { items: [], total: 0, page: 1, limit: 30, hasMore: false }));
     } else if (pathname === "/api/patrocinadores") {
       res.end(JSON.stringify({ items: [], config: { banner: { url: "/imagens/logo.png" }, logo: { url: "/imagens/logo.png" } } }));
@@ -114,10 +117,11 @@ async function main() {
         menu.scrollTop = menu.scrollHeight;
         const last = [...menu.querySelectorAll('.category-choice')].at(-1);
         const rect = menu.getBoundingClientRect();
+        const toolsRect = menu.querySelector('.category-menu-tools').getBoundingClientRect();
         const lastRect = last.getBoundingClientRect();
         return {
           menuTop: rect.top, menuBottom: rect.bottom, viewportHeight: innerHeight,
-          lastBottom: lastRect.bottom, lastVisible: lastRect.top >= rect.top + 2 && lastRect.bottom <= Math.min(rect.bottom, innerHeight) - 2,
+          lastBottom: lastRect.bottom, lastVisible: lastRect.top >= toolsRect.bottom - 2 && lastRect.bottom <= Math.min(rect.bottom, innerHeight) - 2,
           menuInBody: menu.parentElement === document.body,
           heroImageVisible: !document.querySelector('#heroImage').hidden,
           heroBackground: getComputedStyle(document.querySelector('#heroImage')).backgroundImage,
