@@ -43,7 +43,7 @@
           <h2>Como a ativação funciona</h2>
           <ul class="steps">
             <li><span class="num">1</span><span>Escolha o plano mais adequado para o seu momento.</span></li>
-            <li><span class="num">2</span><span>Entre em contato para solicitar o cadastro ou o plano escolhido.</span></li>
+            <li><span class="num">2</span><span>Para o cadastro gratuito, fale com a equipe. Para os planos pagos, conclua a assinatura.</span></li>
             <li><span class="num">3</span><span>Validamos o vínculo com o comércio e aplicamos o plano no Busca Salto.</span></li>
           </ul>
         </aside>
@@ -81,7 +81,7 @@
               <li>Selo de parceiro</li>
               <li>Descrição revisada para melhor apresentação</li>
             </ul>
-            <button class="btn primary" data-plan="parceiro">Solicitar Parceiro</button>
+            <button class="btn primary" data-plan="parceiro">Assinar Parceiro</button>
           </article>
           <article class="plan recommended">
             <div class="ribbon">Mais interessante</div>
@@ -94,7 +94,7 @@
               <li>Imagem, selo e oferta/promoção</li>
               <li>Indicado para campanhas, lançamentos e movimento local</li>
             </ul>
-            <button class="btn primary" data-plan="destaque">Solicitar Destaque</button>
+            <button class="btn primary" data-plan="destaque">Assinar Destaque</button>
           </article>
         </div>
         <p id="checkoutStatus" class="status" aria-live="polite"></p>
@@ -105,7 +105,7 @@
       <div class="container proof-grid">
         <article class="proof-card"><h3>Mais presença no card</h3><p>Imagem, selo, descrição revisada e oferta ajudam o usuário a entender melhor o comércio antes de clicar.</p></article>
         <article class="proof-card"><h3>Prioridade sem perder confiança</h3><p>A ordenação considera plano, relevância da busca e qualidade do cadastro. A experiência continua útil para quem pesquisa.</p></article>
-        <article class="proof-card"><h3>Atendimento direto</h3><p>Converse com a equipe do Busca Salto para solicitar o plano e atualizar os dados do seu comércio.</p></article>
+        <article class="proof-card"><h3>Atendimento direto</h3><p>Converse com a equipe do Busca Salto para tirar dúvidas e atualizar os dados do seu comércio.</p></article>
       </div>
     </section>
 
@@ -131,7 +131,7 @@
       <div class="container">
         <details><summary>Como meu comércio aparece melhor no Busca Salto?</summary><p>Os planos pagos melhoram os sinais visuais do card, como imagem, selo, descrição revisada, oferta e prioridade de exibição conforme o plano escolhido.</p></details>
         <details><summary>Por que o Destaque é recomendado?</summary><p>Ele entrega prioridade maior que o Parceiro, card mais forte, imagem e oferta.</p></details>
-        <details><summary>Quando o plano é ativado?</summary><p>Após a solicitação, validamos o vínculo com o comércio e confirmamos a ativação do plano.</p></details>
+        <details><summary>Quando o plano é ativado?</summary><p>Após a confirmação da assinatura, validamos o vínculo com o comércio e confirmamos a ativação do plano.</p></details>
       </div>
     </section>
   </main>
@@ -144,11 +144,15 @@
     const statusEl=document.getElementById("checkoutStatus");
     const BUSCA_SALTO_WHATSAPP="5511953116573";
     const mercadoPagoLinks={
-      parceiro:"",
-      destaque:""
+      parceiro:"https://mpago.la/2u3qwGJ",
+      destaque:"https://mpago.la/2adTAjs"
     };
     const planosPagos={parceiro:{nome:"Parceiro",preco:"R$ 39,90"},destaque:{nome:"Destaque",preco:"R$ 59,90"}};
-    const cadastroGratuitoUrl=`whatsapp://send?phone=${BUSCA_SALTO_WHATSAPP}&text=${encodeURIComponent("Ola, quero solicitar ou atualizar o cadastro gratuito do meu comercio no Busca Salto.")}`;
+    const cadastroGratuitoMensagem=encodeURIComponent("Ola, quero solicitar ou atualizar o cadastro gratuito do meu comercio no Busca Salto.");
+    const isMobile=Boolean(navigator.userAgentData?.mobile)||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const cadastroGratuitoUrl=isMobile
+      ?`whatsapp://send?phone=${BUSCA_SALTO_WHATSAPP}&text=${cadastroGratuitoMensagem}`
+      :`https://web.whatsapp.com/send?phone=${BUSCA_SALTO_WHATSAPP}&text=${cadastroGratuitoMensagem}`;
     function track(event,payload={}){try{navigator.sendBeacon?.("/api/metricas",new Blob([JSON.stringify({event,payload,path:location.pathname})],{type:"application/json"}))}catch(error){}}
     function startCheckout(plan){
       if(plan==="gratuito"){
