@@ -22,7 +22,8 @@ As colunas `fonte_url` e `data_verificacao` sao mantidas na planilha para facili
 
 - Nome e categoria precisam estar preenchidos; a categoria deve existir na taxonomia do admin.
 - A fonte precisa ser uma URL `http` ou `https`.
-- Registros repetidos no arquivo ou ja existentes na planilha ficam bloqueados para revisao. Abreviacoes comuns de endereco (como `Av.` e `Avenida`) nao impedem a deteccao.
+- Registros repetidos no arquivo ou ja existentes na planilha ficam bloqueados para revisao. A comparacao considera abreviacoes de endereco, nomes alternativos separados por `/`, complementos como `Salto`, termos de ramo no nome e enderecos marcados como nao confirmados.
+- Nome-base semelhante exige categoria compativel e evidencia adicional quando disponivel. Filiais com enderecos diferentes nao sao agrupadas apenas por compartilhar marca; negocios sem relacao no mesmo endereco tambem nao sao agrupados.
 - A previa mostra o cadastro correspondente, campos novos do CSV que podem complementar o registro e campos diferentes que precisam de conferencia. O botao de edicao abre o cadastro existente; nenhuma informacao e substituida automaticamente.
 - Se o mesmo nome for usado por filiais diferentes, informe endereco ou contato para distinguir os cadastros.
 - Um erro de duplicidade no momento da gravacao cancela o lote inteiro; revise a lista e envie novamente.

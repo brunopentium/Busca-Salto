@@ -4,7 +4,7 @@
   else root.CommerceDuplicates = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   const FIELDS = [
-    ["categoria", "Categoria"], ["subcategoria", "Subcategorias"],
+    ["nome", "Nome"], ["categoria", "Categoria"], ["subcategoria", "Subcategorias"],
     ["bairro", "Bairro"], ["endereco", "Endereco"],
     ["whatsapp", "WhatsApp"], ["telefone", "Telefone"],
     ["instagram", "Instagram"], ["facebook", "Facebook"],
@@ -21,6 +21,50 @@
   function normalizedAddress(value = "") {
     return normalize(value).replace(/\bav\b/g, "avenida").replace(/\br\b/g, "rua")
       .replace(/\bpca\b/g, "praca").replace(/\bjd\b/g, "jardim");
+  }
+
+  function missingAddress(value = "") {
+    const address = normalizedAddress(value);
+    return !address || /\b(?:endereco nao confirmado|sem endereco|a confirmar)\b/.test(address)
+      || /^(?:salto(?: sp)?|sp)$/.test(address);
+  }
+
+  function normalizedName(value = "") {
+    return normalize(String(value || "").replace(/['’]/g, ""));
+  }
+
+  function nameVariants(value = "") {
+    return String(value || "").split(/\s*[/|]\s*/).map(normalizedName).filter(Boolean);
+  }
+
+  const GENERIC_NAME_WORDS = new Set([
+    "a", "o", "as", "os", "de", "do", "da", "dos", "das", "e", "la", "le",
+    "casa", "nova", "novo", "gourmet", "restaurante", "padaria", "pizzaria",
+    "hamburgueria", "marmitaria", "sorveteria", "cafeteria", "lanchonete",
+    "confeitaria", "pastelaria", "delivery", "bar",
+  ]);
+
+  function nameCore(value = "") {
+    const withoutLocation = normalizedName(value).replace(/\s+salto(?:\s+(?:das|dos|do|da|de)\s+[a-z0-9 ]+)?$/, "");
+    return withoutLocation.split(" ").filter((word) => !GENERIC_NAME_WORDS.has(word)).join(" ");
+  }
+
+  function relatedName(left, right) {
+    const leftNames = nameVariants(left);
+    const rightNames = nameVariants(right);
+    if (leftNames.some((name) => rightNames.includes(name))) return "exact";
+    const leftCores = leftNames.map(nameCore).filter((name) => name.length >= 5);
+    const rightCores = rightNames.map(nameCore).filter((name) => name.length >= 5);
+    if (leftCores.some((name) => rightCores.includes(name))) return "brand";
+    const tokens = new Set(leftCores.flatMap((name) => name.split(" ")).filter((word) => word.length >= 6));
+    return rightCores.some((name) => name.split(" ").some((word) => tokens.has(word))) ? "token" : null;
+  }
+
+  function compatibleCategory(left, right) {
+    const category = normalize(left.categoria);
+    if (category && category === normalize(right.categoria)) return true;
+    const subcategories = new Set(String(left.subcategoria || "").split(/[;,]/).map(normalize).filter(Boolean));
+    return String(right.subcategoria || "").split(/[;,]/).map(normalize).some((value) => subcategories.has(value));
   }
 
   function streetAndNumber(value = "") {
@@ -43,28 +87,38 @@
     return contactNumbers(right).some((number) => numbers.has(number));
   }
 
-  function sameCommerce(left = {}, right = {}) {
-    const leftName = normalize(left.nome);
-    if (!leftName || leftName !== normalize(right.nome)) return null;
-    const leftAddress = normalizedAddress(left.endereco);
-    const rightAddress = normalizedAddress(right.endereco);
-    if (leftAddress && rightAddress) {
-      if (leftAddress === rightAddress) return { reason: "Mesmo nome e endereco", score: 3 };
-      const first = streetAndNumber(left.endereco);
-      const second = streetAndNumber(right.endereco);
-      if (first.street && first.street === second.street && first.number && first.number === second.number) {
-        if (first.unit && second.unit && first.unit !== second.unit) {
-          return sharedContact(left, right) ? { reason: "Mesmo nome e telefone; confira os boxes ou salas", score: 2 } : null;
-        }
-        if (Boolean(first.unit) !== Boolean(second.unit)) {
-          return { reason: "Mesmo nome, rua e numero; complemento ausente em um endereco", score: 1 };
-        }
-        return { reason: "Mesmo nome, rua e numero", score: 3 };
+  function addressRelation(left, right) {
+    if (missingAddress(left) || missingAddress(right)) return "missing";
+    let incompleteUnit = false;
+    for (const leftPart of String(left).split(";")) {
+      for (const rightPart of String(right).split(";")) {
+        if (normalizedAddress(leftPart) === normalizedAddress(rightPart)) return "same";
+        const first = streetAndNumber(leftPart);
+        const second = streetAndNumber(rightPart);
+        if (!first.street || first.street !== second.street || !first.number || first.number !== second.number) continue;
+        if (first.unit && second.unit && first.unit !== second.unit) continue;
+        if (Boolean(first.unit) !== Boolean(second.unit)) incompleteUnit = true;
+        else return "same";
       }
-      return sharedContact(left, right) ? { reason: "Mesmo nome e telefone; confira os enderecos", score: 2 } : null;
     }
-    if (sharedContact(left, right)) return { reason: "Mesmo nome e telefone", score: 2 };
-    return { reason: "Mesmo nome; endereco ausente em um dos cadastros", score: 1 };
+    return incompleteUnit ? "incomplete-unit" : "different";
+  }
+
+  function sameCommerce(left = {}, right = {}) {
+    const relation = relatedName(left.nome, right.nome);
+    if (!relation) return null;
+    if (relation !== "exact" && !compatibleCategory(left, right)) return null;
+    const address = addressRelation(left.endereco, right.endereco);
+    const contact = sharedContact(left, right);
+    if (address === "same") {
+      return { reason: relation === "exact" ? "Mesmo nome e endereco" : "Nomes relacionados e mesmo endereco", score: relation === "token" ? 2 : 3 };
+    }
+    if (address === "incomplete-unit") {
+      return { reason: "Nomes relacionados, rua e numero iguais; confira box ou sala", score: 1 };
+    }
+    if (contact) return { reason: "Nomes relacionados e telefone igual; confira os enderecos", score: 2 };
+    if (address === "different" || relation === "token") return null;
+    return { reason: relation === "exact" ? "Mesmo nome; endereco ausente em um dos cadastros" : "Nome-base e categoria coincidem; endereco ausente em um dos cadastros", score: 1 };
   }
 
   function findMatch(candidates, incoming) {
@@ -84,7 +138,7 @@
       const value = String(incoming[key] || "").trim();
       if (!value) continue;
       const current = String(existing[key] || "").trim();
-      if (!current) additions.push({ label, value });
+      if (!current || (key === "endereco" && missingAddress(current))) additions.push({ label, value });
       else if ((key === "endereco" ? normalizedAddress(current) : normalize(current)) !==
         (key === "endereco" ? normalizedAddress(value) : normalize(value))) {
         differences.push({ label, current, value });

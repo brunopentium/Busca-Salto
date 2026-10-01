@@ -9,15 +9,25 @@ const root = path.join(__dirname, "..");
 const chromePath = process.env.CHROME_PATH || (process.platform === "win32"
   ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
   : "/usr/bin/google-chrome");
-const csv = [
-  "nome,categoria,subcategoria,bairro,endereco,whatsapp,telefone,instagram,facebook,site,descricao,palavras_chave,oferta,fonte_url,data_verificacao,status,plano",
-  'Santa Esfiha Salto,Alimentação,Esfiharia;Pizzaria,Vila Teixeira,"Avenida Dom Pedro II, 1226, Box 230, Salto/SP",,(11) 2840-0053,,,https://santaesfihasalto.alloy.al/santaesfihasalto,Esfihas e pizzas com pedidos online.,"esfiha, pizza, delivery",,https://santaesfihasalto.alloy.al/santaesfihasalto,2026-09-29,ativo,gratuito',
-].join("\r\n");
-const existing = {
-  id: "539", nome: "Santa Esfiha Salto", categoria: "Alimentação", subcategoria: "Esfiharia",
-  bairro: "Vila Teixeira", endereco: "Av. Dom Pedro II, 1226, Box 230, Salto/SP",
-  telefone: "", site: "", descricao: "Esfiharia em Salto com esfihas e pizzas.",
-};
+const columns = "nome,categoria,subcategoria,bairro,endereco,whatsapp,telefone,instagram,facebook,site,descricao,palavras_chave,oferta,fonte_url,data_verificacao,status,plano".split(",");
+const csvItems = [
+  { nome: "Santa Esfiha Salto", subcategoria: "Esfiharia;Pizzaria", bairro: "Vila Teixeira", endereco: "Avenida Dom Pedro II, 1226, Box 230, Salto/SP", telefone: "(11) 2840-0053", site: "https://santaesfihasalto.alloy.al/santaesfihasalto" },
+  { nome: "Mateus Marmitex", subcategoria: "Marmitaria", bairro: "Jardim Santa Marta", endereco: "Rua Roque Lazzazera, 950, Jardim Santa Marta, Salto/SP", whatsapp: "(11) 99142-9787", site: "https://mateusmarmitex.com.br/" },
+  { nome: "Mineiro Delivery Salto", subcategoria: "Marmitaria", bairro: "Vila Nova", endereco: "Rua Quintino Bocaiuva, 344, Vila Nova, Salto/SP", site: "https://deliverydireto.com.br/mineirodelivery/salto" },
+  { nome: "O Sorvetão Salto das Nações", subcategoria: "Sorveteria", bairro: "Jardim das Nações", endereco: "Rua Floriano Peixoto, 3087, Jardim das Nações, Salto/SP", site: "https://deliverydireto.com.br/osorvetao/salto-das-nacoes" },
+  { nome: "Norba's Pizzaria", subcategoria: "Pizzaria", bairro: "Vila Teixeira", endereco: "Rua Barão do Rio Branco, 1217, Vila Teixeira, Salto/SP", site: "https://www.norbas.com.br/delivery/11758/menu" },
+];
+const csv = [columns.join(","), ...csvItems.map((item) => columns.map((key) => {
+  const value = String(item[key] || (key === "categoria" ? "Alimentação" : key === "fonte_url" ? item.site : ""));
+  return /[,"\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}).join(","))].join("\r\n");
+const existing = [
+  { id: "539", nome: "Santa Esfiha Salto", subcategoria: "Esfiharia", bairro: "Vila Teixeira", endereco: "Av. Dom Pedro II, 1226, Box 230, Salto/SP" },
+  { id: "508", nome: "Restaurante do Mateus / Mateus Marmitex", subcategoria: "Marmitaria", bairro: "Jardim Santa Marta", endereco: "Rua Roque Lazzazera, 950, Jardim Santa Marta, Salto/SP" },
+  { id: "515", nome: "Mineiro Delivery", subcategoria: "Restaurante", bairro: "Vila Nova", endereco: "Rua Quintino Bocaiúva, 344, Vila Nova, Salto/SP" },
+  { id: "556", nome: "O Sorvetão", subcategoria: "Sorveteria", bairro: "Jardim das Nações", endereco: "Rua Floriano Peixoto, 3087, Jardim das Nações, Salto/SP" },
+  { id: "652", nome: "Norba’s Salto", subcategoria: "Pizzaria", bairro: "", endereco: "" },
+].map((item) => ({ ...item, categoria: "Alimentação" }));
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function until(check, timeout = 15000) {
@@ -40,8 +50,8 @@ async function main() {
     }
     res.setHeader("Content-Type", "application/json");
     if (pathname === "/api/admin/session") res.end(JSON.stringify({ ok: true }));
-    else if (pathname === "/api/admin/comercios") res.end(JSON.stringify({ ok: true, items: [existing], total: 1 }));
-    else if (pathname === "/api/admin/taxonomia") res.end(JSON.stringify({ ok: true, taxonomia: [{ categoria: "Alimentação", subcategorias: ["Esfiharia", "Pizzaria"] }] }));
+    else if (pathname === "/api/admin/comercios") res.end(JSON.stringify({ ok: true, items: existing, total: existing.length }));
+    else if (pathname === "/api/admin/taxonomia") res.end(JSON.stringify({ ok: true, taxonomia: [{ categoria: "Alimentação", subcategorias: ["Esfiharia", "Pizzaria", "Marmitaria", "Sorveteria"] }] }));
     else { res.statusCode = 404; res.end(JSON.stringify({ ok: false })); }
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -90,15 +100,17 @@ async function main() {
     await until(() => evaluate("document.querySelector('#adminPanel').classList.contains('active')"));
     await evaluate(`(async () => {
       switchAdminTab('importacao');
-      taxonomia = [{ categoria: 'Alimentação', subcategorias: ['Esfiharia', 'Pizzaria'] }];
+      taxonomia = [{ categoria: 'Alimentação', subcategorias: ['Esfiharia', 'Pizzaria', 'Marmitaria', 'Sorveteria'] }];
       await prepareCommerceImport(new File([${JSON.stringify(csv)}], 'lote.csv', { type: 'text/csv' }));
     })()`);
     const preview = await evaluate("document.querySelector('#commerceImportPreview').innerText");
     assert.match(preview, /Cadastro #539: Santa Esfiha Salto/);
+    for (const id of ["508", "515", "556", "652"]) assert.match(preview, new RegExp(`Cadastro #${id}:`));
     assert.match(preview, /Dados para complementar:/);
     assert.match(preview, /Telefone: \(11\) 2840-0053/);
     assert.match(preview, /Site: https:\/\/santaesfihasalto/);
     assert.equal(await evaluate("document.querySelector('[data-import-index]').disabled"), true);
+    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 5);
     assert.equal(await evaluate("document.querySelector('#commitCommerceImport').disabled"), true);
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 850, deviceScaleFactor: 1, mobile: true });
     assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), true);
@@ -120,7 +132,8 @@ async function main() {
     chrome.kill();
     await new Promise((resolve) => server.close(resolve));
     if (path.resolve(profile).startsWith(path.resolve(os.tmpdir()) + path.sep)) {
-      fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
+      try { fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); }
+      catch (error) { console.warn(`Could not remove Chrome test profile: ${profile}`); }
     }
   }
 }
