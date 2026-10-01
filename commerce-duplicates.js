@@ -46,8 +46,7 @@
 
   function nameCore(value = "") {
     const withoutLocation = normalizedName(value).replace(/\s+salto(?:\s+(?:das|dos|do|da|de)\s+[a-z0-9 ]+)?$/, "");
-    const withoutDescriptor = withoutLocation.replace(/\bcomida caseira\b/g, "").replace(/\s+/g, " ").trim();
-    return withoutDescriptor.split(" ").filter((word) => !GENERIC_NAME_WORDS.has(word)).join(" ");
+    return withoutLocation.split(" ").filter((word) => !GENERIC_NAME_WORDS.has(word)).join(" ");
   }
 
   function burgerSpelling(value) {
@@ -57,6 +56,11 @@
   function hasDistinctiveNameWord(value) {
     return value.split(" ").some((word) => word.length >= 4
       && !GENERIC_NAME_WORDS.has(word) && word !== "burger" && word !== "burgers");
+  }
+
+  function isExpandedCore(shorter, longer) {
+    return shorter !== longer && hasDistinctiveNameWord(shorter)
+      && (` ${longer} `).includes(` ${shorter} `);
   }
 
   function relatedName(left, right) {
@@ -69,6 +73,8 @@
     const rightSpellings = new Set(rightCores.map(burgerSpelling));
     const spellingMatch = leftCores.map(burgerSpelling).find((name) => rightSpellings.has(name));
     if (spellingMatch) return hasDistinctiveNameWord(spellingMatch) ? "brand" : "token";
+    if (leftCores.some((leftCore) => rightCores.some((rightCore) =>
+      isExpandedCore(leftCore, rightCore) || isExpandedCore(rightCore, leftCore)))) return "expanded";
     const tokens = new Set(leftCores.flatMap((name) => name.split(" ")).filter((word) => word.length >= 6));
     return rightCores.some((name) => name.split(" ").some((word) => tokens.has(word))) ? "token" : null;
   }
@@ -132,7 +138,7 @@
     const address = addressRelation(left.endereco, right.endereco);
     const contact = sharedContact(left, right);
     if (address === "same") {
-      return { reason: relation === "exact" ? "Mesmo nome e endereco" : "Nomes relacionados e mesmo endereco", score: relation === "token" ? 2 : 3 };
+      return { reason: relation === "exact" ? "Mesmo nome e endereco" : "Nomes relacionados e mesmo endereco", score: relation === "token" || relation === "expanded" ? 2 : 3 };
     }
     if (address === "incomplete-unit") {
       return { reason: "Nomes relacionados, rua e numero iguais; confira box ou sala", score: 1 };
@@ -148,7 +154,11 @@
       return null;
     }
     if (address === "different-unit" || relation === "token") return null;
+    if (relation === "expanded" && !sharedSubcategory(left, right)) return null;
     if (relation === "brand" && left.subcategoria && right.subcategoria && !sharedSubcategory(left, right)) return null;
+    if (relation === "expanded") {
+      return { reason: "Nome-base contido em nome mais descritivo e mesmo ramo; endereco ausente para conferir", score: 0.5 };
+    }
     return { reason: relation === "exact" ? "Mesmo nome; endereco ausente em um dos cadastros" : "Nome-base e categoria coincidem; endereco ausente em um dos cadastros", score: 1 };
   }
 

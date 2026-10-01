@@ -113,6 +113,7 @@ async function main() {
     assert.match(preview, /Cadastro #539: Santa Esfiha Salto/);
     for (const id of ["508", "515", "556", "652", "523", "645", "584"]) assert.match(preview, new RegExp(`Cadastro #${id}:`));
     assert.match(preview, /Mesmo nome e ramo, mas enderecos diferentes/);
+    assert.match(preview, /Nome-base contido em nome mais descritivo e mesmo ramo/);
     const kadriReview = await evaluate("Array.from(document.querySelectorAll('#commerceImportPreview tr')).find((row) => row.textContent.includes('Kadri Pizzaria'))?.textContent");
     assert.match(kadriReview, /Rua John Kennedy, 537/);
     assert.match(kadriReview, /Rua Monsenhor Couto, 494/);

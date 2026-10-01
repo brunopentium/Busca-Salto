@@ -108,7 +108,7 @@ const cases = [
   {
     id: "584", existingName: "Restaurante Colorau Comida Caseira", incomingName: "Restaurante Colorau",
     existingAddress: "Rua Quintino Bocaiúva, 440, Centro, Salto/SP",
-    incomingAddress: "", subcategoria: "Restaurante", score: 1,
+    incomingAddress: "", subcategoria: "Restaurante", score: 0.5,
   },
 ];
 
@@ -196,5 +196,25 @@ assert.equal(sameCommerce(
   { nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
   { nome: "Restaurante Sabor Caseiro", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
 ), null);
+assert.equal(sameCommerce(
+  { nome: "Pizzaria Aurora Forno a Lenha", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "" },
+  { nome: "Pizzaria Aurora", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "" },
+)?.score, 0.5);
+assert.equal(sameCommerce(
+  { nome: "Pizzaria Aurora Forno a Lenha", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua A, 1" },
+  { nome: "Pizzaria Aurora", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua A, 1" },
+)?.score, 2);
+assert.equal(sameCommerce(
+  { nome: "Pizzaria Aurora Forno a Lenha", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "" },
+  { nome: "Pizzaria Aurora", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
+  { nome: "Restaurante Colorauzinho", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
+), null);
+assert.equal(findMatch([
+  { id: "descritivo", nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
+  { id: "exato", nome: "Restaurante Colorau", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
+], { nome: "Restaurante Colorau", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" })?.candidate.id, "exato");
 
 console.log("Commerce duplicate matching and enrichment checks passed.");
