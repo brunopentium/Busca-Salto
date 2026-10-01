@@ -1644,10 +1644,11 @@
         });
         const result = await response.json();
         if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar.");
-        panelStatus.textContent = "Cadastro salvo.";
-        panelStatus.className = "status ok";
-        setFormItem({ ...(result.item || {}), ...data });
+        if (!result.item) throw new Error("O servidor nao confirmou os dados salvos.");
+        setFormItem(result.item);
         await loadComercios();
+        panelStatus.textContent = "Cadastro salvo na planilha.";
+        panelStatus.className = "status ok";
       } catch (error) {
         panelStatus.textContent = error.message || "Nao foi possivel salvar.";
         panelStatus.className = "status error";
@@ -2057,7 +2058,8 @@
       });
       const result = await response.json();
       if (!response.ok || !result.ok) throw new Error(result.error || "Falha ao salvar comercio.");
-      setFormItem({ ...(result.item || {}), ...data });
+      if (!result.item) throw new Error("O servidor nao confirmou os dados salvos.");
+      setFormItem(result.item);
       await loadComercios();
       return true;
     }

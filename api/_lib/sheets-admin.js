@@ -475,17 +475,46 @@ async function updateCommerce(id, payload) {
     id: row.id,
   }, { requireId: true, taxonomy });
   const values = buildRowValues(current.headers, row.values, data);
-  const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
-  const lastColumn = columnName(current.headers.length - 1);
+  const edits = current.headers.flatMap((header, index) => {
+    const key = headerKey(header, index);
+    const sourceKey = key === "imagem" || key === "imagem_url" ? "foto_url"
+      : key === "tipo_exibicao" ? "plano" : key;
+    if (!Object.prototype.hasOwnProperty.call(payload, sourceKey)) return [];
+    const previous = String(row.values[index] ?? "").trim();
+    const submitted = String(payload[sourceKey] ?? "").trim();
+    const next = String(values[index] ?? "");
+    if (submitted === previous || next === previous) return [];
+    return [{ key, index, value: next }];
+  });
+  if (!edits.length) return row;
 
-  await sheets.spreadsheets.values.update({
+  const sheets = await getSheetsClient([GOOGLE_SCOPES.sheetsWrite]);
+  await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId,
-    range: sheetRange(`A${row.rowNumber}:${lastColumn}${row.rowNumber}`),
-    valueInputOption: "USER_ENTERED",
-    requestBody: { values: [values] },
+    requestBody: {
+      valueInputOption: "RAW",
+      data: edits.map(({ index, value }) => ({
+        range: sheetRange(`${columnName(index)}${row.rowNumber}`),
+        values: [[value]],
+      })),
+    },
   });
 
-  return rowToAdminObject(current.headers, values, row.rowNumber - 2);
+  const lastColumn = columnName(current.headers.length - 1);
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: sheetRange(`A${row.rowNumber}:${lastColumn}${row.rowNumber}`),
+    valueRenderOption: "FORMATTED_VALUE",
+  });
+  const savedValues = response.data.values?.[0] || [];
+  const missing = edits.filter(({ index, value }) => String(savedValues[index] ?? "").trim() !== value);
+  if (missing.length) {
+    const error = new Error(`A planilha nao confirmou a gravacao de: ${missing.map(({ key }) => key).join(", ")}. Tente novamente.`);
+    error.statusCode = 409;
+    throw error;
+  }
+
+  return { ...rowToAdminObject(current.headers, savedValues, row.rowNumber - 2), rowNumber: row.rowNumber };
 }
 
 async function deleteCommerce(id) {
