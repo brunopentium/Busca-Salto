@@ -1,7 +1,7 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
 const { normalizeCommerceCategoryFields } = require("./taxonomy");
 const { readTaxonomy } = require("./taxonomy-store");
-const { findMatch } = require("../../commerce-duplicates");
+const { unconfirmedDuplicates } = require("../../commerce-duplicates");
 
 const COMMERCE_EXTRA_HEADERS = [
   "foto_url",
@@ -389,15 +389,12 @@ async function appendCommerces(payloads = [], options = {}) {
       throw error;
     }
   }
-  const duplicates = [];
-  const accepted = [];
-  for (const data of dataRows) {
-    const duplicate = options.deduplicate !== false && (
-      findMatch(current.rows, data) || findMatch(accepted, data)
-    );
-    if (duplicate) duplicates.push(data.nome);
-    else accepted.push(data);
-  }
+  const duplicates = options.deduplicate === false ? [] : unconfirmedDuplicates(current.rows,
+    dataRows.map((item, index) => ({
+      item,
+      rowNumber: Number(payloads[index].importRowNumber),
+      duplicateOverride: payloads[index].duplicateOverride,
+    })));
   if (duplicates.length) {
     const error = new Error("O lote contem comercios ja cadastrados ou repetidos.");
     error.statusCode = 409;

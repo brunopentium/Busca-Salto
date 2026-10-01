@@ -172,6 +172,34 @@
     return best;
   }
 
+  function duplicateMatchReference(match) {
+    if (match?.origin === "existing") {
+      const id = String(match.candidate?.id || "").trim();
+      return id ? `existing:${id}` : "";
+    }
+    if (match?.origin === "batch") {
+      const rowNumber = Number(match.candidate?.rowNumber);
+      return Number.isSafeInteger(rowNumber) && rowNumber >= 2 ? `batch:${rowNumber}` : "";
+    }
+    return "";
+  }
+
+  function unconfirmedDuplicates(existing, entries) {
+    const accepted = [];
+    const duplicates = [];
+    for (const entry of entries) {
+      const { item, rowNumber, duplicateOverride } = entry;
+      const existingMatch = findMatch(existing, item);
+      const batchMatch = existingMatch ? null : findMatch(accepted, item);
+      const match = existingMatch ? { ...existingMatch, origin: "existing" }
+        : batchMatch ? { ...batchMatch, origin: "batch" } : null;
+      const reference = duplicateMatchReference(match);
+      if (match && (!reference || duplicateOverride !== reference)) duplicates.push(item.nome);
+      else accepted.push({ ...item, rowNumber });
+    }
+    return duplicates;
+  }
+
   function fieldComparison(existing = {}, incoming = {}) {
     const additions = [];
     const differences = [];
@@ -188,5 +216,5 @@
     return { additions, differences };
   }
 
-  return { sameCommerce, findMatch, fieldComparison };
+  return { sameCommerce, findMatch, duplicateMatchReference, unconfirmedDuplicates, fieldComparison };
 });

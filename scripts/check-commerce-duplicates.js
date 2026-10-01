@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { sameCommerce, findMatch, fieldComparison } = require("../commerce-duplicates");
+const { sameCommerce, findMatch, duplicateMatchReference, unconfirmedDuplicates, fieldComparison } = require("../commerce-duplicates");
 
 const existing = {
   id: "539",
@@ -216,5 +216,29 @@ assert.equal(findMatch([
   { id: "descritivo", nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
   { id: "exato", nome: "Restaurante Colorau", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
 ], { nome: "Restaurante Colorau", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" })?.candidate.id, "exato");
+
+const colorau = { nome: "Restaurante Colorau", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" };
+const registeredColorau = { id: "584", nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "Rua Quintino Bocaiúva, 440" };
+assert.equal(duplicateMatchReference({ candidate: registeredColorau, origin: "existing" }), "existing:584");
+assert.deepEqual(unconfirmedDuplicates([registeredColorau], [{ item: colorau, rowNumber: 9 }]), ["Restaurante Colorau"]);
+assert.deepEqual(unconfirmedDuplicates([registeredColorau], [{ item: colorau, rowNumber: 9, duplicateOverride: "existing:584" }]), []);
+assert.deepEqual(unconfirmedDuplicates([registeredColorau], [{ item: colorau, rowNumber: 9, duplicateOverride: "existing:999" }]), ["Restaurante Colorau"]);
+assert.deepEqual(unconfirmedDuplicates([registeredColorau, { ...colorau, id: "600" }], [
+  { item: colorau, rowNumber: 9, duplicateOverride: "existing:584" },
+]), ["Restaurante Colorau"]);
+const expandedName = { nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" };
+assert.equal(duplicateMatchReference({ candidate: { ...colorau, rowNumber: 2 }, origin: "batch" }), "batch:2");
+assert.deepEqual(unconfirmedDuplicates([], [
+  { item: colorau, rowNumber: 2 },
+  { item: expandedName, rowNumber: 3, duplicateOverride: "batch:2" },
+]), []);
+assert.deepEqual(unconfirmedDuplicates([], [
+  { item: colorau, rowNumber: 2 },
+  { item: expandedName, rowNumber: 3, duplicateOverride: "batch:5" },
+]), ["Restaurante Colorau Comida Caseira"]);
+assert.deepEqual(unconfirmedDuplicates([registeredColorau], [
+  { item: colorau, rowNumber: 2, duplicateOverride: "existing:584" },
+  { item: colorau, rowNumber: 3 },
+]), ["Restaurante Colorau"]);
 
 console.log("Commerce duplicate matching and enrichment checks passed.");

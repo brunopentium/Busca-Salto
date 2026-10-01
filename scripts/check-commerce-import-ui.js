@@ -19,6 +19,8 @@ const csvItems = [
   { nome: "Jump Burger", subcategoria: "Hamburgueria", bairro: "Jardim Delegá", endereco: "", fonte_url: "https://jump-burger.compraqui.app/" },
   { nome: "Kadri Pizzaria", subcategoria: "Pizzaria", bairro: "Centro", endereco: "Rua Monsenhor Couto, 494, Centro, Salto/SP", fonte_url: "https://play.google.com/store/apps/details?id=com.wabiz.delivery.kadripizzaria" },
   { nome: "Restaurante Colorau", subcategoria: "Restaurante", bairro: "", endereco: "", fonte_url: "https://www.ifood.com.br/delivery/salto-sp/restaurante-colorau-centro/630a5f2e-cadc-40e3-82fa-f284950fd6a8" },
+  { nome: "Sem Fonte", subcategoria: "Pizzaria", bairro: "Centro", endereco: "Rua Exemplo, 1" },
+  { nome: "Lanchonete Lago Azul", subcategoria: "Restaurante", bairro: "Centro", endereco: "Rua Nova, 20", fonte_url: "https://example.com/lago-azul" },
 ];
 const csv = [columns.join(","), ...csvItems.map((item) => columns.map((key) => {
   const value = String(item[key] || (key === "categoria" ? "Alimentação" : key === "fonte_url" ? item.site : ""));
@@ -47,6 +49,7 @@ async function until(check, timeout = 15000) {
 }
 
 async function main() {
+  let submitted = null;
   const server = http.createServer((req, res) => {
     const pathname = new URL(req.url, "http://localhost").pathname;
     if (pathname === "/admin.html" || pathname === "/commerce-duplicates.js") {
@@ -56,6 +59,15 @@ async function main() {
     }
     res.setHeader("Content-Type", "application/json");
     if (pathname === "/api/admin/session") res.end(JSON.stringify({ ok: true }));
+    else if (pathname === "/api/admin/comercios" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        submitted = JSON.parse(body);
+        res.statusCode = 201;
+        res.end(JSON.stringify({ ok: true, count: submitted.items.length, items: submitted.items }));
+      });
+    }
     else if (pathname === "/api/admin/comercios") res.end(JSON.stringify({ ok: true, items: existing, total: existing.length }));
     else if (pathname === "/api/admin/taxonomia") res.end(JSON.stringify({ ok: true, taxonomia: [{ categoria: "Alimentação", subcategorias: ["Esfiharia", "Pizzaria", "Marmitaria", "Sorveteria", "Hamburgueria", "Restaurante"] }] }));
     else { res.statusCode = 404; res.end(JSON.stringify({ ok: false })); }
@@ -120,9 +132,11 @@ async function main() {
     assert.match(preview, /Dados para complementar:/);
     assert.match(preview, /Telefone: \(11\) 2840-0053/);
     assert.match(preview, /Site: https:\/\/santaesfihasalto/);
-    assert.equal(await evaluate("document.querySelector('[data-import-index]').disabled"), true);
-    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 8);
-    assert.equal(await evaluate("document.querySelector('#commitCommerceImport').disabled"), true);
+    assert.equal(await evaluate("document.querySelector('[data-import-index]').disabled"), false);
+    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 1);
+    assert.equal(await evaluate("document.querySelector('[data-import-index=\"8\"]').disabled"), true);
+    assert.equal(await evaluate("document.querySelector('[data-import-index=\"9\"]').checked"), true);
+    assert.equal(await evaluate("document.querySelector('#commitCommerceImport').disabled"), false);
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 850, deviceScaleFactor: 1, mobile: true });
     assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), true);
     assert.equal(await evaluate("getComputedStyle(document.querySelector('.import-table tr')).display"), "grid");
@@ -133,6 +147,21 @@ async function main() {
     }
     await evaluate("document.querySelector('[data-import-edit]').click()");
     assert.equal(await evaluate("document.querySelector('#commerceId').value"), "539");
+    await evaluate("switchAdminTab('importacao'); document.querySelector('[data-import-index=\"7\"]').click()");
+    assert.equal(await evaluate("document.querySelector('[data-import-index=\"7\"]').checked"), true);
+    assert.equal(await evaluate("document.querySelector('#commitCommerceImport').disabled"), false);
+    assert.match(await evaluate("document.querySelector('#commerceImportStatus').textContent"), /2 selecionados \(1 manualmente\)/);
+    await evaluate("window.confirm = () => false; document.querySelector('#commitCommerceImport').click()");
+    assert.equal(submitted, null);
+    await evaluate("window.confirm = () => true; document.querySelector('#commitCommerceImport').click()");
+    await until(() => submitted);
+    assert.equal(submitted.items.length, 2);
+    assert.equal(submitted.items[0].nome, "Restaurante Colorau");
+    assert.equal(submitted.items[0].importRowNumber, 9);
+    assert.equal(submitted.items[0].duplicateOverride, "existing:584");
+    assert.equal(submitted.items[1].nome, "Lanchonete Lago Azul");
+    assert.equal(submitted.items[1].duplicateOverride, undefined);
+    await until(() => evaluate("document.querySelector('#commerceImportStatus').textContent.includes('2 comercio(s) importado(s)')"));
     console.log("Admin import preview: duplicate, enrichment and edit action passed.");
   } finally {
     if (socket?.readyState === WebSocket.OPEN) {

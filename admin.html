@@ -227,7 +227,7 @@
       <section id="commerceImportView" class="import-panel management-section" data-admin-view="importacao" hidden>
         <div>
           <h2>Importar comercios por categoria</h2>
-          <p class="import-note">O modelo inclui uma linha preenchida do Scallet apenas como referencia de formato. Remova essa linha antes de importar e mantenha somente os novos comercios. Ela esta marcada como EXEMPLO - NAO IMPORTAR e o plano invalido impede sua inclusao acidental. O painel valida nome, categoria, fonte e possiveis duplicados. Limite: 25 por importacao; por padrao entram gratuitos, ativos e nao verificados. Fotos sao adicionadas depois pelo cadastro normal.</p>
+          <p class="import-note">O modelo inclui uma linha preenchida do Scallet apenas como referencia de formato. Remova essa linha antes de importar e mantenha somente os novos comercios. Ela esta marcada como EXEMPLO - NAO IMPORTAR e o plano invalido impede sua inclusao acidental. O painel valida nome, categoria, fonte e possiveis duplicados. Possiveis duplicados ficam desmarcados, mas podem ser incluidos manualmente apos conferencia. Limite: 25 por importacao; por padrao entram gratuitos, ativos e nao verificados. Fotos sao adicionadas depois pelo cadastro normal.</p>
         </div>
         <div class="import-actions">
           <button id="downloadImportTemplate" class="secondary" type="button">Baixar modelo CSV</button>
@@ -1328,14 +1328,14 @@
     }
 
     function renderCommerceImportPreview() {
-      const selectedCount = commerceImportRows.filter((item) => item.selected && !item.errors.length && !item.duplicate).length;
+      const selectedCount = commerceImportRows.filter((item) => item.selected && !item.errors.length).length;
       commitCommerceImport.disabled = selectedCount < 1 || selectedCount > 25;
       commitCommerceImport.textContent = selectedCount > 25 ? "Selecione ate 25 comercios" : `Importar selecionados (${selectedCount})`;
       commerceImportPreview.hidden = !commerceImportRows.length;
       commerceImportPreview.innerHTML = `<table class="import-table"><thead><tr><th>Incluir</th><th>Comercio / categoria</th><th>Revisao</th><th>Bairro / endereco</th><th>Contato</th><th>Fonte / conferencia</th></tr></thead><tbody>${commerceImportRows.map((item, index) => {
         const issue = item.errors.join("; ") || (item.duplicate ? "Possivel duplicado" : "Pronto");
-        const checked = item.selected && !item.errors.length && !item.duplicate ? " checked" : "";
-        const disabled = item.errors.length || item.duplicate ? " disabled" : "";
+        const checked = item.selected && !item.errors.length ? " checked" : "";
+        const disabled = item.errors.length ? " disabled" : "";
         const rowClass = item.errors.length ? "import-row-error" : item.duplicate ? "import-row-duplicate" : "";
         const source = item.fonte_url ? escapeHtml(item.fonte_url) : "Sem fonte";
         let review = escapeHtml(issue);
@@ -1343,13 +1343,14 @@
           const { candidate, reason, origin } = item.duplicateMatch;
           const { additions, differences } = CommerceDuplicates.fieldComparison(candidate, item);
           const identity = origin === "existing" ? `Cadastro #${escapeHtml(candidate.id)}: ${escapeHtml(candidate.nome)}` : `Linha ${candidate.rowNumber} deste CSV: ${escapeHtml(candidate.nome)}`;
-          review = `<div class="import-match"><strong>${identity}</strong><span>${escapeHtml(reason)}</span>${item.errors.length ? `<span>${escapeHtml(item.errors.join("; "))}</span>` : ""}${additions.length ? `<div><strong>Dados para complementar:</strong><ul>${additions.map(({ label, value }) => `<li>${escapeHtml(label)}: ${escapeHtml(value)}</li>`).join("")}</ul></div>` : "<span>Sem campos vazios para complementar.</span>"}${differences.length ? `<details><summary>${differences.length} campo(s) diferente(s) para conferir</summary><ul>${differences.map(({ label, current, value }) => `<li>${escapeHtml(label)}: atual ${escapeHtml(current)}; CSV ${escapeHtml(value)}</li>`).join("")}</ul></details>` : ""}${origin === "existing" ? `<button class="secondary" type="button" data-import-edit="${index}">Editar cadastro #${escapeHtml(candidate.id)}</button>` : ""}</div>`;
+          review = `<div class="import-match"><strong>${identity}</strong><span>${escapeHtml(reason)}</span>${item.selected ? "<span>Inclusao manual selecionada.</span>" : ""}${item.errors.length ? `<span>${escapeHtml(item.errors.join("; "))}</span>` : ""}${additions.length ? `<div><strong>Dados para complementar:</strong><ul>${additions.map(({ label, value }) => `<li>${escapeHtml(label)}: ${escapeHtml(value)}</li>`).join("")}</ul></div>` : "<span>Sem campos vazios para complementar.</span>"}${differences.length ? `<details><summary>${differences.length} campo(s) diferente(s) para conferir</summary><ul>${differences.map(({ label, current, value }) => `<li>${escapeHtml(label)}: atual ${escapeHtml(current)}; CSV ${escapeHtml(value)}</li>`).join("")}</ul></details>` : ""}${origin === "existing" ? `<button class="secondary" type="button" data-import-edit="${index}">Editar cadastro #${escapeHtml(candidate.id)}</button>` : ""}</div>`;
         }
         return `<tr class="${rowClass}"><td><input type="checkbox" data-import-index="${index}"${checked}${disabled} aria-label="Incluir ${escapeOption(item.nome)}" /></td><td><strong>${escapeHtml(item.nome || "Sem nome")}</strong><br>${escapeHtml(item.categoria || "Sem categoria")}${item.subcategoria ? `<br><span class="muted">${escapeHtml(item.subcategoria)}</span>` : ""}</td><td data-label="Revisao">${review}</td><td data-label="Bairro / endereco">${escapeHtml(item.bairro || "Sem bairro")}<br>${escapeHtml(item.endereco || "Sem endereco")}</td><td data-label="Contato">${escapeHtml(item.whatsapp || item.telefone || "Sem contato")}</td><td data-label="Fonte / conferencia">${source}<br>${escapeHtml(item.data_verificacao)}</td></tr>`;
       }).join("")}</tbody></table>`;
       const invalidCount = commerceImportRows.filter((item) => item.errors.length).length;
       const duplicateCount = commerceImportRows.filter((item) => item.duplicate).length;
-      commerceImportStatus.textContent = `${commerceImportRows.length} linhas; ${invalidCount} com erros; ${duplicateCount} possiveis duplicados; ${selectedCount} selecionados.`;
+      const manualCount = commerceImportRows.filter((item) => item.selected && item.duplicate && !item.errors.length).length;
+      commerceImportStatus.textContent = `${commerceImportRows.length} linhas; ${invalidCount} com erros; ${duplicateCount} possiveis duplicados; ${selectedCount} selecionados${manualCount ? ` (${manualCount} manualmente)` : ""}.`;
       commerceImportStatus.className = invalidCount || duplicateCount ? "status" : "status ok";
     }
 
@@ -1394,8 +1395,15 @@
     }
 
     async function submitCommerceImport() {
-      const items = commerceImportRows.filter((item) => item.selected && !item.errors.length && !item.duplicate).map(({ rowNumber, selected, errors, duplicate, duplicateMatch, ...item }) => item);
+      const selectedRows = commerceImportRows.filter((item) => item.selected && !item.errors.length);
+      const manualCount = selectedRows.filter((item) => item.duplicate).length;
+      const items = selectedRows.map(({ rowNumber, selected, errors, duplicate, duplicateMatch, ...item }) => ({
+        ...item,
+        importRowNumber: rowNumber,
+        ...(duplicate ? { duplicateOverride: CommerceDuplicates.duplicateMatchReference(duplicateMatch) } : {}),
+      }));
       if (!items.length || items.length > 25) return;
+      if (manualCount && !window.confirm(`Voce selecionou ${manualCount} possivel(is) duplicado(s). Isso pode criar cadastros repetidos. Confirma a importacao dessas linhas?`)) return;
       commitCommerceImport.disabled = true;
       commerceImportStatus.textContent = "Gravando o lote na planilha...";
       commerceImportStatus.className = "status";
@@ -1407,11 +1415,11 @@
           body: JSON.stringify({ items }),
         });
         const result = await response.json();
-        if (!response.ok || !result.ok) throw new Error(result.duplicates?.length ? `Revisao necessaria; possiveis duplicados: ${result.duplicates.join(", ")}` : result.error || "Falha ao importar o lote.");
+        if (!response.ok || !result.ok) throw new Error(result.duplicates?.length ? `Revisao necessaria; possiveis duplicados: ${result.duplicates.join(", ")}. Atualize a previa e confira novamente.` : result.error || "Falha ao importar o lote.");
         commerceImportRows = [];
         commerceImportFile.value = "";
         commerceImportPreview.hidden = true;
-        commerceImportStatus.textContent = `${result.count} comercio(s) importado(s). Os cadastros foram gravados como nao verificados.`;
+        commerceImportStatus.textContent = `${result.count} comercio(s) importado(s)${manualCount ? `, incluindo ${manualCount} revisado(s) manualmente` : ""}. Os cadastros foram gravados como nao verificados.`;
         commerceImportStatus.className = "status ok";
         await loadComercios();
       } catch (error) {
