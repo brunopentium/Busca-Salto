@@ -17,6 +17,7 @@ const csvItems = [
   { nome: "O Sorvetão Salto das Nações", subcategoria: "Sorveteria", bairro: "Jardim das Nações", endereco: "Rua Floriano Peixoto, 3087, Jardim das Nações, Salto/SP", site: "https://deliverydireto.com.br/osorvetao/salto-das-nacoes" },
   { nome: "Norba's Pizzaria", subcategoria: "Pizzaria", bairro: "Vila Teixeira", endereco: "Rua Barão do Rio Branco, 1217, Vila Teixeira, Salto/SP", site: "https://www.norbas.com.br/delivery/11758/menu" },
   { nome: "Jump Burger", subcategoria: "Hamburgueria", bairro: "Jardim Delegá", endereco: "", fonte_url: "https://jump-burger.compraqui.app/" },
+  { nome: "Kadri Pizzaria", subcategoria: "Pizzaria", bairro: "Centro", endereco: "Rua Monsenhor Couto, 494, Centro, Salto/SP", fonte_url: "https://play.google.com/store/apps/details?id=com.wabiz.delivery.kadripizzaria" },
 ];
 const csv = [columns.join(","), ...csvItems.map((item) => columns.map((key) => {
   const value = String(item[key] || (key === "categoria" ? "Alimentação" : key === "fonte_url" ? item.site : ""));
@@ -29,6 +30,7 @@ const existing = [
   { id: "556", nome: "O Sorvetão", subcategoria: "Sorveteria", bairro: "Jardim das Nações", endereco: "Rua Floriano Peixoto, 3087, Jardim das Nações, Salto/SP" },
   { id: "652", nome: "Norba’s Salto", subcategoria: "Pizzaria", bairro: "", endereco: "" },
   { id: "523", nome: "Jump Burguer", subcategoria: "Hamburgueria", bairro: "Jardim São João", endereco: "Av. José Maria Marques de Oliveira, 1026, Jardim São João, Salto/SP" },
+  { id: "645", nome: "Kadri Pizzaria", subcategoria: "Pizzaria", bairro: "Parque Bela Vista", endereco: "Rua John Kennedy, 537, Parque Bela Vista, Salto/SP" },
 ].map((item) => ({ ...item, categoria: "Alimentação" }));
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -107,12 +109,16 @@ async function main() {
     })()`);
     const preview = await evaluate("document.querySelector('#commerceImportPreview').innerText");
     assert.match(preview, /Cadastro #539: Santa Esfiha Salto/);
-    for (const id of ["508", "515", "556", "652", "523"]) assert.match(preview, new RegExp(`Cadastro #${id}:`));
+    for (const id of ["508", "515", "556", "652", "523", "645"]) assert.match(preview, new RegExp(`Cadastro #${id}:`));
+    assert.match(preview, /Mesmo nome e ramo, mas enderecos diferentes/);
+    const kadriReview = await evaluate("Array.from(document.querySelectorAll('#commerceImportPreview tr')).find((row) => row.textContent.includes('Kadri Pizzaria'))?.textContent");
+    assert.match(kadriReview, /Rua John Kennedy, 537/);
+    assert.match(kadriReview, /Rua Monsenhor Couto, 494/);
     assert.match(preview, /Dados para complementar:/);
     assert.match(preview, /Telefone: \(11\) 2840-0053/);
     assert.match(preview, /Site: https:\/\/santaesfihasalto/);
     assert.equal(await evaluate("document.querySelector('[data-import-index]').disabled"), true);
-    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 6);
+    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 7);
     assert.equal(await evaluate("document.querySelector('#commitCommerceImport').disabled"), true);
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 850, deviceScaleFactor: 1, mobile: true });
     assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), true);

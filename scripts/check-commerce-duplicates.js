@@ -27,7 +27,7 @@ assert.ok(comparison.differences.some((field) => field.label === "Subcategorias"
 assert.ok(fieldComparison(existing, { facebook: "https://facebook.com/santaesfiha" })
   .additions.some((field) => field.label === "Facebook"));
 
-assert.equal(sameCommerce(existing, { ...incoming, endereco: "Av. Dom Pedro II, 1300, Salto/SP" }), null);
+assert.equal(sameCommerce(existing, { ...incoming, endereco: "Av. Dom Pedro II, 1300, Salto/SP" })?.score, 1);
 assert.equal(sameCommerce(existing, { ...incoming, endereco: "Av. Dom Pedro II, 1226, Box 231, Salto/SP" }), null);
 assert.equal(sameCommerce(existing, { ...incoming, endereco: "Av. Dom Pedro II, 1226, Salto/SP" })?.score, 1);
 assert.equal(sameCommerce(existing, { ...incoming, nome: "Outra Esfiharia" }), null);
@@ -100,6 +100,11 @@ const cases = [
     existingAddress: "Av. José Maria Marques de Oliveira, 1026, Jardim São João, Salto/SP",
     incomingAddress: "", subcategoria: "Hamburgueria", score: 1,
   },
+  {
+    id: "645", existingName: "Kadri Pizzaria", incomingName: "Kadri Pizzaria",
+    existingAddress: "Rua John Kennedy, 537, Parque Bela Vista, Salto/SP",
+    incomingAddress: "Rua Monsenhor Couto, 494, Centro, Salto/SP", subcategoria: "Pizzaria", score: 1,
+  },
 ];
 
 for (const item of cases) {
@@ -158,5 +163,21 @@ assert.equal(sameCommerce(
   { nome: "Burguer", categoria: "Alimentação", endereco: "Rua A, 1" },
   { nome: "Burger", categoria: "Alimentação", endereco: "Rua A, 1" },
 )?.score, 2);
+assert.match(sameCommerce(
+  { nome: "Kadri Pizzaria", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua John Kennedy, 537" },
+  { nome: "Kadri Pizzaria", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua Monsenhor Couto, 494" },
+)?.reason || "", /enderecos diferentes/);
+assert.ok(fieldComparison(
+  { endereco: "Rua John Kennedy, 537, Parque Bela Vista, Salto/SP" },
+  { endereco: "Rua Monsenhor Couto, 494, Centro, Salto/SP" },
+).differences.some((field) => field.label === "Endereco"));
+assert.equal(sameCommerce(
+  { nome: "Kadri Pizzaria", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua A, 1" },
+  { nome: "Kadri Pizzaria", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "Rua B, 2" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Pizzaria", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua A, 1" },
+  { nome: "Pizzaria", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua B, 2" },
+), null);
 
 console.log("Commerce duplicate matching and enrichment checks passed.");

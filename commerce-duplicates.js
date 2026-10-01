@@ -75,6 +75,10 @@
   function compatibleCategory(left, right) {
     const category = normalize(left.categoria);
     if (category && category === normalize(right.categoria)) return true;
+    return sharedSubcategory(left, right);
+  }
+
+  function sharedSubcategory(left, right) {
     const subcategories = new Set(String(left.subcategoria || "").split(/[;,]/).map(normalize).filter(Boolean));
     return String(right.subcategoria || "").split(/[;,]/).map(normalize).some((value) => subcategories.has(value));
   }
@@ -102,18 +106,22 @@
   function addressRelation(left, right) {
     if (missingAddress(left) || missingAddress(right)) return "missing";
     let incompleteUnit = false;
+    let differentUnit = false;
     for (const leftPart of String(left).split(";")) {
       for (const rightPart of String(right).split(";")) {
         if (normalizedAddress(leftPart) === normalizedAddress(rightPart)) return "same";
         const first = streetAndNumber(leftPart);
         const second = streetAndNumber(rightPart);
         if (!first.street || first.street !== second.street || !first.number || first.number !== second.number) continue;
-        if (first.unit && second.unit && first.unit !== second.unit) continue;
+        if (first.unit && second.unit && first.unit !== second.unit) {
+          differentUnit = true;
+          continue;
+        }
         if (Boolean(first.unit) !== Boolean(second.unit)) incompleteUnit = true;
         else return "same";
       }
     }
-    return incompleteUnit ? "incomplete-unit" : "different";
+    return incompleteUnit ? "incomplete-unit" : differentUnit ? "different-unit" : "different";
   }
 
   function sameCommerce(left = {}, right = {}) {
@@ -129,7 +137,16 @@
       return { reason: "Nomes relacionados, rua e numero iguais; confira box ou sala", score: 1 };
     }
     if (contact) return { reason: "Nomes relacionados e telefone igual; confira os enderecos", score: 2 };
-    if (address === "different" || relation === "token") return null;
+    if (address === "different") {
+      const rightNames = new Set(nameVariants(right.nome));
+      const sharedName = nameVariants(left.nome).find((name) => rightNames.has(name));
+      if (sharedName && hasDistinctiveNameWord(nameCore(sharedName))
+        && compatibleCategory(left, right) && sharedSubcategory(left, right)) {
+        return { reason: "Mesmo nome e ramo, mas enderecos diferentes; confira mudanca ou filial", score: 1 };
+      }
+      return null;
+    }
+    if (address === "different-unit" || relation === "token") return null;
     return { reason: relation === "exact" ? "Mesmo nome; endereco ausente em um dos cadastros" : "Nome-base e categoria coincidem; endereco ausente em um dos cadastros", score: 1 };
   }
 
