@@ -1,6 +1,7 @@
 const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig, sheetRange } = require("./google");
 const { normalizeCommerceCategoryFields } = require("./taxonomy");
 const { readTaxonomy } = require("./taxonomy-store");
+const { findMatch } = require("../../commerce-duplicates");
 
 const COMMERCE_EXTRA_HEADERS = [
   "foto_url",
@@ -357,19 +358,6 @@ async function appendCommerce(payload) {
   return item;
 }
 
-function isSameCommerce(left = {}, right = {}) {
-  const leftName = normalizeSearchText(left.nome);
-  const rightName = normalizeSearchText(right.nome);
-  if (!leftName || leftName !== rightName) return false;
-  const leftAddress = normalizeSearchText(left.endereco);
-  const rightAddress = normalizeSearchText(right.endereco);
-  if (leftAddress && rightAddress) return leftAddress === rightAddress;
-  const leftContact = normalizeSearchText(left.whatsapp || left.telefone);
-  const rightContact = normalizeSearchText(right.whatsapp || right.telefone);
-  if (leftContact && rightContact) return leftContact === rightContact;
-  return true;
-}
-
 async function appendCommerces(payloads = [], options = {}) {
   if (!Array.isArray(payloads) || payloads.length < 1 || payloads.length > 25) {
     const error = new Error("O lote deve ter entre 1 e 25 comercios.");
@@ -405,7 +393,7 @@ async function appendCommerces(payloads = [], options = {}) {
   const accepted = [];
   for (const data of dataRows) {
     const duplicate = options.deduplicate !== false && (
-      current.rows.some((row) => isSameCommerce(row, data)) || accepted.some((item) => isSameCommerce(item, data))
+      findMatch(current.rows, data) || findMatch(accepted, data)
     );
     if (duplicate) duplicates.push(data.nome);
     else accepted.push(data);

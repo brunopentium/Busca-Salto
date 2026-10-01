@@ -120,6 +120,8 @@
     .taxonomy-panel{display:grid;gap:16px;border:1px solid var(--borda);border-radius:8px;background:#fff;padding:16px}.taxonomy-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.taxonomy-head h2{margin:0;color:var(--azul);font-size:1rem}.taxonomy-forms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.taxonomy-form{border:1px solid var(--borda);border-radius:8px;padding:14px;background:#fbfcfe;align-content:start}.taxonomy-form h3{margin:0;color:var(--azul);font-size:.95rem}.taxonomy-form label,.taxonomy-search{font-size:.82rem}.taxonomy-form button{margin-top:2px}.taxonomy-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}.taxonomy-group{border:1px solid var(--borda);border-radius:8px;overflow:hidden}.taxonomy-group summary{display:flex;justify-content:space-between;gap:10px;padding:12px;cursor:pointer;color:var(--azul);font-weight:800;background:#f6f8fb}.taxonomy-group summary span:last-child{color:var(--muted);font-size:.8rem;white-space:nowrap}.taxonomy-group ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px;margin:0;padding:12px 12px 12px 28px;color:var(--texto);font-size:.85rem}.taxonomy-group li{overflow-wrap:anywhere}
     @media(max-width:1180px){.record-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid,.sponsor-grid,.metric-grid{grid-template-columns:1fr}.editor,.sponsor-panel{max-width:none}}
     @media(max-width:760px){body{padding:10px}main{padding:14px}.topbar{align-items:stretch}.toolbar{width:100%;justify-content:stretch}.toolbar button{flex:1;min-width:0}.admin-tabs{display:grid;grid-template-columns:1fr 1fr}.admin-tab{min-width:0}.filters{grid-template-columns:1fr;padding:10px}.record-card{grid-template-columns:1fr}.record-actions{width:100%;flex-direction:row}.record-actions button{flex:1}.record-meta{grid-template-columns:1fr}.editor-grid,.sponsor-form,.image-slots{grid-template-columns:1fr}.media-actions,.image-slot .media-actions{grid-template-columns:1fr 1fr}.media-actions label{grid-column:1/-1}.editor-actions{grid-template-columns:1fr}.sponsor-panel{padding:10px}.subcategory-list{grid-template-columns:1fr}.subcategory-tools{grid-template-columns:1fr}.subcategory-tools button{width:100%}.adjust-grid{grid-template-columns:1fr}.adjust-box{padding:10px}.adjust-actions{grid-template-columns:1fr}.metric-cards{grid-template-columns:1fr}.metric-svg{min-height:220px}.import-actions{align-items:stretch;flex-direction:column}.import-actions button,.import-actions label{width:100%}.taxonomy-forms,.taxonomy-list{grid-template-columns:1fr}.taxonomy-group ul{grid-template-columns:1fr}}
+    .import-match{display:grid;gap:5px}.import-match ul{margin:2px 0 0;padding-left:18px}.import-match li{margin:3px 0;overflow-wrap:anywhere}.import-match details{margin-top:3px}.import-match summary{cursor:pointer}.import-match button{width:auto;padding:7px 10px;font-size:.8rem;justify-self:start}
+    @media(max-width:760px){.import-table{min-width:0}.import-table thead{display:none}.import-table tbody{display:grid;gap:10px;padding:10px}.import-table tr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;padding:12px;border:1px solid var(--borda);border-radius:8px}.import-table td{display:block;min-width:0;padding:0;border:0;overflow-wrap:anywhere}.import-table td:first-child{grid-column:1;grid-row:1}.import-table td:nth-child(2){grid-column:2;grid-row:1}.import-table td:nth-child(n+3){grid-column:1/-1}.import-table td:nth-child(n+3)::before{content:attr(data-label);display:block;margin-bottom:3px;color:var(--muted);font-size:.72rem;font-weight:800;text-transform:uppercase}}
   </style>
 </head>
 <body>
@@ -481,6 +483,7 @@
     </div>
   </div>
 
+  <script src="/commerce-duplicates.js"></script>
   <script>
     const loginBox = document.getElementById("loginBox");
     const adminPanel = document.getElementById("adminPanel");
@@ -754,7 +757,10 @@
       if (nextTab === "identidade") loadSiteConfig();
       if (nextTab === "comercios") loadComercios();
       if (nextTab === "categorias") loadTaxonomia();
-      if (nextTab === "importacao") commerceImportStatus.textContent = "Carregue o CSV revisado para iniciar a conferencia.";
+      if (nextTab === "importacao") {
+        if (commerceImportRows.length) renderCommerceImportPreview();
+        else commerceImportStatus.textContent = "Carregue o CSV revisado para iniciar a conferencia.";
+      }
       if (nextTab === "patrocinadores") loadSponsors();
       if (nextTab === "indicadores") loadMetrics();
     }
@@ -1300,20 +1306,10 @@
           selected: false,
           errors: [],
           duplicate: false,
+          duplicateMatch: null,
         };
         return item;
       });
-    }
-
-    function sameImportedCommerce(left, right) {
-      const leftName = normalizeImportHeader(left.nome);
-      if (!leftName || leftName !== normalizeImportHeader(right.nome)) return false;
-      const leftAddress = normalizeImportHeader(left.endereco);
-      const rightAddress = normalizeImportHeader(right.endereco);
-      if (leftAddress && rightAddress) return leftAddress === rightAddress;
-      const leftContact = normalizeImportHeader(left.whatsapp || left.telefone);
-      const rightContact = normalizeImportHeader(right.whatsapp || right.telefone);
-      return leftContact && rightContact ? leftContact === rightContact : true;
     }
 
     async function readAllCommercesForImport() {
@@ -1336,13 +1332,20 @@
       commitCommerceImport.disabled = selectedCount < 1 || selectedCount > 25;
       commitCommerceImport.textContent = selectedCount > 25 ? "Selecione ate 25 comercios" : `Importar selecionados (${selectedCount})`;
       commerceImportPreview.hidden = !commerceImportRows.length;
-      commerceImportPreview.innerHTML = `<table class="import-table"><thead><tr><th>Incluir</th><th>Comercio / categoria</th><th>Bairro / endereco</th><th>Contato</th><th>Fonte / conferencia</th><th>Revisao</th></tr></thead><tbody>${commerceImportRows.map((item, index) => {
+      commerceImportPreview.innerHTML = `<table class="import-table"><thead><tr><th>Incluir</th><th>Comercio / categoria</th><th>Revisao</th><th>Bairro / endereco</th><th>Contato</th><th>Fonte / conferencia</th></tr></thead><tbody>${commerceImportRows.map((item, index) => {
         const issue = item.errors.join("; ") || (item.duplicate ? "Possivel duplicado" : "Pronto");
         const checked = item.selected && !item.errors.length && !item.duplicate ? " checked" : "";
         const disabled = item.errors.length || item.duplicate ? " disabled" : "";
         const rowClass = item.errors.length ? "import-row-error" : item.duplicate ? "import-row-duplicate" : "";
         const source = item.fonte_url ? escapeHtml(item.fonte_url) : "Sem fonte";
-        return `<tr class="${rowClass}"><td><input type="checkbox" data-import-index="${index}"${checked}${disabled} aria-label="Incluir ${escapeOption(item.nome)}" /></td><td><strong>${escapeHtml(item.nome || "Sem nome")}</strong><br>${escapeHtml(item.categoria || "Sem categoria")}${item.subcategoria ? `<br><span class="muted">${escapeHtml(item.subcategoria)}</span>` : ""}</td><td>${escapeHtml(item.bairro || "Sem bairro")}<br>${escapeHtml(item.endereco || "Sem endereco")}</td><td>${escapeHtml(item.whatsapp || item.telefone || "Sem contato")}</td><td>${source}<br>${escapeHtml(item.data_verificacao)}</td><td>${escapeHtml(issue)}</td></tr>`;
+        let review = escapeHtml(issue);
+        if (item.duplicateMatch) {
+          const { candidate, reason, origin } = item.duplicateMatch;
+          const { additions, differences } = CommerceDuplicates.fieldComparison(candidate, item);
+          const identity = origin === "existing" ? `Cadastro #${escapeHtml(candidate.id)}: ${escapeHtml(candidate.nome)}` : `Linha ${candidate.rowNumber} deste CSV: ${escapeHtml(candidate.nome)}`;
+          review = `<div class="import-match"><strong>${identity}</strong><span>${escapeHtml(reason)}</span>${item.errors.length ? `<span>${escapeHtml(item.errors.join("; "))}</span>` : ""}${additions.length ? `<div><strong>Dados para complementar:</strong><ul>${additions.map(({ label, value }) => `<li>${escapeHtml(label)}: ${escapeHtml(value)}</li>`).join("")}</ul></div>` : "<span>Sem campos vazios para complementar.</span>"}${differences.length ? `<details><summary>${differences.length} campo(s) diferente(s) para conferir</summary><ul>${differences.map(({ label, current, value }) => `<li>${escapeHtml(label)}: atual ${escapeHtml(current)}; CSV ${escapeHtml(value)}</li>`).join("")}</ul></details>` : ""}${origin === "existing" ? `<button class="secondary" type="button" data-import-edit="${index}">Editar cadastro #${escapeHtml(candidate.id)}</button>` : ""}</div>`;
+        }
+        return `<tr class="${rowClass}"><td><input type="checkbox" data-import-index="${index}"${checked}${disabled} aria-label="Incluir ${escapeOption(item.nome)}" /></td><td><strong>${escapeHtml(item.nome || "Sem nome")}</strong><br>${escapeHtml(item.categoria || "Sem categoria")}${item.subcategoria ? `<br><span class="muted">${escapeHtml(item.subcategoria)}</span>` : ""}</td><td data-label="Revisao">${review}</td><td data-label="Bairro / endereco">${escapeHtml(item.bairro || "Sem bairro")}<br>${escapeHtml(item.endereco || "Sem endereco")}</td><td data-label="Contato">${escapeHtml(item.whatsapp || item.telefone || "Sem contato")}</td><td data-label="Fonte / conferencia">${source}<br>${escapeHtml(item.data_verificacao)}</td></tr>`;
       }).join("")}</tbody></table>`;
       const invalidCount = commerceImportRows.filter((item) => item.errors.length).length;
       const duplicateCount = commerceImportRows.filter((item) => item.duplicate).length;
@@ -1375,7 +1378,10 @@
           } catch (error) { item.errors.push("Fonte URL http/https obrigatoria"); }
           if (item.status && !["ativo", "inativo"].includes(normalizeImportHeader(item.status))) item.errors.push("Status deve ser ativo ou inativo");
           if (item.plano && !["gratuito", "parceiro", "destaque", "top"].includes(normalizeImportHeader(item.plano))) item.errors.push("Plano invalido");
-          item.duplicate = existing.some((candidate) => sameImportedCommerce(candidate, item)) || commerceImportRows.slice(0, item.rowNumber - 2).some((candidate) => sameImportedCommerce(candidate, item));
+          const existingMatch = CommerceDuplicates.findMatch(existing, item);
+          const batchMatch = existingMatch ? null : CommerceDuplicates.findMatch(commerceImportRows.slice(0, item.rowNumber - 2), item);
+          item.duplicateMatch = existingMatch ? { ...existingMatch, origin: "existing" } : batchMatch ? { ...batchMatch, origin: "batch" } : null;
+          item.duplicate = Boolean(item.duplicateMatch);
           item.selected = !item.errors.length && !item.duplicate;
         }
         renderCommerceImportPreview();
@@ -1388,7 +1394,7 @@
     }
 
     async function submitCommerceImport() {
-      const items = commerceImportRows.filter((item) => item.selected && !item.errors.length && !item.duplicate).map(({ rowNumber, selected, errors, duplicate, ...item }) => item);
+      const items = commerceImportRows.filter((item) => item.selected && !item.errors.length && !item.duplicate).map(({ rowNumber, selected, errors, duplicate, duplicateMatch, ...item }) => item);
       if (!items.length || items.length > 25) return;
       commitCommerceImport.disabled = true;
       commerceImportStatus.textContent = "Gravando o lote na planilha...";
@@ -2138,6 +2144,15 @@
       const item = commerceImportRows[Number(checkbox.dataset.importIndex)];
       if (item) item.selected = checkbox.checked;
       renderCommerceImportPreview();
+    });
+    commerceImportPreview.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-import-edit]");
+      if (!button) return;
+      const match = commerceImportRows[Number(button.dataset.importEdit)]?.duplicateMatch;
+      if (!match || match.origin !== "existing") return;
+      switchAdminTab("comercios");
+      setFormItem(match.candidate);
+      commerceForm.scrollIntoView({ block: "start", behavior: "smooth" });
     });
     commitCommerceImport.addEventListener("click", submitCommerceImport);
     document.querySelectorAll("[data-admin-tab]").forEach((button) => {
