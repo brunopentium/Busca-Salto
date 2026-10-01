@@ -16,6 +16,7 @@ const csvItems = [
   { nome: "Mineiro Delivery Salto", subcategoria: "Marmitaria", bairro: "Vila Nova", endereco: "Rua Quintino Bocaiuva, 344, Vila Nova, Salto/SP", site: "https://deliverydireto.com.br/mineirodelivery/salto" },
   { nome: "O Sorvetão Salto das Nações", subcategoria: "Sorveteria", bairro: "Jardim das Nações", endereco: "Rua Floriano Peixoto, 3087, Jardim das Nações, Salto/SP", site: "https://deliverydireto.com.br/osorvetao/salto-das-nacoes" },
   { nome: "Norba's Pizzaria", subcategoria: "Pizzaria", bairro: "Vila Teixeira", endereco: "Rua Barão do Rio Branco, 1217, Vila Teixeira, Salto/SP", site: "https://www.norbas.com.br/delivery/11758/menu" },
+  { nome: "Jump Burger", subcategoria: "Hamburgueria", bairro: "Jardim Delegá", endereco: "", fonte_url: "https://jump-burger.compraqui.app/" },
 ];
 const csv = [columns.join(","), ...csvItems.map((item) => columns.map((key) => {
   const value = String(item[key] || (key === "categoria" ? "Alimentação" : key === "fonte_url" ? item.site : ""));
@@ -27,6 +28,7 @@ const existing = [
   { id: "515", nome: "Mineiro Delivery", subcategoria: "Restaurante", bairro: "Vila Nova", endereco: "Rua Quintino Bocaiúva, 344, Vila Nova, Salto/SP" },
   { id: "556", nome: "O Sorvetão", subcategoria: "Sorveteria", bairro: "Jardim das Nações", endereco: "Rua Floriano Peixoto, 3087, Jardim das Nações, Salto/SP" },
   { id: "652", nome: "Norba’s Salto", subcategoria: "Pizzaria", bairro: "", endereco: "" },
+  { id: "523", nome: "Jump Burguer", subcategoria: "Hamburgueria", bairro: "Jardim São João", endereco: "Av. José Maria Marques de Oliveira, 1026, Jardim São João, Salto/SP" },
 ].map((item) => ({ ...item, categoria: "Alimentação" }));
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -51,7 +53,7 @@ async function main() {
     res.setHeader("Content-Type", "application/json");
     if (pathname === "/api/admin/session") res.end(JSON.stringify({ ok: true }));
     else if (pathname === "/api/admin/comercios") res.end(JSON.stringify({ ok: true, items: existing, total: existing.length }));
-    else if (pathname === "/api/admin/taxonomia") res.end(JSON.stringify({ ok: true, taxonomia: [{ categoria: "Alimentação", subcategorias: ["Esfiharia", "Pizzaria", "Marmitaria", "Sorveteria"] }] }));
+    else if (pathname === "/api/admin/taxonomia") res.end(JSON.stringify({ ok: true, taxonomia: [{ categoria: "Alimentação", subcategorias: ["Esfiharia", "Pizzaria", "Marmitaria", "Sorveteria", "Hamburgueria"] }] }));
     else { res.statusCode = 404; res.end(JSON.stringify({ ok: false })); }
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -100,17 +102,17 @@ async function main() {
     await until(() => evaluate("document.querySelector('#adminPanel').classList.contains('active')"));
     await evaluate(`(async () => {
       switchAdminTab('importacao');
-      taxonomia = [{ categoria: 'Alimentação', subcategorias: ['Esfiharia', 'Pizzaria', 'Marmitaria', 'Sorveteria'] }];
+      taxonomia = [{ categoria: 'Alimentação', subcategorias: ['Esfiharia', 'Pizzaria', 'Marmitaria', 'Sorveteria', 'Hamburgueria'] }];
       await prepareCommerceImport(new File([${JSON.stringify(csv)}], 'lote.csv', { type: 'text/csv' }));
     })()`);
     const preview = await evaluate("document.querySelector('#commerceImportPreview').innerText");
     assert.match(preview, /Cadastro #539: Santa Esfiha Salto/);
-    for (const id of ["508", "515", "556", "652"]) assert.match(preview, new RegExp(`Cadastro #${id}:`));
+    for (const id of ["508", "515", "556", "652", "523"]) assert.match(preview, new RegExp(`Cadastro #${id}:`));
     assert.match(preview, /Dados para complementar:/);
     assert.match(preview, /Telefone: \(11\) 2840-0053/);
     assert.match(preview, /Site: https:\/\/santaesfihasalto/);
     assert.equal(await evaluate("document.querySelector('[data-import-index]').disabled"), true);
-    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 5);
+    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 6);
     assert.equal(await evaluate("document.querySelector('#commitCommerceImport').disabled"), true);
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 850, deviceScaleFactor: 1, mobile: true });
     assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), true);

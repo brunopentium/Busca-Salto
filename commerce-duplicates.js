@@ -49,6 +49,15 @@
     return withoutLocation.split(" ").filter((word) => !GENERIC_NAME_WORDS.has(word)).join(" ");
   }
 
+  function burgerSpelling(value) {
+    return value.replace(/\bburguers\b/g, "burgers").replace(/\bburguer\b/g, "burger");
+  }
+
+  function hasDistinctiveNameWord(value) {
+    return value.split(" ").some((word) => word.length >= 4
+      && !GENERIC_NAME_WORDS.has(word) && word !== "burger" && word !== "burgers");
+  }
+
   function relatedName(left, right) {
     const leftNames = nameVariants(left);
     const rightNames = nameVariants(right);
@@ -56,6 +65,9 @@
     const leftCores = leftNames.map(nameCore).filter((name) => name.length >= 5);
     const rightCores = rightNames.map(nameCore).filter((name) => name.length >= 5);
     if (leftCores.some((name) => rightCores.includes(name))) return "brand";
+    const rightSpellings = new Set(rightCores.map(burgerSpelling));
+    const spellingMatch = leftCores.map(burgerSpelling).find((name) => rightSpellings.has(name));
+    if (spellingMatch) return hasDistinctiveNameWord(spellingMatch) ? "brand" : "token";
     const tokens = new Set(leftCores.flatMap((name) => name.split(" ")).filter((word) => word.length >= 6));
     return rightCores.some((name) => name.split(" ").some((word) => tokens.has(word))) ? "token" : null;
   }

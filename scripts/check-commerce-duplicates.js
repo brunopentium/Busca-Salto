@@ -95,6 +95,11 @@ const cases = [
     existingAddress: "Rua Rui Barbosa, 1043, Salto/SP; Rua Rio Branco, 1304, Salto/SP",
     incomingAddress: "Rua Rui Barbosa, 1043, Salto/SP", subcategoria: "Padaria", score: 3,
   },
+  {
+    id: "523", existingName: "Jump Burguer", incomingName: "Jump Burger",
+    existingAddress: "Av. José Maria Marques de Oliveira, 1026, Jardim São João, Salto/SP",
+    incomingAddress: "", subcategoria: "Hamburgueria", score: 1,
+  },
 ];
 
 for (const item of cases) {
@@ -121,5 +126,37 @@ assert.equal(sameCommerce(
   { nome: "Padaria Aliança", endereco: "Rua Rui Barbosa, 1043, Salto/SP", categoria: "Alimentação" },
   { nome: "Padaria Aliança Salto", endereco: "Rua Rio Branco, 1304, Salto/SP", categoria: "Alimentação" },
 ), null);
+assert.equal(sameCommerce(
+  { nome: "Jump Burguer", categoria: "Alimentação", endereco: "Rua A, 1" },
+  { nome: "Jump Burger", categoria: "Alimentação", endereco: "Rua B, 2" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Jump Burguer", categoria: "Alimentação", endereco: "" },
+  { nome: "Outro Burger", categoria: "Alimentação", endereco: "" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Jump Burguer", categoria: "Alimentação", endereco: "" },
+  { nome: "Jump Pizzaria", categoria: "Alimentação", endereco: "" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Jump Burguer", categoria: "Alimentação", endereco: "" },
+  { nome: "Jump Burger", categoria: "Automotivo", endereco: "" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Jump Burguer Salto", categoria: "Alimentação", endereco: "" },
+  { nome: "Jump Burger", categoria: "Alimentação", endereco: "" },
+)?.score, 1);
+assert.equal(sameCommerce(
+  { nome: "Jump Burguers", categoria: "Alimentação", endereco: "" },
+  { nome: "Jump Burgers", categoria: "Alimentação", endereco: "" },
+)?.score, 1);
+assert.equal(sameCommerce(
+  { nome: "Burguer", categoria: "Alimentação", endereco: "" },
+  { nome: "Burger", categoria: "Alimentação", endereco: "" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Burguer", categoria: "Alimentação", endereco: "Rua A, 1" },
+  { nome: "Burger", categoria: "Alimentação", endereco: "Rua A, 1" },
+)?.score, 2);
 
 console.log("Commerce duplicate matching and enrichment checks passed.");
