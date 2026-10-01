@@ -18,6 +18,7 @@ const csvItems = [
   { nome: "Norba's Pizzaria", subcategoria: "Pizzaria", bairro: "Vila Teixeira", endereco: "Rua Barão do Rio Branco, 1217, Vila Teixeira, Salto/SP", site: "https://www.norbas.com.br/delivery/11758/menu" },
   { nome: "Jump Burger", subcategoria: "Hamburgueria", bairro: "Jardim Delegá", endereco: "", fonte_url: "https://jump-burger.compraqui.app/" },
   { nome: "Kadri Pizzaria", subcategoria: "Pizzaria", bairro: "Centro", endereco: "Rua Monsenhor Couto, 494, Centro, Salto/SP", fonte_url: "https://play.google.com/store/apps/details?id=com.wabiz.delivery.kadripizzaria" },
+  { nome: "Restaurante Colorau", subcategoria: "Restaurante", bairro: "", endereco: "", fonte_url: "https://www.ifood.com.br/delivery/salto-sp/restaurante-colorau-centro/630a5f2e-cadc-40e3-82fa-f284950fd6a8" },
 ];
 const csv = [columns.join(","), ...csvItems.map((item) => columns.map((key) => {
   const value = String(item[key] || (key === "categoria" ? "Alimentação" : key === "fonte_url" ? item.site : ""));
@@ -31,6 +32,7 @@ const existing = [
   { id: "652", nome: "Norba’s Salto", subcategoria: "Pizzaria", bairro: "", endereco: "" },
   { id: "523", nome: "Jump Burguer", subcategoria: "Hamburgueria", bairro: "Jardim São João", endereco: "Av. José Maria Marques de Oliveira, 1026, Jardim São João, Salto/SP" },
   { id: "645", nome: "Kadri Pizzaria", subcategoria: "Pizzaria", bairro: "Parque Bela Vista", endereco: "Rua John Kennedy, 537, Parque Bela Vista, Salto/SP" },
+  { id: "584", nome: "Restaurante Colorau Comida Caseira", subcategoria: "Restaurante", bairro: "Centro", endereco: "Rua Quintino Bocaiúva, 440, Centro, Salto/SP" },
 ].map((item) => ({ ...item, categoria: "Alimentação" }));
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -55,7 +57,7 @@ async function main() {
     res.setHeader("Content-Type", "application/json");
     if (pathname === "/api/admin/session") res.end(JSON.stringify({ ok: true }));
     else if (pathname === "/api/admin/comercios") res.end(JSON.stringify({ ok: true, items: existing, total: existing.length }));
-    else if (pathname === "/api/admin/taxonomia") res.end(JSON.stringify({ ok: true, taxonomia: [{ categoria: "Alimentação", subcategorias: ["Esfiharia", "Pizzaria", "Marmitaria", "Sorveteria", "Hamburgueria"] }] }));
+    else if (pathname === "/api/admin/taxonomia") res.end(JSON.stringify({ ok: true, taxonomia: [{ categoria: "Alimentação", subcategorias: ["Esfiharia", "Pizzaria", "Marmitaria", "Sorveteria", "Hamburgueria", "Restaurante"] }] }));
     else { res.statusCode = 404; res.end(JSON.stringify({ ok: false })); }
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -104,12 +106,12 @@ async function main() {
     await until(() => evaluate("document.querySelector('#adminPanel').classList.contains('active')"));
     await evaluate(`(async () => {
       switchAdminTab('importacao');
-      taxonomia = [{ categoria: 'Alimentação', subcategorias: ['Esfiharia', 'Pizzaria', 'Marmitaria', 'Sorveteria', 'Hamburgueria'] }];
+      taxonomia = [{ categoria: 'Alimentação', subcategorias: ['Esfiharia', 'Pizzaria', 'Marmitaria', 'Sorveteria', 'Hamburgueria', 'Restaurante'] }];
       await prepareCommerceImport(new File([${JSON.stringify(csv)}], 'lote.csv', { type: 'text/csv' }));
     })()`);
     const preview = await evaluate("document.querySelector('#commerceImportPreview').innerText");
     assert.match(preview, /Cadastro #539: Santa Esfiha Salto/);
-    for (const id of ["508", "515", "556", "652", "523", "645"]) assert.match(preview, new RegExp(`Cadastro #${id}:`));
+    for (const id of ["508", "515", "556", "652", "523", "645", "584"]) assert.match(preview, new RegExp(`Cadastro #${id}:`));
     assert.match(preview, /Mesmo nome e ramo, mas enderecos diferentes/);
     const kadriReview = await evaluate("Array.from(document.querySelectorAll('#commerceImportPreview tr')).find((row) => row.textContent.includes('Kadri Pizzaria'))?.textContent");
     assert.match(kadriReview, /Rua John Kennedy, 537/);
@@ -118,7 +120,7 @@ async function main() {
     assert.match(preview, /Telefone: \(11\) 2840-0053/);
     assert.match(preview, /Site: https:\/\/santaesfihasalto/);
     assert.equal(await evaluate("document.querySelector('[data-import-index]').disabled"), true);
-    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 7);
+    assert.equal(await evaluate("document.querySelectorAll('[data-import-index]:disabled').length"), 8);
     assert.equal(await evaluate("document.querySelector('#commitCommerceImport').disabled"), true);
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 850, deviceScaleFactor: 1, mobile: true });
     assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), true);

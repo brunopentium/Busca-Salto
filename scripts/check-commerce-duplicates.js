@@ -105,6 +105,11 @@ const cases = [
     existingAddress: "Rua John Kennedy, 537, Parque Bela Vista, Salto/SP",
     incomingAddress: "Rua Monsenhor Couto, 494, Centro, Salto/SP", subcategoria: "Pizzaria", score: 1,
   },
+  {
+    id: "584", existingName: "Restaurante Colorau Comida Caseira", incomingName: "Restaurante Colorau",
+    existingAddress: "Rua Quintino Bocaiúva, 440, Centro, Salto/SP",
+    incomingAddress: "", subcategoria: "Restaurante", score: 1,
+  },
 ];
 
 for (const item of cases) {
@@ -178,6 +183,18 @@ assert.equal(sameCommerce(
 assert.equal(sameCommerce(
   { nome: "Pizzaria", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua A, 1" },
   { nome: "Pizzaria", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "Rua B, 2" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "Rua A, 1" },
+  { nome: "Restaurante Colorau", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "Rua B, 2" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
+  { nome: "Colorau Pizzaria", categoria: "Alimentação", subcategoria: "Pizzaria", endereco: "" },
+), null);
+assert.equal(sameCommerce(
+  { nome: "Restaurante Colorau Comida Caseira", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
+  { nome: "Restaurante Sabor Caseiro", categoria: "Alimentação", subcategoria: "Restaurante", endereco: "" },
 ), null);
 
 console.log("Commerce duplicate matching and enrichment checks passed.");

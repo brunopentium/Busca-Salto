@@ -46,7 +46,8 @@
 
   function nameCore(value = "") {
     const withoutLocation = normalizedName(value).replace(/\s+salto(?:\s+(?:das|dos|do|da|de)\s+[a-z0-9 ]+)?$/, "");
-    return withoutLocation.split(" ").filter((word) => !GENERIC_NAME_WORDS.has(word)).join(" ");
+    const withoutDescriptor = withoutLocation.replace(/\bcomida caseira\b/g, "").replace(/\s+/g, " ").trim();
+    return withoutDescriptor.split(" ").filter((word) => !GENERIC_NAME_WORDS.has(word)).join(" ");
   }
 
   function burgerSpelling(value) {
@@ -147,6 +148,7 @@
       return null;
     }
     if (address === "different-unit" || relation === "token") return null;
+    if (relation === "brand" && left.subcategoria && right.subcategoria && !sharedSubcategory(left, right)) return null;
     return { reason: relation === "exact" ? "Mesmo nome; endereco ausente em um dos cadastros" : "Nome-base e categoria coincidem; endereco ausente em um dos cadastros", score: 1 };
   }
 
