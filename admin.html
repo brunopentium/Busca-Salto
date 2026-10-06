@@ -198,6 +198,79 @@
       .commerce-editor .editor-actions{justify-self:stretch;grid-template-columns:1fr 1fr}
     }
     @media(max-width:360px){.commerce-list-panel .record-card{grid-template-columns:minmax(0,1fr)}.commerce-list-panel .record-actions{width:100%;flex-direction:row}.commerce-list-panel .record-actions button{flex:1}}
+    .sponsor-view{border:0;padding:0;background:transparent}
+    .sponsor-view .sponsor-grid{grid-template-columns:minmax(320px,.75fr) minmax(0,1.25fr);gap:14px}
+    .sponsor-pane-switch{display:none}
+    .sponsor-list-panel{max-height:calc(100vh - 198px);min-height:320px;overflow:auto;overscroll-behavior:contain}
+    .sponsor-list-panel .section-head{position:sticky;top:0;z-index:2;background:#fff;min-height:58px}
+    .sponsor-list-panel .section-head h2{margin:0;font-size:1.05rem}
+    .sponsor-count{color:var(--muted);font-size:.78rem;font-weight:600}
+    .sponsor-new-button{width:auto;white-space:nowrap;background:#137a72;font-size:.84rem;padding:9px 12px}
+    .sponsor-list-panel .record-card{grid-template-columns:minmax(0,1fr) 72px;gap:10px;padding:12px 14px}
+    .sponsor-list-panel .record-card:hover{background:#f8fafc}
+    .sponsor-list-panel .record-card.is-selected{background:#eef8f6;box-shadow:inset 3px 0 #137a72}
+    .sponsor-list-panel .record-card:has([data-sponsor-id]:focus-visible){outline:2px solid #5fa3e6;outline-offset:-2px}
+    .sponsor-list-panel .record-id{order:2;margin-left:auto;background:transparent;padding:1px 0;font-weight:600}
+    .sponsor-list-panel .record-title strong{font-size:.93rem}
+    .sponsor-list-panel .record-meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;margin-top:8px}
+    .sponsor-list-panel .meta-block:nth-child(n+3){grid-column:1/-1}
+    .sponsor-list-panel .meta-label{margin-bottom:2px;font-size:.64rem}
+    .sponsor-list-panel .meta-value{font-size:.81rem;line-height:1.3}
+    .sponsor-state{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef1f5;color:#526275;font-size:.76rem;font-weight:700}
+    .sponsor-state.is-active{background:#e0f4ee;color:#0b6b56}
+    .sponsor-list-panel .record-actions{width:72px;gap:6px}
+    .sponsor-list-panel .row-action{padding:7px 5px;font-size:.76rem}
+    .sponsor-editor{min-width:0;border:1px solid var(--borda);border-radius:8px;background:#fff;overflow:hidden}
+    .sponsor-editor-head{display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 16px;border-bottom:1px solid var(--borda)}
+    .sponsor-editor-head h2{margin:0;flex:1;font-size:1.05rem;overflow-wrap:anywhere}
+    .sponsor-editor-head button{width:auto;padding:9px 16px;font-size:.84rem}
+    .sponsor-back-button{display:none}
+    .sponsor-editor-status{margin:0;padding:10px 16px;border-bottom:1px solid var(--borda);background:#f4f8fc;overflow-wrap:anywhere}
+    .sponsor-editor-status.error{background:#fff1f0}
+    .sponsor-editor-status.ok{background:#edf8f4}
+    .sponsor-editor-status[hidden]{display:none}
+    .sponsor-view .sponsor-form{display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:0 16px 16px}
+    .sponsor-fields,.sponsor-media-section{min-width:0;margin:0;padding:16px 0 18px;border-bottom:1px solid #e4eaf1}
+    .sponsor-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+    .sponsor-fields h3,.sponsor-media-section h3{grid-column:1/-1;margin:0;color:var(--azul);font-size:.9rem;font-weight:800}
+    .sponsor-media-section h3{margin-bottom:12px}
+    .sponsor-media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .sponsor-view .media-group{grid-column:auto;min-width:0;margin:0;padding:12px;border-color:#dce5ed;background:#fff}
+    .sponsor-view .media-group legend{font-size:.83rem}
+    .sponsor-view .media-actions{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+    .sponsor-view .media-actions label{grid-column:1/-1;min-width:0}
+    .sponsor-view .media-actions button{width:100%;min-width:0;padding:9px 4px}
+    .sponsor-view input[type="file"]{font-size:.75rem}
+    .sponsor-view input[type="file"]::file-selector-button{padding:6px 8px;margin-right:7px;font:inherit}
+    .sponsor-view .editor-actions{grid-column:1;margin-top:16px;justify-self:end;grid-template-columns:repeat(2,minmax(110px,auto))}
+    .sponsor-view .editor-actions button{min-width:120px}
+    @media(max-width:1180px){
+      .sponsor-view .sponsor-grid{grid-template-columns:minmax(0,1fr);gap:0}
+      .sponsor-pane-switch{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--borda);border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden}
+      .sponsor-pane-button{border-radius:0;background:#f0f4f8;color:var(--azul);font-size:.86rem;padding:11px}
+      .sponsor-pane-button.active{background:var(--azul);color:#fff}
+      .sponsor-list-panel,.sponsor-editor{border-radius:0 0 8px 8px}
+      .sponsor-list-panel{max-height:none;min-height:0}
+      .sponsor-grid[data-sponsor-pane="list"] .sponsor-editor,.sponsor-grid[data-sponsor-pane="editor"] .sponsor-list-panel{display:none}
+      .sponsor-back-button{display:inline-block}
+    }
+    @media(max-width:800px){.sponsor-media-grid{grid-template-columns:minmax(0,1fr)}}
+    @media(max-width:600px){
+      .sponsor-list-panel .record-card{grid-template-columns:minmax(0,1fr);gap:8px;padding:12px}
+      .sponsor-list-panel .record-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .sponsor-list-panel .record-actions{width:100%;flex-direction:row;justify-content:flex-start}
+      .sponsor-list-panel .record-actions button{flex:0 1 112px;min-height:36px}
+      .sponsor-list-panel .record-id{order:0;margin-left:0}
+      .sponsor-editor-head{flex-wrap:wrap;padding:10px 12px}
+      .sponsor-editor-head h2{min-width:0;order:-1;flex-basis:100%}
+      .sponsor-editor-head button{flex:1}
+      .sponsor-view .sponsor-form{padding:0 12px 14px}
+      .sponsor-fields{grid-template-columns:minmax(0,1fr);gap:10px}
+      .sponsor-fields .span-2{grid-column:1}
+      .sponsor-view .media-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .sponsor-view .editor-actions{justify-self:stretch;grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:400px){.sponsor-list-panel .section-head{flex-wrap:wrap}.sponsor-new-button{width:100%}}
   </style>
 </head>
 <body>
@@ -488,50 +561,71 @@
           </form>
         </aside>
       </div>
-      <section class="sponsor-panel management-section" data-admin-view="patrocinadores" hidden>
-        <h2>Patrocinadores</h2>
-        <div class="sponsor-grid">
-          <form id="sponsorForm" class="sponsor-form">
-            <input id="sponsorId" name="id" type="hidden" />
-            <label>Nome<input name="nome" required maxlength="120" /></label>
-            <p class="field-hint">Cada patrocinador deve ser um cadastro separado. Use Novo para cadastrar outro patrocinador.</p>
-            <fieldset class="media-group">
-              <legend>Banner desktop</legend>
-              <label>Banner desktop URL<input id="sponsorImageUrl" name="imagem_url" maxlength="500" placeholder="Obrigatorio para aparecer no site" /></label>
-              <div class="media-actions">
-                <label>Arquivo desktop<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="imagem_url" /></label>
-                <button class="secondary" type="button" data-upload-kind="patrocinador" data-upload-target="imagem_url">Enviar</button>
-                <button class="secondary" type="button" data-adjust-target="imagem_url">Enquadrar</button>
-                <button class="secondary danger" type="button" data-clear-target="imagem_url">Remover</button>
-              </div>
-            </fieldset>
-            <fieldset class="media-group">
-              <legend>Banner smartphone</legend>
-              <label>Banner smartphone URL<input name="imagem_mobile_1" maxlength="500" placeholder="Se vazio, usa o desktop" /></label>
-              <div class="media-actions">
-                <label>Arquivo smartphone<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="imagem_mobile_1" /></label>
-                <button class="secondary" type="button" data-upload-kind="patrocinador" data-upload-target="imagem_mobile_1">Enviar</button>
-                <button class="secondary" type="button" data-adjust-target="imagem_mobile_1">Enquadrar</button>
-                <button class="secondary danger" type="button" data-clear-target="imagem_mobile_1">Remover</button>
-              </div>
-            </fieldset>
-            <label>Link<input name="link_url" maxlength="500" /></label>
-            <label>Status<select name="status"><option value="ativo">ativo</option><option value="inativo">inativo</option></select></label>
-            <label>Ordem<input name="ordem" inputmode="numeric" maxlength="5" value="0" /></label>
-            <label>Inicio<input name="inicio" type="date" /></label>
-            <label>Fim<input name="fim" type="date" /></label>
-            <label>Texto alternativo<input name="texto_alt" maxlength="160" /></label>
-            <div class="editor-actions">
-              <button id="saveSponsorButton" type="submit">Salvar</button>
-              <button id="newSponsorButton" class="secondary" type="button">Novo</button>
-            </div>
-          </form>
-          <section class="list-panel">
+      <section class="sponsor-panel sponsor-view management-section" data-admin-view="patrocinadores" hidden>
+        <div id="sponsorLayout" class="sponsor-grid" data-sponsor-pane="list">
+          <div class="sponsor-pane-switch" aria-label="Visualizar patrocinadores">
+            <button id="sponsorListPaneButton" class="sponsor-pane-button active" type="button" aria-pressed="true">Lista</button>
+            <button id="sponsorEditorPaneButton" class="sponsor-pane-button" type="button" aria-pressed="false">Cadastro</button>
+          </div>
+          <section class="list-panel sponsor-list-panel" aria-label="Lista de patrocinadores">
             <div class="section-head">
-              <h2>Lista de patrocinadores</h2>
-              <span class="muted">Banners ativos e inativos</span>
+              <h2>Patrocinadores <span id="sponsorCount" class="sponsor-count"></span></h2>
+              <button id="newSponsorTopButton" class="sponsor-new-button" type="button">Novo patrocinador</button>
             </div>
             <div id="sponsorRows" class="record-list"></div>
+          </section>
+          <section class="sponsor-editor" aria-label="Cadastro de patrocinador">
+            <div class="sponsor-editor-head">
+              <button id="returnToSponsorList" class="secondary sponsor-back-button" type="button" aria-label="Voltar a lista">Voltar</button>
+              <h2 id="sponsorEditorTitle">Novo patrocinador</h2>
+              <button id="saveSponsorTopButton" type="submit" form="sponsorForm">Salvar</button>
+            </div>
+            <div id="sponsorEditorStatus" class="status sponsor-editor-status" role="status" aria-live="polite" hidden></div>
+            <form id="sponsorForm" class="sponsor-form">
+              <input id="sponsorId" name="id" type="hidden" />
+              <section class="sponsor-fields" aria-labelledby="sponsorDetailsHeading">
+                <h3 id="sponsorDetailsHeading">Dados do patrocinador</h3>
+                <label class="span-2">Nome<input name="nome" required maxlength="120" /></label>
+                <label class="span-2">Link de destino<input name="link_url" maxlength="500" /></label>
+                <label class="span-2">Texto alternativo<input name="texto_alt" maxlength="160" /></label>
+              </section>
+              <section class="sponsor-media-section" aria-labelledby="sponsorMediaHeading">
+                <h3 id="sponsorMediaHeading">Banners</h3>
+                <div class="sponsor-media-grid">
+                  <fieldset class="media-group">
+                    <legend>Desktop</legend>
+                    <label>Banner desktop URL<input id="sponsorImageUrl" name="imagem_url" maxlength="500" placeholder="Obrigatorio para aparecer no site" /></label>
+                    <div class="media-actions">
+                      <label>Arquivo desktop<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="imagem_url" /></label>
+                      <button class="secondary" type="button" data-upload-kind="patrocinador" data-upload-target="imagem_url">Enviar</button>
+                      <button class="secondary" type="button" data-adjust-target="imagem_url">Enquadrar</button>
+                      <button class="secondary danger" type="button" data-clear-target="imagem_url">Remover</button>
+                    </div>
+                  </fieldset>
+                  <fieldset class="media-group">
+                    <legend>Smartphone</legend>
+                    <label>Banner smartphone URL<input name="imagem_mobile_1" maxlength="500" placeholder="Se vazio, usa o desktop" /></label>
+                    <div class="media-actions">
+                      <label>Arquivo smartphone<input type="file" accept="image/jpeg,image/png,image/webp" data-file-target="imagem_mobile_1" /></label>
+                      <button class="secondary" type="button" data-upload-kind="patrocinador" data-upload-target="imagem_mobile_1">Enviar</button>
+                      <button class="secondary" type="button" data-adjust-target="imagem_mobile_1">Enquadrar</button>
+                      <button class="secondary danger" type="button" data-clear-target="imagem_mobile_1">Remover</button>
+                    </div>
+                  </fieldset>
+                </div>
+              </section>
+              <section class="sponsor-fields" aria-labelledby="sponsorDisplayHeading">
+                <h3 id="sponsorDisplayHeading">Exibicao</h3>
+                <label>Status<select name="status"><option value="ativo">ativo</option><option value="inativo">inativo</option></select></label>
+                <label>Ordem<input name="ordem" inputmode="numeric" maxlength="5" value="0" /></label>
+                <label>Inicio<input name="inicio" type="date" /></label>
+                <label>Fim<input name="fim" type="date" /></label>
+              </section>
+              <div class="editor-actions">
+                <button id="saveSponsorButton" type="submit">Salvar</button>
+                <button id="newSponsorButton" class="secondary" type="button">Novo</button>
+              </div>
+            </form>
           </section>
         </div>
       </section>
@@ -619,6 +713,15 @@
     const saveSiteConfigButton = document.getElementById("saveSiteConfigButton");
     const reloadSiteConfigButton = document.getElementById("reloadSiteConfigButton");
     const sponsorForm = document.getElementById("sponsorForm");
+    const sponsorLayout = document.getElementById("sponsorLayout");
+    const sponsorListPaneButton = document.getElementById("sponsorListPaneButton");
+    const sponsorEditorPaneButton = document.getElementById("sponsorEditorPaneButton");
+    const returnToSponsorList = document.getElementById("returnToSponsorList");
+    const newSponsorTopButton = document.getElementById("newSponsorTopButton");
+    const saveSponsorTopButton = document.getElementById("saveSponsorTopButton");
+    const sponsorEditorTitle = document.getElementById("sponsorEditorTitle");
+    const sponsorEditorStatus = document.getElementById("sponsorEditorStatus");
+    const sponsorCount = document.getElementById("sponsorCount");
     const sponsorId = document.getElementById("sponsorId");
     const sponsorRows = document.getElementById("sponsorRows");
     const sponsorImageUrl = document.getElementById("sponsorImageUrl");
@@ -640,9 +743,11 @@
     const loginStatus = document.getElementById("loginStatus");
     const panelStatus = document.getElementById("panelStatus");
     new MutationObserver(() => {
-      commerceEditorStatus.textContent = panelStatus.textContent;
-      commerceEditorStatus.className = `${panelStatus.className} commerce-editor-status`;
-      commerceEditorStatus.hidden = !panelStatus.textContent.trim();
+      for (const [target, className] of [[commerceEditorStatus, "commerce-editor-status"], [sponsorEditorStatus, "sponsor-editor-status"]]) {
+        target.textContent = panelStatus.textContent;
+        target.className = `${panelStatus.className} ${className}`;
+        target.hidden = !panelStatus.textContent.trim();
+      }
     }).observe(panelStatus, { childList: true, characterData: true, attributes: true });
     const imageAdjustModal = document.getElementById("imageAdjustModal");
     const adjustTitle = document.getElementById("adjustTitle");
@@ -884,6 +989,17 @@
       filtersForm.classList.toggle("commerce-editor-active", pane === "editor");
       if (window.matchMedia("(max-width: 1050px)").matches) {
         commerceLayout.scrollIntoView({ block: "start" });
+      }
+    }
+
+    function setSponsorPane(pane) {
+      sponsorLayout.dataset.sponsorPane = pane;
+      sponsorListPaneButton.classList.toggle("active", pane === "list");
+      sponsorEditorPaneButton.classList.toggle("active", pane === "editor");
+      sponsorListPaneButton.setAttribute("aria-pressed", pane === "list" ? "true" : "false");
+      sponsorEditorPaneButton.setAttribute("aria-pressed", pane === "editor" ? "true" : "false");
+      if (window.matchMedia("(max-width: 1180px)").matches) {
+        sponsorLayout.scrollIntoView({ block: "start" });
       }
     }
 
@@ -1587,12 +1703,16 @@
     }
 
     function setSponsorItem(item = {}) {
+      sponsorEditorTitle.textContent = item.id ? `Editar ${item.id}` : "Novo patrocinador";
       sponsorForm.reset();
       sponsorId.value = item.id || "";
       for (const field of sponsorForm.elements) {
         if (!field.name || field.name === "id") continue;
         field.value = item[field.name] || (field.name === "status" ? "ativo" : field.name === "ordem" ? "0" : "");
       }
+      sponsorRows.querySelectorAll(".record-card").forEach((row) => {
+        row.classList.toggle("is-selected", Boolean(item.id) && row.dataset.id === String(item.id));
+      });
     }
 
     function setSiteConfig(config = {}) {
@@ -1616,20 +1736,21 @@
     }
 
     function renderSponsors(data) {
+      sponsorCount.textContent = `(${data.items.length})`;
       if (!data.items.length) {
         sponsorRows.innerHTML = '<div class="empty">Nenhum patrocinador cadastrado.</div>';
         window.currentSponsors = [];
         return;
       }
       sponsorRows.innerHTML = data.items.map((item) => `
-        <article class="record-card">
+        <article class="record-card${String(item.id) === String(sponsorId.value) ? " is-selected" : ""}" data-id="${escapeHtml(item.id)}">
           <div class="record-main">
             <div class="record-title">
               <span class="record-id">ID ${escapeHtml(item.id)}</span>
               <strong>${escapeHtml(item.nome || "Sem nome")}</strong>
             </div>
             <div class="record-meta">
-              <div class="meta-block"><span class="meta-label">Status</span><div class="meta-value">${escapeHtml(item.status)}</div></div>
+              <div class="meta-block"><span class="meta-label">Status</span><div class="meta-value"><span class="sponsor-state${item.status === "ativo" ? " is-active" : ""}">${escapeHtml(item.status)}</span></div></div>
               <div class="meta-block"><span class="meta-label">Ordem</span><div class="meta-value">${escapeHtml(item.ordem)}</div></div>
               <div class="meta-block"><span class="meta-label">Periodo</span><div class="meta-value">${escapeHtml(item.inicio || "Sem inicio")} ${item.fim ? `ate ${escapeHtml(item.fim)}` : ""}</div></div>
               <div class="meta-block"><span class="meta-label">Link</span><div class="meta-value">${escapeHtml(item.link_url || "Sem link")}</div></div>
@@ -1651,7 +1772,8 @@
         if (!response.ok || !data.ok) throw new Error(data.error || "Falha ao carregar patrocinadores.");
         renderSponsors(data);
       } catch (error) {
-        sponsorRows.innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(error.message || "Erro ao carregar.")}</td></tr>`;
+        sponsorRows.innerHTML = `<div class="empty">${escapeHtml(error.message || "Erro ao carregar.")}</div>`;
+        sponsorCount.textContent = "";
       }
     }
 
@@ -1711,7 +1833,17 @@
     commerceListPaneButton.addEventListener("click", () => setCommercePane("list"));
     commerceEditorPaneButton.addEventListener("click", () => setCommercePane("editor"));
     returnToCommerceList.addEventListener("click", () => setCommercePane("list"));
-    newSponsorButton.addEventListener("click", () => setSponsorItem());
+    newSponsorButton.addEventListener("click", () => {
+      setSponsorItem();
+      sponsorLayout.querySelector(".sponsor-editor-head").scrollIntoView({ block: "start" });
+    });
+    newSponsorTopButton.addEventListener("click", () => {
+      setSponsorItem();
+      setSponsorPane("editor");
+    });
+    sponsorListPaneButton.addEventListener("click", () => setSponsorPane("list"));
+    sponsorEditorPaneButton.addEventListener("click", () => setSponsorPane("editor"));
+    returnToSponsorList.addEventListener("click", () => setSponsorPane("list"));
 
     sponsorRows.addEventListener("click", (event) => {
       const deleteButton = event.target.closest("[data-delete-sponsor-id]");
@@ -1722,7 +1854,10 @@
       const button = event.target.closest("[data-sponsor-id]");
       if (!button) return;
       const item = (window.currentSponsors || []).find((entry) => String(entry.id) === String(button.dataset.sponsorId));
-      if (item) setSponsorItem(item);
+      if (item) {
+        setSponsorItem(item);
+        setSponsorPane("editor");
+      }
     });
 
     async function deleteCommerce(id) {
@@ -2226,6 +2361,7 @@
     sponsorForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       saveSponsorButton.disabled = true;
+      saveSponsorTopButton.disabled = true;
       panelStatus.textContent = "Salvando patrocinador...";
       panelStatus.className = "status";
       const data = Object.fromEntries(new FormData(sponsorForm).entries());
@@ -2248,6 +2384,7 @@
         panelStatus.className = "status error";
       } finally {
         saveSponsorButton.disabled = false;
+        saveSponsorTopButton.disabled = false;
       }
     });
 
