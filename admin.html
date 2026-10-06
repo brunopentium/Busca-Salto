@@ -122,6 +122,82 @@
     @media(max-width:760px){body{padding:10px}main{padding:14px}.topbar{align-items:stretch}.toolbar{width:100%;justify-content:stretch}.toolbar button{flex:1;min-width:0}.admin-tabs{display:grid;grid-template-columns:1fr 1fr}.admin-tab{min-width:0}.filters{grid-template-columns:1fr;padding:10px}.record-card{grid-template-columns:1fr}.record-actions{width:100%;flex-direction:row}.record-actions button{flex:1}.record-meta{grid-template-columns:1fr}.editor-grid,.sponsor-form,.image-slots{grid-template-columns:1fr}.media-actions,.image-slot .media-actions{grid-template-columns:1fr 1fr}.media-actions label{grid-column:1/-1}.editor-actions{grid-template-columns:1fr}.sponsor-panel{padding:10px}.subcategory-list{grid-template-columns:1fr}.subcategory-tools{grid-template-columns:1fr}.subcategory-tools button{width:100%}.adjust-grid{grid-template-columns:1fr}.adjust-box{padding:10px}.adjust-actions{grid-template-columns:1fr}.metric-cards{grid-template-columns:1fr}.metric-svg{min-height:220px}.import-actions{align-items:stretch;flex-direction:column}.import-actions button,.import-actions label{width:100%}.taxonomy-forms,.taxonomy-list{grid-template-columns:1fr}.taxonomy-group ul{grid-template-columns:1fr}}
     .import-match{display:grid;gap:5px}.import-match ul{margin:2px 0 0;padding-left:18px}.import-match li{margin:3px 0;overflow-wrap:anywhere}.import-match details{margin-top:3px}.import-match summary{cursor:pointer}.import-match button{width:auto;padding:7px 10px;font-size:.8rem;justify-self:start}
     @media(max-width:760px){.import-table{min-width:0}.import-table thead{display:none}.import-table tbody{display:grid;gap:10px;padding:10px}.import-table tr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;padding:12px;border:1px solid var(--borda);border-radius:8px}.import-table td{display:block;min-width:0;padding:0;border:0;overflow-wrap:anywhere}.import-table td:first-child{grid-column:1;grid-row:1}.import-table td:nth-child(2){grid-column:2;grid-row:1}.import-table td:nth-child(n+3){grid-column:1/-1}.import-table td:nth-child(n+3)::before{content:attr(data-label);display:block;margin-bottom:3px;color:var(--muted);font-size:.72rem;font-weight:800;text-transform:uppercase}}
+    .commerce-filters{margin:0;padding:12px;background:#f7f9fc;align-items:end}
+    .commerce-filters input,.commerce-filters select,.commerce-filters button{min-height:44px}
+    .commerce-layout{grid-template-columns:minmax(310px,.8fr) minmax(0,1.2fr);gap:14px;align-items:start}
+    .commerce-pane-switch{display:none}
+    .commerce-list-panel{max-height:calc(100vh - 198px);min-height:320px;overflow:auto;overscroll-behavior:contain}
+    .commerce-list-panel .section-head{position:sticky;top:0;z-index:2;background:#fff;min-height:58px}
+    .commerce-list-panel .section-head h2{font-size:1.05rem}
+    .commerce-new-button{width:auto;white-space:nowrap;font-size:.84rem;padding:9px 12px;background:#137a72}
+    .commerce-list-panel .record-card{grid-template-columns:minmax(0,1fr) 72px;gap:10px;padding:12px 14px}
+    .commerce-list-panel .record-card:hover{background:#f8fafc}
+    .commerce-list-panel .record-card.is-selected{background:#eef8f6;box-shadow:inset 3px 0 #137a72}
+    .commerce-list-panel .record-card:has([data-edit-id]:focus-visible){outline:2px solid #5fa3e6;outline-offset:-2px}
+    .commerce-list-panel .record-id{order:2;margin-left:auto;background:transparent;padding:1px 0;font-weight:600}
+    .commerce-list-panel .record-title strong{font-size:.93rem}
+    .commerce-list-panel .record-meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;margin-top:8px}
+    .commerce-list-panel .meta-label{margin-bottom:2px;font-size:.64rem}
+    .commerce-list-panel .meta-value{font-size:.81rem;line-height:1.3}
+    .commerce-list-panel .record-address{margin-top:6px;font-size:.79rem;line-height:1.3}
+    .commerce-list-panel .record-actions{width:72px;gap:6px}
+    .commerce-list-panel .row-action{padding:7px 5px;font-size:.76rem}
+    .commerce-editor{padding:0;background:#fff;overflow:hidden}
+    .commerce-editor-head{display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 16px;border-bottom:1px solid var(--borda);background:#fff}
+    .commerce-editor-head h2{margin:0;flex:1;font-size:1.05rem;overflow-wrap:anywhere}
+    .commerce-editor-head button{width:auto;padding:9px 16px;font-size:.84rem}
+    .commerce-back-button{display:none}
+    .commerce-editor-status{margin:0;padding:10px 16px;border-bottom:1px solid var(--borda);background:#f4f8fc;overflow-wrap:anywhere}
+    .commerce-editor-status.error{background:#fff1f0}
+    .commerce-editor-status.ok{background:#edf8f4}
+    .commerce-editor-status[hidden]{display:none}
+    .commerce-editor .editor-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:0 16px 16px}
+    .commerce-fieldset{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;min-width:0;margin:0;padding:16px 0 18px;border:0;border-bottom:1px solid #e4eaf1}
+    .commerce-fieldset h3{grid-column:1/-1;margin:0;color:var(--azul);font-size:.9rem;font-weight:800}
+    .commerce-editor .image-slots legend{padding:0 0 12px;color:var(--azul);font-size:.9rem;font-weight:800}
+    .commerce-fieldset label{min-width:0;align-content:start}
+    .commerce-fieldset .span-2{grid-column:1/-1}
+    .commerce-fieldset .subcategory-picker{margin-top:2px}
+    .commerce-editor .image-slots{grid-column:1;margin:0;padding:16px 0 18px;border:0;border-bottom:1px solid #e4eaf1;background:#fff}
+    .commerce-editor .image-slot{background:#fff;border-color:#dce5ed}
+    .commerce-editor .image-slot .media-actions{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+    .commerce-editor .image-slot .media-actions label{grid-column:1/-1;min-width:0}
+    .commerce-editor .image-slot .media-actions button{width:100%;min-width:0;padding:9px 4px}
+    .commerce-editor input[type="file"]{font-size:.75rem}
+    .commerce-editor input[type="file"]::file-selector-button{padding:6px 8px;margin-right:7px;font:inherit}
+    .commerce-editor .editor-actions{grid-column:1;margin-top:16px;justify-self:end;grid-template-columns:repeat(2,minmax(110px,auto))}
+    .commerce-editor .editor-actions button{min-width:120px}
+    @media(max-width:1050px){
+      .commerce-filters{grid-template-columns:minmax(0,1fr) repeat(2,minmax(130px,160px)) 100px}
+      .commerce-layout{grid-template-columns:minmax(0,1fr);gap:0}
+      .commerce-pane-switch{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--borda);border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden}
+      .commerce-pane-button{border-radius:0;background:#f0f4f8;color:var(--azul);font-size:.86rem;padding:11px}
+      .commerce-pane-button.active{background:var(--azul);color:#fff}
+      .commerce-list-panel,.commerce-editor{border-radius:0 0 8px 8px}
+      .commerce-list-panel{max-height:none;min-height:0}
+      .commerce-layout[data-commerce-pane="list"] .commerce-editor,.commerce-layout[data-commerce-pane="editor"] .commerce-list-panel{display:none}
+      .commerce-back-button{display:inline-block}
+      .commerce-filters.commerce-editor-active{display:none}
+    }
+    @media(max-width:600px){
+      .commerce-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .commerce-filters #adminSearch,.commerce-filters #filterButton{grid-column:1/-1}
+      .commerce-list-panel .record-card{grid-template-columns:minmax(0,1fr);gap:8px;padding:12px}
+      .commerce-list-panel .record-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .commerce-list-panel .record-actions{width:100%;flex-direction:row;justify-content:flex-start}
+      .commerce-list-panel .record-actions button{flex:0 1 112px;min-height:36px}
+      .commerce-list-panel .record-id{order:0;margin-left:0}
+      .commerce-editor-head{flex-wrap:wrap;padding:10px 12px}
+      .commerce-editor-head h2{min-width:0;order:-1;flex-basis:100%}
+      .commerce-editor-head button{flex:1}
+      .commerce-editor .editor-grid{padding:0 12px 14px}
+      .commerce-fieldset{grid-template-columns:minmax(0,1fr);gap:10px}
+      .commerce-fieldset .span-2{grid-column:1}
+      .commerce-editor .image-slots{grid-template-columns:minmax(0,1fr)}
+      .commerce-editor .image-slot .media-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .commerce-editor .editor-actions{justify-self:stretch;grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:360px){.commerce-list-panel .record-card{grid-template-columns:minmax(0,1fr)}.commerce-list-panel .record-actions{width:100%;flex-direction:row}.commerce-list-panel .record-actions button{flex:1}}
   </style>
 </head>
 <body>
@@ -238,7 +314,7 @@
         <div id="commerceImportStatus" class="status" role="status">Use fonte_url para registrar o site ou perfil consultado e data_verificacao para anotar quando os dados foram conferidos.</div>
         <div id="commerceImportPreview" class="import-table-wrap" hidden></div>
       </section>
-      <form id="filtersForm" class="filters management-section" data-admin-view="comercios" hidden>
+      <form id="filtersForm" class="filters commerce-filters management-section" data-admin-view="comercios" role="search" hidden>
         <input id="adminSearch" name="busca" type="search" placeholder="Buscar comercio, bairro, contato..." autocomplete="off" />
         <select id="statusFilter" name="status">
           <option value="">Status</option>
@@ -304,18 +380,29 @@
           </div>
         </form>
       </section>
-      <div class="content-grid management-section" data-admin-view="comercios" hidden>
-        <section class="list-panel">
+      <div id="commerceLayout" class="content-grid commerce-layout management-section" data-admin-view="comercios" data-commerce-pane="list" hidden>
+        <div class="commerce-pane-switch" aria-label="Visualizar comercios">
+          <button id="commerceListPaneButton" class="commerce-pane-button active" type="button" aria-pressed="true">Lista</button>
+          <button id="commerceEditorPaneButton" class="commerce-pane-button" type="button" aria-pressed="false">Cadastro</button>
+        </div>
+        <section class="list-panel commerce-list-panel" aria-label="Lista de comercios">
           <div class="section-head">
             <h2>Comercios</h2>
-            <span class="muted">Edite ou exclua sem rolagem lateral</span>
+            <button id="newCommerceTopButton" class="commerce-new-button" type="button">Novo comercio</button>
           </div>
           <div id="commerceRows" class="record-list"></div>
         </section>
-        <aside class="editor">
-          <h2 id="editorTitle">Novo comercio</h2>
+        <aside class="editor commerce-editor" aria-label="Cadastro de comercio">
+          <div class="commerce-editor-head">
+            <button id="returnToCommerceList" class="secondary commerce-back-button" type="button" aria-label="Voltar a lista">Voltar</button>
+            <h2 id="editorTitle">Novo comercio</h2>
+            <button id="saveCommerceTopButton" type="submit" form="commerceForm">Salvar</button>
+          </div>
+          <div id="commerceEditorStatus" class="status commerce-editor-status" role="status" aria-live="polite" hidden></div>
           <form id="commerceForm" class="editor-grid">
             <input id="commerceId" name="id" type="hidden" />
+            <section class="commerce-fieldset" aria-labelledby="commerceIdentityHeading">
+              <h3 id="commerceIdentityHeading">Identificacao</h3>
             <label>Nome<input name="nome" required maxlength="140" /></label>
             <label>Categoria<select id="categoriaSelect" name="categoria"><option value="">Categoria</option></select></label>
             <div class="span-2">
@@ -330,18 +417,27 @@
                 <div id="subcategoryList" class="subcategory-list"></div>
               </div>
             </div>
+            </section>
+            <section class="commerce-fieldset" aria-labelledby="commerceContactHeading">
+              <h3 id="commerceContactHeading">Localizacao e contato</h3>
             <label>Bairro<input name="bairro" maxlength="80" /></label>
             <label>Endereco<input name="endereco" maxlength="180" /></label>
             <label>WhatsApp<input name="whatsapp" maxlength="40" /></label>
             <label>Telefone<input name="telefone" maxlength="40" /></label>
             <label>Instagram<input name="instagram" maxlength="120" /></label>
             <label>Facebook<input name="facebook" maxlength="180" /></label>
-            <label>Site<input name="site" maxlength="180" /></label>
+            <label class="span-2">Site<input name="site" maxlength="180" /></label>
+            </section>
+            <section class="commerce-fieldset" aria-labelledby="commerceDisplayHeading">
+              <h3 id="commerceDisplayHeading">Exibicao no site</h3>
             <label>Plano<select name="plano"><option value="gratuito">gratuito</option><option value="parceiro">parceiro</option><option value="destaque">destaque</option><option value="top">top</option></select></label>
             <label>Status<select name="status"><option value="ativo">ativo</option><option value="inativo">inativo</option></select></label>
             <label>Prioridade<select name="prioridade"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
             <label>Verificado<select name="verificado"><option value="não">não</option><option value="sim">sim</option></select></label>
-            <label>Oferta<input name="oferta" maxlength="180" /></label>
+            <label class="span-2">Oferta<input name="oferta" maxlength="180" /></label>
+            <label>Descricao<textarea name="descricao" maxlength="700"></textarea></label>
+            <label>Palavras-chave<textarea name="palavras_chave" maxlength="400"></textarea></label>
+            </section>
             <fieldset class="media-group image-slots">
               <legend>Fotos do comercio</legend>
               <div class="image-slot">
@@ -385,8 +481,6 @@
                 </div>
               </div>
             </fieldset>
-            <label>Descricao<textarea name="descricao" maxlength="700"></textarea></label>
-            <label>Palavras-chave<textarea name="palavras_chave" maxlength="400"></textarea></label>
             <div class="editor-actions">
               <button id="saveCommerceButton" type="submit">Salvar</button>
               <button id="newCommerceButton" class="secondary" type="button">Novo</button>
@@ -495,6 +589,13 @@
     const refreshButton = document.getElementById("refreshButton");
     const filtersForm = document.getElementById("filtersForm");
     const commerceRows = document.getElementById("commerceRows");
+    const commerceLayout = document.getElementById("commerceLayout");
+    const commerceListPaneButton = document.getElementById("commerceListPaneButton");
+    const commerceEditorPaneButton = document.getElementById("commerceEditorPaneButton");
+    const returnToCommerceList = document.getElementById("returnToCommerceList");
+    const newCommerceTopButton = document.getElementById("newCommerceTopButton");
+    const saveCommerceTopButton = document.getElementById("saveCommerceTopButton");
+    const commerceEditorStatus = document.getElementById("commerceEditorStatus");
     const commerceForm = document.getElementById("commerceForm");
     const commerceId = document.getElementById("commerceId");
     const categoriaSelect = document.getElementById("categoriaSelect");
@@ -538,6 +639,11 @@
     const commitCommerceImport = document.getElementById("commitCommerceImport");
     const loginStatus = document.getElementById("loginStatus");
     const panelStatus = document.getElementById("panelStatus");
+    new MutationObserver(() => {
+      commerceEditorStatus.textContent = panelStatus.textContent;
+      commerceEditorStatus.className = `${panelStatus.className} commerce-editor-status`;
+      commerceEditorStatus.hidden = !panelStatus.textContent.trim();
+    }).observe(panelStatus, { childList: true, characterData: true, attributes: true });
     const imageAdjustModal = document.getElementById("imageAdjustModal");
     const adjustTitle = document.getElementById("adjustTitle");
     const adjustHint = document.getElementById("adjustHint");
@@ -767,6 +873,18 @@
       }
       if (nextTab === "patrocinadores") loadSponsors();
       if (nextTab === "indicadores") loadMetrics();
+    }
+
+    function setCommercePane(pane) {
+      commerceLayout.dataset.commercePane = pane;
+      commerceListPaneButton.classList.toggle("active", pane === "list");
+      commerceEditorPaneButton.classList.toggle("active", pane === "editor");
+      commerceListPaneButton.setAttribute("aria-pressed", pane === "list" ? "true" : "false");
+      commerceEditorPaneButton.setAttribute("aria-pressed", pane === "editor" ? "true" : "false");
+      filtersForm.classList.toggle("commerce-editor-active", pane === "editor");
+      if (window.matchMedia("(max-width: 1050px)").matches) {
+        commerceLayout.scrollIntoView({ block: "start" });
+      }
     }
 
     function adjustmentMetaForTarget(target) {
@@ -1199,7 +1317,9 @@
         item.instagram && `IG ${item.instagram}`,
         item.site && "Site",
       ].filter(Boolean);
-      return contacts.length ? contacts.join("<br>") : '<span class="muted">Sem contato</span>';
+      return contacts.length
+        ? `${escapeHtml(contacts[0])}${contacts.length > 1 ? ` <span class="muted">+${contacts.length - 1}</span>` : ""}`
+        : '<span class="muted">Sem contato</span>';
     }
 
     function renderComercios(data) {
@@ -1210,7 +1330,7 @@
         return;
       }
       commerceRows.innerHTML = data.items.map((item) => `
-        <article class="record-card" data-id="${escapeHtml(item.id)}">
+        <article class="record-card${String(item.id) === String(commerceId.value) ? " is-selected" : ""}" data-id="${escapeHtml(item.id)}">
           <div class="record-main">
             <div class="record-title">
               <span class="record-id">ID ${escapeHtml(item.id)} · Linha ${escapeHtml(item.rowNumber)}</span>
@@ -1461,6 +1581,9 @@
       subcategorySearchTerm = "";
       subcategorySearch.value = "";
       setSelectedSubcategories(item.subcategoria || "");
+      commerceRows.querySelectorAll(".record-card").forEach((row) => {
+        row.classList.toggle("is-selected", Boolean(item.id) && row.dataset.id === String(item.id));
+      });
     }
 
     function setSponsorItem(item = {}) {
@@ -1571,10 +1694,23 @@
       const button = event.target.closest("[data-edit-id]");
       if (!button) return;
       const item = (window.currentComercios || []).find((entry) => String(entry.id) === String(button.dataset.editId));
-      if (item) setFormItem(item);
+      if (item) {
+        setFormItem(item);
+        setCommercePane("editor");
+      }
     });
 
-    newCommerceButton.addEventListener("click", () => setFormItem());
+    newCommerceButton.addEventListener("click", () => {
+      setFormItem();
+      commerceLayout.querySelector(".commerce-editor-head").scrollIntoView({ block: "start" });
+    });
+    newCommerceTopButton.addEventListener("click", () => {
+      setFormItem();
+      setCommercePane("editor");
+    });
+    commerceListPaneButton.addEventListener("click", () => setCommercePane("list"));
+    commerceEditorPaneButton.addEventListener("click", () => setCommercePane("editor"));
+    returnToCommerceList.addEventListener("click", () => setCommercePane("list"));
     newSponsorButton.addEventListener("click", () => setSponsorItem());
 
     sponsorRows.addEventListener("click", (event) => {
@@ -1634,6 +1770,7 @@
     commerceForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       saveCommerceButton.disabled = true;
+      saveCommerceTopButton.disabled = true;
       panelStatus.textContent = "Salvando...";
       panelStatus.className = "status";
       const data = Object.fromEntries(new FormData(commerceForm).entries());
@@ -1658,6 +1795,7 @@
         panelStatus.className = "status error";
       } finally {
         saveCommerceButton.disabled = false;
+        saveCommerceTopButton.disabled = false;
       }
     });
 
@@ -2166,7 +2304,10 @@
       if (!match || match.origin !== "existing") return;
       switchAdminTab("comercios");
       setFormItem(match.candidate);
-      commerceForm.scrollIntoView({ block: "start", behavior: "smooth" });
+      setCommercePane("editor");
+      if (!window.matchMedia("(max-width: 1050px)").matches) {
+        commerceForm.scrollIntoView({ block: "start", behavior: "smooth" });
+      }
     });
     commitCommerceImport.addEventListener("click", submitCommerceImport);
     document.querySelectorAll("[data-admin-tab]").forEach((button) => {

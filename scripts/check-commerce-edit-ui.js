@@ -105,10 +105,11 @@ async function main() {
     await evaluate(`(() => {
       const form = document.querySelector('#commerceForm');
       form.elements.telefone.value = '+55 (11) 4028-0000';
-      form.requestSubmit();
+      document.querySelector('#saveCommerceTopButton').click();
     })()`);
     await until(() => submitted?.telefone === "+55 (11) 4028-0000");
     await until(() => evaluate("document.querySelector('#panelStatus').textContent.includes('Cadastro salvo na planilha.')"));
+    assert.equal(await evaluate("document.querySelector('#commerceEditorStatus').textContent"), "Cadastro salvo na planilha.");
     assert.equal(await evaluate("document.querySelector('#commerceForm [name=\"telefone\"]').value"), item.telefone);
     await evaluate("document.querySelector('#newCommerceButton').click(); document.querySelector('[data-edit-id=\"108\"]').click()");
     assert.equal(await evaluate("document.querySelector('#commerceForm [name=\"telefone\"]').value"), item.telefone);
