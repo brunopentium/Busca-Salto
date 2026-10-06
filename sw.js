@@ -1,9 +1,10 @@
-const CACHE_NAME = "busca-salto-pwa-v11";
+const CACHE_NAME = "busca-salto-pwa-v12";
 
 const STATIC_ASSETS = [
   "/",
   "/index.html",
   "/comerciantes.html",
+  "/metrics-client.js",
   "/manifest.json",
   "/robots.txt",
   "/sitemap.xml",

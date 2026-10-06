@@ -9,6 +9,7 @@ const RATE_LIMIT_MAX_REQUESTS = 30;
 const RATE_LIMIT_MAX_KEYS = 2000;
 const rateLimitStore = new Map();
 const ALLOWED_EVENTS = new Set([
+  "visit",
   "page_view",
   "search",
   "contact_click",
@@ -290,6 +291,8 @@ function aggregateMetrics(rows = [], options = {}) {
   const sponsors = new Map();
   let todayCount = 0;
   let sevenDaysCount = 0;
+  let visits = 0;
+  let pageViews = 0;
 
   const metrics = rows
     .map(parseMetricRow)
@@ -303,7 +306,11 @@ function aggregateMetrics(rows = [], options = {}) {
   for (const row of metrics) {
     const date = new Date(row.timestamp);
     increment(events, row.event);
-    if (row.path) increment(pages, row.path);
+    if (row.event === "visit") visits += 1;
+    if (row.event === "page_view") {
+      pageViews += 1;
+      if (row.path) increment(pages, row.path);
+    }
     if (dateKeyFor(date) === today) todayCount += 1;
     if (date >= since7) sevenDaysCount += 1;
     const timelineKey = granularity === "hour" ? hourKeyFor(date) : dateKeyFor(date);
@@ -332,6 +339,8 @@ function aggregateMetrics(rows = [], options = {}) {
     generatedAt: now.toISOString(),
     summary: {
       total: metrics.length,
+      visits,
+      pageViews,
       today: todayCount,
       sevenDays: sevenDaysCount,
       events: topItems(events, 12),

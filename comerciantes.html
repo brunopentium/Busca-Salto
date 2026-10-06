@@ -139,6 +139,7 @@
     <div class="container">Busca Salto - planos para o comércio local. <a href="quem-somos.html">Quem somos</a></div>
   </footer>
 
+  <script src="/metrics-client.js"></script>
   <script>
     const statusEl=document.getElementById("checkoutStatus");
     const BUSCA_SALTO_WHATSAPP="5511953116573";
@@ -152,7 +153,7 @@
     const cadastroGratuitoUrl=isMobile
       ?`whatsapp://send?phone=${BUSCA_SALTO_WHATSAPP}&text=${cadastroGratuitoMensagem}`
       :`https://web.whatsapp.com/send?phone=${BUSCA_SALTO_WHATSAPP}&text=${cadastroGratuitoMensagem}`;
-    function track(event,payload={}){try{navigator.sendBeacon?.("/api/metricas",new Blob([JSON.stringify({event,payload,path:location.pathname})],{type:"application/json"}))}catch(error){}}
+    function track(event,payload={}){window.BuscaSaltoMetrics.track(event,payload)}
     function startCheckout(plan){
       if(plan==="gratuito"){
         statusEl.textContent="Abrindo atendimento pelo WhatsApp...";
@@ -173,6 +174,7 @@
       location.href=`whatsapp://send?phone=${BUSCA_SALTO_WHATSAPP}&text=${encodeURIComponent(`Olá, quero solicitar o plano ${escolhido.nome} do Busca Salto por ${escolhido.preco} por mês.`)}`;
     }
     document.querySelectorAll("[data-plan]").forEach(button=>button.addEventListener("click",()=>startCheckout(button.dataset.plan)));
+    track("page_view",{page:"comerciantes"});
   </script>
 </body>
 </html>

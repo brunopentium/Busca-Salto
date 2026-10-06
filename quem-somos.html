@@ -84,8 +84,9 @@
   <footer class="footer">
     <div class="container">Busca Salto - tecnologia simples para fortalecer conexoes locais.</div>
   </footer>
+  <script src="/metrics-client.js"></script>
   <script>
-    try{navigator.sendBeacon?.("/api/metricas",new Blob([JSON.stringify({event:"page_view",payload:{page:"quem_somos"},path:location.pathname})],{type:"application/json"}))}catch(error){}
+    window.BuscaSaltoMetrics.track("page_view",{page:"quem_somos"});
   </script>
 </body>
 </html>

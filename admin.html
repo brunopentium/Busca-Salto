@@ -182,7 +182,8 @@
           </label>
           <label>Grafico
             <select id="metricsEvent">
-              <option value="page_view" selected>Visitas</option>
+              <option value="visit">Visitas estimadas</option>
+              <option value="page_view" selected>Paginas vistas</option>
               <option value="search">Buscas</option>
               <option value="contact_click">Cliques em contato</option>
               <option value="sponsor_click">Cliques em publicidade</option>
@@ -630,7 +631,8 @@
     function metricEventLabel(event) {
       return {
         all: "Todos os eventos",
-        page_view: "Visitas",
+        visit: "Visitas estimadas",
+        page_view: "Paginas vistas",
         search: "Buscas",
         contact_click: "Cliques em contato",
         sponsor_click: "Cliques em publicidade",
@@ -707,9 +709,11 @@
       const contacts = metrics.contacts || {};
       metricsContent.innerHTML = `
         <div class="metric-cards">
+          <div class="metric-card"><span class="metric-label">Visitas estimadas</span><span class="metric-value">${escapeHtml(summaryData.visits || 0)}</span></div>
+          <div class="metric-card"><span class="metric-label">Paginas vistas</span><span class="metric-value">${escapeHtml(summaryData.pageViews || 0)}</span></div>
           <div class="metric-card"><span class="metric-label">Eventos no periodo</span><span class="metric-value">${escapeHtml(summaryData.total || 0)}</span></div>
-          <div class="metric-card"><span class="metric-label">Hoje</span><span class="metric-value">${escapeHtml(summaryData.today || 0)}</span></div>
-          <div class="metric-card"><span class="metric-label">Ultimos 7 dias</span><span class="metric-value">${escapeHtml(summaryData.sevenDays || 0)}</span></div>
+          <div class="metric-card"><span class="metric-label">Eventos hoje</span><span class="metric-value">${escapeHtml(summaryData.today || 0)}</span></div>
+          <div class="metric-card"><span class="metric-label">Eventos nos ultimos 7 dias</span><span class="metric-value">${escapeHtml(summaryData.sevenDays || 0)}</span></div>
         </div>
         ${metricChart(metrics)}
         <div class="metric-grid">
