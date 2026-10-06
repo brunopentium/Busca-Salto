@@ -3,6 +3,11 @@ const { GOOGLE_SCOPES, getSheetsClient, getSpreadsheetConfig } = require("./_lib
 
 const METRICS_SHEET_NAME = (process.env.GOOGLE_METRICS_SHEET_TAB || "metricas").trim();
 const METRICS_HEADERS = ["timestamp", "data", "evento", "path", "payload", "ip", "user_agent"];
+const MAX_BODY_BYTES = 2 * 1024;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 30;
+const RATE_LIMIT_MAX_KEYS = 2000;
+const rateLimitStore = new Map();
 const ALLOWED_EVENTS = new Set([
   "page_view",
   "search",
@@ -49,9 +54,54 @@ function cleanText(value, maxLength = 120) {
 
 async function readBody(req) {
   const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
+  let totalBytes = 0;
+  const contentLength = Number(req.headers["content-length"]);
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+    const error = new Error("Payload muito grande.");
+    error.statusCode = 413;
+    throw error;
+  }
+  for await (const chunk of req) {
+    totalBytes += chunk.length;
+    if (totalBytes > MAX_BODY_BYTES) {
+      const error = new Error("Payload muito grande.");
+      error.statusCode = 413;
+      throw error;
+    }
+    chunks.push(chunk);
+  }
   if (!chunks.length) return {};
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch (error) {
+    const parseError = new Error("JSON invalido.");
+    parseError.statusCode = 400;
+    throw parseError;
+  }
+}
+
+function checkRateLimit(req) {
+  const now = Date.now();
+  const ip = getClientIp(req);
+  let bucket = rateLimitStore.get(ip);
+  if (!bucket || now - bucket.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    bucket = { count: 0, windowStart: now };
+    rateLimitStore.set(ip, bucket);
+  }
+  bucket.count += 1;
+  if (rateLimitStore.size > RATE_LIMIT_MAX_KEYS) {
+    for (const [key, value] of rateLimitStore) {
+      if (now - value.windowStart >= RATE_LIMIT_WINDOW_MS) rateLimitStore.delete(key);
+      if (rateLimitStore.size <= RATE_LIMIT_MAX_KEYS) break;
+    }
+    while (rateLimitStore.size > RATE_LIMIT_MAX_KEYS) {
+      rateLimitStore.delete(rateLimitStore.keys().next().value);
+    }
+  }
+  return {
+    allowed: bucket.count <= RATE_LIMIT_MAX_REQUESTS,
+    retryAfter: Math.max(1, Math.ceil((RATE_LIMIT_WINDOW_MS - (now - bucket.windowStart)) / 1000)),
+  };
 }
 
 async function ensureMetricsSheet() {
@@ -319,6 +369,11 @@ async function readMetrics(options) {
 }
 
 async function handlePost(req, res) {
+  const rateLimit = checkRateLimit(req);
+  if (!rateLimit.allowed) {
+    res.setHeader("Retry-After", String(rateLimit.retryAfter));
+    return json(res, 429, { ok: false, error: "Muitas requisicoes. Tente novamente em instantes." });
+  }
   try {
     const body = await readBody(req);
     const event = cleanText(body.event, 40);
@@ -363,6 +418,7 @@ async function handlePost(req, res) {
 
     return json(res, 200, { ok: true, stored });
   } catch (error) {
+    if (error.statusCode) return json(res, error.statusCode, { ok: false, error: error.message });
     console.error(JSON.stringify({
       level: "warn",
       service: "busca-salto-metricas",
