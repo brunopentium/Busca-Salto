@@ -271,6 +271,85 @@
       .sponsor-view .editor-actions{justify-self:stretch;grid-template-columns:1fr 1fr}
     }
     @media(max-width:400px){.sponsor-list-panel .section-head{flex-wrap:wrap}.sponsor-new-button{width:100%}}
+    .metrics-panel{gap:0;min-width:0}
+    .metrics-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .metrics-heading h2{margin:0;color:var(--azul);font-size:1.12rem}
+    .metrics-heading span{font-size:.83rem}
+    .metrics-filters{display:grid;gap:0;border:1px solid var(--borda);border-radius:8px;background:#f8fafc;overflow:hidden}
+    .metrics-filter-group{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:14px;border-bottom:1px solid var(--borda)}
+    .metrics-filter-group:nth-child(2){grid-template-columns:minmax(140px,180px) minmax(140px,180px) minmax(180px,1fr) minmax(130px,160px) minmax(120px,140px) minmax(130px,150px)}
+    .metrics-filter-group h3{grid-column:1/-1;margin:0;color:var(--azul);font-size:.88rem}
+    .metrics-filter-group label{min-width:0;font-size:.79rem;grid-template-columns:minmax(0,1fr)}
+    .metrics-filter-group input,.metrics-filter-group select{min-height:42px;padding:9px 10px;background:#fff}
+    .metrics-filter-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 14px}
+    .metrics-filter-actions button{width:auto;min-width:128px;padding:10px 14px}
+    #metricsFilterStatus{margin:0;min-height:0;padding:8px 0}
+    #metricsFilterStatus:empty{display:none}
+    #metricsContent{min-width:0}
+    .metrics-panel .metric-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--borda);border-bottom:1px solid var(--borda);margin:12px 0 18px}
+    .metrics-panel .metric-card{border:0;border-right:1px solid var(--borda);border-radius:0;padding:14px 16px}
+    .metrics-panel .metric-card:nth-child(3n){border-right:0}
+    .metrics-panel .metric-card:nth-child(n+4){border-top:1px solid var(--borda)}
+    .metrics-panel .metric-value{font-size:1.6rem;margin-top:3px}
+    .metrics-panel .metric-chart{border:0;border-bottom:1px solid var(--borda);border-radius:0;margin-bottom:18px}
+    .metrics-panel .metric-chart-head{padding:0 0 8px;background:transparent;border:0}
+    .metrics-panel .metric-chart-head h3{font-size:1rem}
+    .metrics-panel .metric-chart-head span{font-weight:500}
+    .metrics-panel .metric-plot{padding:6px 0 0}
+    .metrics-panel .metric-svg{width:100%;height:auto;min-height:0;max-height:310px}
+    .metric-bars{fill:#137a72}
+    .metrics-panel .metric-line{stroke:#137a72;stroke-width:2.5}
+    .metrics-panel .metric-point{fill:#f1ad26;stroke:#137a72}
+    .metrics-panel .metric-area{fill:rgba(19,122,114,.1)}
+    .metric-insight{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.83rem;padding:4px 0 12px}
+    .metric-data-details{border-top:1px solid #e6edf4;padding:8px 0 12px}
+    .metric-data-details summary{width:max-content;color:var(--azul);font-size:.83rem;font-weight:700;cursor:pointer}
+    .metric-data-wrap{max-height:260px;overflow:auto;margin-top:8px;border:1px solid var(--borda);border-radius:6px}
+    .metric-data-table,.metric-record-table{width:100%;border-collapse:collapse;font-size:.84rem}
+    .metric-data-table th,.metric-data-table td,.metric-record-table th,.metric-record-table td{text-align:left;padding:8px 10px;border-bottom:1px solid #edf1f6;vertical-align:top}
+    .metric-data-table th,.metric-record-table th{color:var(--muted);font-size:.72rem;text-transform:uppercase;background:#f7f9fc}
+    .metric-data-table td:last-child,.metric-data-table th:last-child{text-align:right}
+    .metric-breakdowns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px}
+    .metric-section{min-width:0;border-bottom:1px solid var(--borda);padding:12px 0 18px}
+    .metric-section h3,.metric-records h3{margin:0 0 10px;color:var(--azul);font-size:.94rem}
+    .metric-rank-list{display:grid;gap:8px}
+    .metric-rank-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(50px,1fr) auto;gap:10px;align-items:center;font-size:.82rem}
+    .metric-rank-row span:first-child{min-width:0;overflow-wrap:anywhere}
+    .metric-rank-track{height:7px;border-radius:2px;background:#e7edf2;overflow:hidden}
+    .metric-rank-track i{display:block;height:100%;background:#137a72}
+    .metric-rank-row strong{min-width:24px;text-align:right;color:var(--azul)}
+    .metric-records{padding-top:18px}
+    .metric-records-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .metric-records-head span{font-size:.8rem;color:var(--muted)}
+    .metric-record-table-wrap{width:100%;overflow:auto;border-top:1px solid var(--borda)}
+    .metric-record-table{table-layout:fixed}
+    .metric-record-table th:nth-child(1){width:145px}.metric-record-table th:nth-child(2){width:175px}.metric-record-table th:nth-child(3){width:20%}
+    .metric-record-table td{overflow-wrap:anywhere}
+    .metric-record-table td:first-child{white-space:nowrap}
+    .metric-pagination{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 0}
+    .metric-pagination button{width:auto;min-width:96px;padding:8px 12px}
+    .metric-pagination span{font-size:.83rem;color:var(--muted)}
+    @media(max-width:1120px){.metrics-filter-group:nth-child(2){grid-template-columns:repeat(3,minmax(0,1fr))}.metrics-query{grid-column:1/-1}.metrics-filter-group{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:760px){
+      .metrics-heading{align-items:flex-start}
+      .metrics-filter-group,.metrics-filter-group:nth-child(2){grid-template-columns:repeat(2,minmax(0,1fr));padding:12px;gap:9px}
+      .metrics-filter-group label:first-of-type,.metrics-query{grid-column:1/-1}
+      .metrics-filter-group:nth-child(2) label:nth-of-type(2),.metrics-filter-group:nth-child(2) label:nth-of-type(6){grid-column:1/-1}
+      .metrics-filter-actions button{flex:1;min-width:0}
+      .metrics-panel .metric-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .metrics-panel .metric-card:nth-child(3n){border-right:1px solid var(--borda)}
+      .metrics-panel .metric-card:nth-child(2n){border-right:0}
+      .metrics-panel .metric-card:nth-child(n+3){border-top:1px solid var(--borda)}
+      .metrics-panel .metric-value{font-size:1.35rem}
+      .metric-breakdowns{grid-template-columns:1fr}
+      .metric-record-table,.metric-record-table tbody{display:block}
+      .metric-record-table thead{display:none}
+      .metric-record-table tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 10px;padding:10px 0;border-bottom:1px solid var(--borda)}
+      .metric-record-table td{display:block;border:0;padding:0;white-space:normal!important}
+      .metric-record-table td::before{content:attr(data-label);display:block;color:var(--muted);font-size:.68rem;font-weight:800;text-transform:uppercase}
+      .metric-record-table td:nth-child(n+3){grid-column:1/-1}
+    }
+    @media(max-width:360px){.metrics-panel .metric-cards{grid-template-columns:1fr}.metrics-panel .metric-card{border-right:0!important;border-top:1px solid var(--borda)}.metrics-panel .metric-card:first-child{border-top:0}}
   </style>
 </head>
 <body>
@@ -308,46 +387,82 @@
         <button class="admin-tab" type="button" data-admin-tab="indicadores">Indicadores</button>
       </nav>
       <section id="metricsView" class="metrics-panel" data-admin-view="indicadores" hidden>
-        <div class="metrics-toolbar">
-          <div>
-            <h2>Indicadores do site</h2>
-            <p class="muted">Uso registrado pela navegacao publica e pelos cliques nos cards.</p>
-          </div>
-          <label>Atalho
+        <div class="metrics-heading">
+          <h2>Indicadores do site</h2>
+          <span id="metricsPeriodLabel" class="muted"></span>
+        </div>
+        <form id="metricsFilters" class="metrics-filters">
+          <div class="metrics-filter-group">
+            <h3>Periodo</h3>
+            <label>Intervalo
             <select id="metricsDays">
               <option value="1">Hoje</option>
-              <option value="3">Ultimos 3 dias</option>
               <option value="7">Ultimos 7 dias</option>
-              <option value="15">Ultimos 15 dias</option>
               <option value="30" selected>Ultimos 30 dias</option>
               <option value="90">Ultimos 90 dias</option>
+              <option value="180">Ultimos 180 dias</option>
+              <option value="all">Todo o historico</option>
+              <option value="custom">Personalizado</option>
             </select>
-          </label>
-          <label>Inicio
-            <input id="metricsStart" type="date" />
-          </label>
-          <label>Fim
-            <input id="metricsEnd" type="date" />
-          </label>
-          <label>Grafico
+            </label>
+            <label>Data inicial<input id="metricsStart" type="date" /></label>
+            <label>Hora inicial<input id="metricsStartTime" type="time" value="00:00" /></label>
+            <label>Data final<input id="metricsEnd" type="date" /></label>
+            <label>Hora final<input id="metricsEndTime" type="time" value="23:59" /></label>
+          </div>
+          <div class="metrics-filter-group">
+            <h3>Recorte e visualizacao</h3>
+            <label>Evento
             <select id="metricsEvent">
+              <option value="all" selected>Todos os eventos</option>
               <option value="visit">Visitas estimadas</option>
-              <option value="page_view" selected>Paginas vistas</option>
+              <option value="page_view">Paginas vistas</option>
               <option value="search">Buscas</option>
               <option value="contact_click">Cliques em contato</option>
               <option value="sponsor_click">Cliques em publicidade</option>
-              <option value="all">Todos os eventos</option>
+              <option value="category_select">Categorias selecionadas</option>
+              <option value="plan_click">Cliques em planos</option>
             </select>
-          </label>
-          <label>Agrupar
+            </label>
+            <label>Campo
+              <select id="metricsField">
+                <option value="all">Todos os campos</option>
+                <option value="path">Pagina</option>
+                <option value="busca">Termo buscado</option>
+                <option value="categoria">Categoria</option>
+                <option value="bairro">Bairro</option>
+                <option value="comercio">Comercio</option>
+                <option value="patrocinador">Patrocinador</option>
+              </select>
+            </label>
+            <label class="metrics-query">Contem<input id="metricsQuery" type="search" maxlength="120" placeholder="Buscar nos registros" autocomplete="off" /></label>
+            <label>Agrupar
             <select id="metricsGranularity">
               <option value="auto" selected>Automatico</option>
               <option value="day">Por dia</option>
               <option value="hour">Por hora</option>
+              <option value="week">Por semana</option>
+              <option value="month">Por mes</option>
+              <option value="hour_of_day">Hora do dia</option>
             </select>
-          </label>
-          <button id="refreshMetricsButton" class="secondary" type="button">Atualizar</button>
-        </div>
+            </label>
+            <label>Grafico
+              <select id="metricsChartType">
+                <option value="auto">Automatico</option>
+                <option value="bar">Barras</option>
+                <option value="line">Linha</option>
+              </select>
+            </label>
+            <label>Registros por pagina
+              <select id="metricsPageSize"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select>
+            </label>
+          </div>
+          <div class="metrics-filter-actions">
+            <button id="refreshMetricsButton" type="submit">Aplicar filtros</button>
+            <button id="resetMetricsButton" class="secondary" type="button">Limpar</button>
+          </div>
+        </form>
+        <div id="metricsFilterStatus" class="status" role="status" aria-live="polite"></div>
         <div id="metricsContent">
           <div class="empty">Abra a guia para carregar os indicadores.</div>
         </div>
@@ -735,6 +850,16 @@
     const metricsEnd = document.getElementById("metricsEnd");
     const metricsEvent = document.getElementById("metricsEvent");
     const metricsGranularity = document.getElementById("metricsGranularity");
+    const metricsStartTime = document.getElementById("metricsStartTime");
+    const metricsEndTime = document.getElementById("metricsEndTime");
+    const metricsField = document.getElementById("metricsField");
+    const metricsQuery = document.getElementById("metricsQuery");
+    const metricsChartType = document.getElementById("metricsChartType");
+    const metricsPageSize = document.getElementById("metricsPageSize");
+    const metricsFilters = document.getElementById("metricsFilters");
+    const metricsFilterStatus = document.getElementById("metricsFilterStatus");
+    const metricsPeriodLabel = document.getElementById("metricsPeriodLabel");
+    const resetMetricsButton = document.getElementById("resetMetricsButton");
     const refreshMetricsButton = document.getElementById("refreshMetricsButton");
     const commerceImportFile = document.getElementById("commerceImportFile");
     const commerceImportStatus = document.getElementById("commerceImportStatus");
@@ -825,7 +950,7 @@
     }
 
     function escapeHtml(value) {
-      return String(value || "").replace(/[&<>"']/g, (char) => ({
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
@@ -834,9 +959,12 @@
       }[char]));
     }
 
-    function metricRows(items = []) {
-      if (!items.length) return '<div class="metric-empty">Sem dados no periodo.</div>';
-      return `<div class="metric-list">${items.map((item) => `<div class="metric-row"><span title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span><strong>${escapeHtml(item.count)}</strong></div>`).join("")}</div>`;
+    function metricRankRows(items = []) {
+      if (!items.length) return '<div class="metric-empty">Sem dados neste recorte.</div>';
+      const max = Math.max(1, ...items.map((item) => Number(item.count) || 0));
+      return `<div class="metric-rank-list">${items.map((item) => `
+        <div class="metric-rank-row"><span>${escapeHtml(item.label)}</span><div class="metric-rank-track" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, (Number(item.count) || 0) / max * 100)).toFixed(1)}%"></i></div><strong>${escapeHtml(item.count)}</strong></div>
+      `).join("")}</div>`;
     }
 
     function metricEventLabel(event) {
@@ -853,109 +981,171 @@
     }
 
     function localDateKey(date = new Date()) {
-      const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-      return offsetDate.toISOString().slice(0, 10);
+      const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+      }).formatToParts(date).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+      return `${parts.year}-${parts.month}-${parts.day}`;
     }
 
     function addLocalDays(dateKey, amount) {
-      const date = new Date(`${dateKey}T12:00:00`);
-      date.setDate(date.getDate() + amount);
-      return localDateKey(date);
+      const date = new Date(`${dateKey}T12:00:00Z`);
+      date.setUTCDate(date.getUTCDate() + amount);
+      return date.toISOString().slice(0, 10);
     }
 
     function daysBetween(startKey, endKey) {
       if (!startKey || !endKey) return Number(metricsDays.value || 30);
-      const start = new Date(`${startKey}T12:00:00`);
-      const end = new Date(`${endKey}T12:00:00`);
+      const start = new Date(`${startKey}T12:00:00Z`);
+      const end = new Date(`${endKey}T12:00:00Z`);
       return Math.max(1, Math.round((end - start) / 86400000) + 1);
     }
 
-    function selectedGranularity() {
-      if (metricsGranularity.value !== "auto") return metricsGranularity.value;
-      return daysBetween(metricsStart.value, metricsEnd.value) <= 3 ? "hour" : "day";
-    }
-
     function applyMetricsQuickRange() {
+      const all = metricsDays.value === "all";
+      for (const input of [metricsStart, metricsEnd, metricsStartTime, metricsEndTime]) input.disabled = all;
+      if (all || metricsDays.value === "custom") return;
       const days = Number(metricsDays.value || 30);
       const end = localDateKey();
       metricsEnd.value = end;
       metricsStart.value = addLocalDays(end, -(Math.max(days, 1) - 1));
+      metricsStartTime.value = "00:00";
+      metricsEndTime.value = "23:59";
     }
 
     function metricChart(metrics = {}) {
-      const selectedEvent = metricsEvent.value || "page_view";
-      const daily = metrics.timeline?.daily || [];
-      const points = daily.map((item) => ({
-        label: item.label || item.date || "",
-        count: selectedEvent === "all" ? Number(item.total || 0) : Number(item.events?.[selectedEvent] || 0),
+      const points = (metrics.timeline?.daily || []).map((item) => ({
+        label: item.label || item.date || "", count: Number(item.total || 0),
       }));
+      const grouping = metrics.timeline?.granularity || "day";
+      const groupLabels = { hour: "por hora", day: "por dia", week: "por semana", month: "por mes", hour_of_day: "por hora do dia" };
+      const compact = window.matchMedia("(max-width: 640px)").matches;
+      const width = compact ? 340 : 840, height = compact ? 250 : 290;
+      const left = compact ? 35 : 44, right = compact ? 8 : 14, top = 18, bottom = 38;
+      const chartWidth = width - left - right, chartHeight = height - top - bottom;
+      const mode = metricsChartType.value === "auto" ? (points.length <= 45 ? "bar" : "line") : metricsChartType.value;
       const max = Math.max(1, ...points.map((item) => item.count));
       const total = points.reduce((sum, item) => sum + item.count, 0);
-      const granularityLabel = metrics.timeline?.granularity === "hour" ? "por hora" : "por dia";
-      const width = 760, height = 280, left = 42, right = 18, top = 18, bottom = 42;
-      const chartWidth = width - left - right, chartHeight = height - top - bottom;
-      const xFor = (index) => left + (points.length <= 1 ? chartWidth / 2 : (index / (points.length - 1)) * chartWidth);
+      const xFor = (index) => left + (mode === "bar" ? (index + .5) / Math.max(1, points.length) : points.length <= 1 ? .5 : index / (points.length - 1)) * chartWidth;
       const yFor = (count) => top + chartHeight - (count / max) * chartHeight;
       const coords = points.map((item, index) => `${xFor(index).toFixed(1)},${yFor(item.count).toFixed(1)}`);
       const line = coords.join(" ");
-      const area = points.length ? `${left},${top + chartHeight} ${line} ${left + chartWidth},${top + chartHeight}` : "";
-      const tickStep = Math.max(1, Math.ceil(points.length / 6));
-      const xLabels = points.map((item, index) => ({ ...item, index })).filter((item) => item.index === 0 || item.index === points.length - 1 || item.index % tickStep === 0);
+      const area = points.length ? `${xFor(0).toFixed(1)},${top + chartHeight} ${line} ${xFor(points.length - 1).toFixed(1)},${top + chartHeight}` : "";
+      const tickStep = Math.max(1, Math.ceil(points.length / (compact ? 4 : 8)));
+      const xLabels = points.map((item, index) => ({ ...item, index })).filter((item) => item.index % tickStep === 0);
+      if (points.length > 1) {
+        if (points.length - 1 - xLabels[xLabels.length - 1].index < Math.ceil(tickStep / 2)) xLabels.pop();
+        xLabels.push({ ...points[points.length - 1], index: points.length - 1 });
+      }
       const yTicks = [0, Math.ceil(max / 2), max].filter((value, index, list) => list.indexOf(value) === index);
-      const circles = points.length <= 96 ? points.map((item, index) => `<circle class="metric-point" cx="${xFor(index).toFixed(1)}" cy="${yFor(item.count).toFixed(1)}" r="3"><title>${escapeHtml(item.label)}: ${escapeHtml(item.count)}</title></circle>`).join("") : "";
       const peak = points.reduce((best, item) => item.count > best.count ? item : best, { label: "-", count: 0 });
-      const svg = points.length ? `<svg class="metric-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Distribuicao de ${escapeHtml(metricEventLabel(selectedEvent))} ${escapeHtml(granularityLabel)}">
+      const barWidth = Math.max(1, Math.min(24, chartWidth / Math.max(1, points.length) * .72));
+      const marks = mode === "bar"
+        ? points.map((item, index) => `<rect class="metric-bars" x="${(xFor(index) - barWidth / 2).toFixed(1)}" y="${yFor(item.count).toFixed(1)}" width="${barWidth.toFixed(1)}" height="${Math.max(0, top + chartHeight - yFor(item.count)).toFixed(1)}"><title>${escapeHtml(item.label)}: ${escapeHtml(item.count)}</title></rect>`).join("")
+        : `<polygon class="metric-area" points="${area}"></polygon><polyline class="metric-line" points="${line}"></polyline>${points.length <= 48 ? points.map((item, index) => `<circle class="metric-point" cx="${xFor(index).toFixed(1)}" cy="${yFor(item.count).toFixed(1)}" r="3"><title>${escapeHtml(item.label)}: ${escapeHtml(item.count)}</title></circle>`).join("") : ""}`;
+      const svg = total ? `<svg class="metric-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Eventos ${escapeHtml(groupLabels[grouping] || "no periodo")}">
         ${yTicks.map((tick) => `<line class="metric-grid-line" x1="${left}" y1="${yFor(tick).toFixed(1)}" x2="${left + chartWidth}" y2="${yFor(tick).toFixed(1)}"></line><text class="metric-axis" x="${left - 8}" y="${(yFor(tick) + 4).toFixed(1)}" text-anchor="end">${escapeHtml(tick)}</text>`).join("")}
-        <polygon class="metric-area" points="${area}"></polygon>
-        <polyline class="metric-line" points="${line}"></polyline>
-        ${circles}
+        ${marks}
         ${xLabels.map((item) => `<text class="metric-axis" x="${xFor(item.index).toFixed(1)}" y="${height - 14}" text-anchor="middle">${escapeHtml(item.label)}</text>`).join("")}
-      </svg>` : '<div class="metric-empty">Sem dados no periodo.</div>';
-      return `<section class="metric-chart"><div class="metric-chart-head"><h3>Distribuicao no periodo</h3><span>${escapeHtml(metricEventLabel(selectedEvent))} ${escapeHtml(granularityLabel)}: ${escapeHtml(total)} | Pico: ${escapeHtml(peak.count)} em ${escapeHtml(peak.label)}</span></div><div class="metric-plot">${svg}</div></section>`;
+      </svg>` : '<div class="metric-empty">Sem eventos neste recorte.</div>';
+      return `<section class="metric-chart"><div class="metric-chart-head"><h3>${grouping === "hour_of_day" ? "Horarios com mais atividade" : "Evolucao no periodo"}</h3><span>${escapeHtml(metricEventLabel(metricsEvent.value))} ${escapeHtml(groupLabels[grouping] || "")}</span></div><div class="metric-plot">${svg}</div>
+        <div class="metric-insight"><span>${escapeHtml(total.toLocaleString("pt-BR"))} eventos</span><span>Pico: ${escapeHtml(peak.count)} em ${escapeHtml(peak.label)}</span></div>
+        <details class="metric-data-details"><summary>Ver valores do grafico</summary><div class="metric-data-wrap"><table class="metric-data-table"><thead><tr><th>Intervalo</th><th>Eventos</th></tr></thead><tbody>${points.map((item) => `<tr><td>${escapeHtml(item.label)}</td><td>${escapeHtml(item.count)}</td></tr>`).join("")}</tbody></table></div></details>
+      </section>`;
+    }
+
+    function metricRecordRows(items = []) {
+      if (!items.length) return '<tr><td colspan="4" class="metric-empty">Nenhum registro neste recorte.</td></tr>';
+      const formatter = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "medium" });
+      return items.map((item) => {
+        const date = new Date(item.timestamp);
+        const timestamp = Number.isFinite(date.getTime()) ? formatter.format(date) : item.timestamp;
+        const detail = Object.entries(item.payload || {}).filter(([, value]) => value !== "").map(([key, value]) => `${key}: ${value}`).join(" · ") || "-";
+        return `<tr><td data-label="Data e hora">${escapeHtml(timestamp)}</td><td data-label="Evento">${escapeHtml(metricEventLabel(item.event))}</td><td data-label="Pagina">${escapeHtml(item.path || "-")}</td><td data-label="Detalhes">${escapeHtml(detail)}</td></tr>`;
+      }).join("");
     }
 
     function renderMetrics(metrics = {}) {
       const summaryData = metrics.summary || {};
       const searches = metrics.searches || {};
       const contacts = metrics.contacts || {};
+      const records = metrics.records || { total: 0, page: 1, pageCount: 1, items: [] };
+      const displayDate = (key) => String(key || "").split("-").reverse().join("/");
+      metricsPeriodLabel.textContent = `${displayDate(metrics.period?.start)} a ${displayDate(metrics.period?.end)} · horario de Salto/SP`;
+      if (metricsDays.value === "all" && metrics.period) {
+        metricsStart.value = metrics.period.start;
+        metricsEnd.value = metrics.period.end;
+      }
+      const cards = [
+        ["Eventos filtrados", summaryData.total], ["Visitas estimadas", summaryData.visits],
+        ["Paginas vistas", summaryData.pageViews], ["Buscas", (summaryData.events || []).find((item) => item.label === "search")?.count],
+        ["Cliques em contato", (summaryData.events || []).find((item) => item.label === "contact_click")?.count],
+        ["Cliques em publicidade", (summaryData.events || []).find((item) => item.label === "sponsor_click")?.count],
+      ];
+      const breakdowns = [
+        ["Tipos de evento", (summaryData.events || []).map((item) => ({ ...item, label: metricEventLabel(item.label) }))],
+        ["Paginas mais vistas", metrics.pages], ["Termos pesquisados", searches.terms],
+        ["Categorias e filtros", searches.categories], ["Bairros filtrados", searches.bairros],
+        ["Cliques por tipo de contato", contacts.types], ["Comercios com mais cliques", contacts.businesses],
+        ["Patrocinadores clicados", metrics.sponsors],
+      ];
+      const availableBreakdowns = breakdowns.filter(([, items]) => items?.length);
       metricsContent.innerHTML = `
-        <div class="metric-cards">
-          <div class="metric-card"><span class="metric-label">Visitas estimadas</span><span class="metric-value">${escapeHtml(summaryData.visits || 0)}</span></div>
-          <div class="metric-card"><span class="metric-label">Paginas vistas</span><span class="metric-value">${escapeHtml(summaryData.pageViews || 0)}</span></div>
-          <div class="metric-card"><span class="metric-label">Eventos no periodo</span><span class="metric-value">${escapeHtml(summaryData.total || 0)}</span></div>
-          <div class="metric-card"><span class="metric-label">Eventos hoje</span><span class="metric-value">${escapeHtml(summaryData.today || 0)}</span></div>
-          <div class="metric-card"><span class="metric-label">Eventos nos ultimos 7 dias</span><span class="metric-value">${escapeHtml(summaryData.sevenDays || 0)}</span></div>
-        </div>
+        <div class="metric-cards">${cards.map(([label, value]) => `<div class="metric-card"><span class="metric-label">${escapeHtml(label)}</span><span class="metric-value">${escapeHtml(Number(value || 0).toLocaleString("pt-BR"))}</span></div>`).join("")}</div>
         ${metricChart(metrics)}
-        <div class="metric-grid">
-          <section class="metric-box"><h3>Tipos de evento</h3>${metricRows(summaryData.events)}</section>
-          <section class="metric-box"><h3>Paginas mais vistas</h3>${metricRows(metrics.pages)}</section>
-          <section class="metric-box"><h3>Termos pesquisados</h3>${metricRows(searches.terms)}</section>
-          <section class="metric-box"><h3>Categorias e filtros</h3>${metricRows(searches.categories)}</section>
-          <section class="metric-box"><h3>Bairros filtrados</h3>${metricRows(searches.bairros)}</section>
-          <section class="metric-box"><h3>Cliques por tipo de contato</h3>${metricRows(contacts.types)}</section>
-          <section class="metric-box"><h3>Comercios com mais cliques</h3>${metricRows(contacts.businesses)}</section>
-          <section class="metric-box"><h3>Patrocinadores clicados</h3>${metricRows(metrics.sponsors)}</section>
-        </div>
+        <div class="metric-breakdowns">${availableBreakdowns.map(([title, items]) => `<section class="metric-section"><h3>${escapeHtml(title)}</h3>${metricRankRows(items)}</section>`).join("")}</div>
+        <section id="metricRecords" class="metric-records"><div class="metric-records-head"><h3>Registros</h3><span>${escapeHtml(records.total || 0)} encontrados · pagina ${escapeHtml(records.page || 1)} de ${escapeHtml(records.pageCount || 1)}</span></div>
+          <div class="metric-record-table-wrap"><table class="metric-record-table"><thead><tr><th>Data e hora</th><th>Evento</th><th>Pagina</th><th>Detalhes</th></tr></thead><tbody>${metricRecordRows(records.items)}</tbody></table></div>
+          <div class="metric-pagination"><button class="secondary" type="button" data-metrics-page="${Number(records.page || 1) - 1}" ${records.page <= 1 ? "disabled" : ""}>Anterior</button><span>${escapeHtml(records.page || 1)} / ${escapeHtml(records.pageCount || 1)}</span><button class="secondary" type="button" data-metrics-page="${Number(records.page || 1) + 1}" ${records.page >= records.pageCount ? "disabled" : ""}>Proxima</button></div>
+        </section>
       `;
     }
 
-    async function loadMetrics() {
-      metricsContent.innerHTML = '<div class="empty">Carregando indicadores...</div>';
+    let metricsRequestId = 0;
+    async function loadMetrics(page = 1, scrollToRecords = false) {
+      const all = metricsDays.value === "all";
+      if (!all && (!metricsStart.value || !metricsEnd.value || `${metricsStart.value}T${metricsStartTime.value}` > `${metricsEnd.value}T${metricsEndTime.value}`)) {
+        metricsFilterStatus.textContent = "Confira as datas e horas: o inicio deve ser anterior ao fim.";
+        metricsFilterStatus.className = "status error";
+        return;
+      }
+      if (metricsGranularity.value === "hour" && (all || daysBetween(metricsStart.value, metricsEnd.value) > 7)) {
+        metricsFilterStatus.textContent = "Para ver por hora, selecione ate 7 dias. Para periodos maiores, use hora do dia.";
+        metricsFilterStatus.className = "status error";
+        return;
+      }
+      const requestId = ++metricsRequestId;
+      metricsFilterStatus.textContent = "Atualizando indicadores...";
+      metricsFilterStatus.className = "status";
+      metricsContent.setAttribute("aria-busy", "true");
       try {
         const params = new URLSearchParams({
-          days: metricsDays.value || "30",
-          start: metricsStart.value || "",
-          end: metricsEnd.value || "",
-          granularity: selectedGranularity(),
+          days: /^\d+$/.test(metricsDays.value) ? metricsDays.value : "30",
+          all: all ? "1" : "0",
+          start: all ? "" : metricsStart.value,
+          end: all ? "" : metricsEnd.value,
+          startTime: all ? "00:00" : metricsStartTime.value,
+          endTime: all ? "23:59" : metricsEndTime.value,
+          granularity: metricsGranularity.value,
+          event: metricsEvent.value,
+          field: metricsField.value,
+          query: metricsQuery.value.trim(),
+          page: String(page), pageSize: metricsPageSize.value,
         });
         const response = await fetch(`/api/metricas?${params.toString()}`, { cache: "no-store", credentials: "same-origin" });
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.error || "Falha ao carregar indicadores.");
+        if (requestId !== metricsRequestId) return;
         currentMetrics = data.metrics || {};
         renderMetrics(currentMetrics);
+        metricsFilterStatus.textContent = "";
+        if (scrollToRecords) document.getElementById("metricRecords")?.scrollIntoView({ block: "start" });
       } catch (error) {
+        if (requestId !== metricsRequestId) return;
+        metricsFilterStatus.textContent = error.message || "Nao foi possivel carregar os indicadores.";
+        metricsFilterStatus.className = "status error";
         metricsContent.innerHTML = `<div class="empty">${escapeHtml(error.message || "Nao foi possivel carregar os indicadores.")}</div>`;
+      } finally {
+        if (requestId === metricsRequestId) metricsContent.removeAttribute("aria-busy");
       }
     }
 
@@ -2453,16 +2643,34 @@
     categoryCreateForm.addEventListener("submit", (event) => createTaxonomyEntry(event, "category"));
     subcategoryCreateForm.addEventListener("submit", (event) => createTaxonomyEntry(event, "subcategory"));
     taxonomySearch.addEventListener("input", renderTaxonomyManager);
-    refreshMetricsButton.addEventListener("click", loadMetrics);
+    metricsFilters.addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadMetrics();
+    });
     metricsDays.addEventListener("change", () => {
       applyMetricsQuickRange();
       loadMetrics();
     });
-    metricsStart.addEventListener("change", loadMetrics);
-    metricsEnd.addEventListener("change", loadMetrics);
-    metricsGranularity.addEventListener("change", loadMetrics);
-    metricsEvent.addEventListener("change", () => {
+    for (const input of [metricsStart, metricsEnd, metricsStartTime, metricsEndTime]) {
+      input.addEventListener("change", () => { metricsDays.value = "custom"; });
+    }
+    resetMetricsButton.addEventListener("click", () => {
+      metricsFilters.reset();
+      applyMetricsQuickRange();
+      loadMetrics();
+    });
+    metricsChartType.addEventListener("change", () => {
       if (currentMetrics) renderMetrics(currentMetrics);
+    });
+    metricsContent.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-metrics-page]");
+      if (button && !button.disabled) loadMetrics(Number(button.dataset.metricsPage), true);
+    });
+    let metricsResizeTimer;
+    window.addEventListener("resize", () => {
+      if (activeAdminTab !== "indicadores" || !currentMetrics) return;
+      clearTimeout(metricsResizeTimer);
+      metricsResizeTimer = setTimeout(() => renderMetrics(currentMetrics), 150);
     });
     adjustCloseButton.addEventListener("click", closeImageAdjustment);
     adjustSaveButton.addEventListener("click", saveImageAdjustment);
