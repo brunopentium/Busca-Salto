@@ -16,6 +16,13 @@ const ALLOWED_EVENTS = new Set([
   "category_select",
   "plan_click",
   "sponsor_click",
+  "pwa_prompt_shown",
+  "pwa_install_click",
+  "pwa_prompt_dismiss",
+  "pwa_native_accept",
+  "pwa_native_dismiss",
+  "pwa_installed",
+  "pwa_visit_no_notice",
 ]);
 
 function json(res, status, body) {
@@ -297,6 +304,8 @@ function matchesDetail(row, field, query) {
     bairro: payload.bairro,
     comercio: row.event === "contact_click" ? `${payload.nome || ""} ${payload.id || ""}` : "",
     patrocinador: row.event === "sponsor_click" ? `${payload.nome || ""} ${payload.id || ""}` : "",
+    modo: payload.modo,
+    motivo: payload.motivo,
   };
   const text = field === "all" ? [row.event, ...Object.values(values), ...Object.values(payload)].join(" ") : values[field] || "";
   return normalizeSearch(text).includes(normalizeSearch(query));
@@ -362,6 +371,7 @@ function aggregateMetrics(rows = [], options = {}) {
   const contactTypes = new Map();
   const contactBusinesses = new Map();
   const sponsors = new Map();
+  const noNoticeReasons = new Map();
   let todayCount = 0;
   let sevenDaysCount = 0;
   let visits = 0;
@@ -370,7 +380,7 @@ function aggregateMetrics(rows = [], options = {}) {
   const startMinute = `${startKey}T${options.startTime || "00:00"}`;
   const endMinute = `${endKey}T${options.endTime || "23:59"}`;
   const selectedEvent = ALLOWED_EVENTS.has(options.event) ? options.event : "all";
-  const selectedField = ["all", "path", "busca", "categoria", "bairro", "comercio", "patrocinador"].includes(options.field) ? options.field : "all";
+  const selectedField = ["all", "path", "busca", "categoria", "bairro", "comercio", "patrocinador", "modo", "motivo"].includes(options.field) ? options.field : "all";
   const query = cleanText(options.query, 120);
   const metrics = parsedRows
     .filter((row) => {
@@ -407,6 +417,7 @@ function aggregateMetrics(rows = [], options = {}) {
       increment(contactBusinesses, row.payload.nome || row.payload.id);
     }
     if (row.event === "sponsor_click") increment(sponsors, row.payload.nome || row.payload.id);
+    if (row.event === "pwa_visit_no_notice") increment(noNoticeReasons, row.payload.motivo);
   }
 
   const pageSize = Math.min(Math.max(Number(options.pageSize) || 25, 1), 100);
@@ -424,7 +435,16 @@ function aggregateMetrics(rows = [], options = {}) {
       pageViews,
       today: todayCount,
       sevenDays: sevenDaysCount,
-      events: topItems(events, 12),
+      events: topItems(events, ALLOWED_EVENTS.size),
+      pwa: {
+        promptShown: events.get("pwa_prompt_shown") || 0,
+        installClicks: events.get("pwa_install_click") || 0,
+        promptDismissed: events.get("pwa_prompt_dismiss") || 0,
+        nativeAccepted: events.get("pwa_native_accept") || 0,
+        nativeDismissed: events.get("pwa_native_dismiss") || 0,
+        installed: events.get("pwa_installed") || 0,
+        visitsWithoutNotice: events.get("pwa_visit_no_notice") || 0,
+      },
     },
     pages: topItems(pages, 8),
     searches: {
@@ -437,6 +457,7 @@ function aggregateMetrics(rows = [], options = {}) {
       businesses: topItems(contactBusinesses, 10),
     },
     sponsors: topItems(sponsors, 10),
+    pwaNoNoticeReasons: topItems(noNoticeReasons, 8),
     timeline: {
       granularity,
       events: ["all", ...ALLOWED_EVENTS],

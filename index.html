@@ -154,11 +154,13 @@
       const installTitle = document.getElementById("installTitle");
       const installText = document.getElementById("installText");
       let deferredPrompt = null;
+      let noticeOutcomeRecorded = false;
       const INSTALL_TITLE = "Instale o Busca Salto";
       const INSTALL_DESCRIPTION = "Acesse o Busca Salto pela tela inicial, como um aplicativo.";
       const INSTALL_BROWSER_HELP = "Se a instalacao nao abrir automaticamente, toque no menu do navegador e escolha Adicionar a tela inicial ou Instalar app.";
       const INSTALL_SAMSUNG_HELP = "Neste navegador, use o menu do navegador e escolha Adicionar a tela inicial.";
       const isSamsungInternet = /SamsungBrowser/i.test(window.navigator.userAgent || "");
+      const trackPwa = (event, payload = {}) => window.BuscaSaltoMetrics?.track(event, payload);
 
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
@@ -197,7 +199,13 @@
       }
 
       function showInstallBanner(mode) {
-        if (!banner || isStandalone || isAppAlreadyInstalled() || isInstallDismissedThisSession()) {
+        if (!banner) return;
+        const noNoticeReason = isStandalone ? "standalone" : isAppAlreadyInstalled() ? "installed" : isInstallDismissedThisSession() ? "dismissed_this_session" : "";
+        if (noNoticeReason) {
+          if (!noticeOutcomeRecorded && window.BuscaSaltoMetrics?.startedVisitOnPage()) {
+            trackPwa("pwa_visit_no_notice", { motivo: noNoticeReason });
+          }
+          noticeOutcomeRecorded = true;
           return;
         }
 
@@ -207,7 +215,9 @@
         sanitizeInstallText();
 
         banner.dataset.installMode = mode;
+        if (banner.hidden) trackPwa("pwa_prompt_shown", { modo: mode });
         banner.hidden = false;
+        noticeOutcomeRecorded = true;
       }
 
       if ("serviceWorker" in navigator) {
@@ -228,6 +238,9 @@
       });
 
       installButton?.addEventListener("click", async () => {
+        if (banner?.dataset.installMode !== "samsung-help" && banner?.dataset.installMode !== "manual-help") {
+          trackPwa("pwa_install_click", { modo: banner?.dataset.installMode || "manual" });
+        }
         if (isSamsungInternet) {
           if (banner?.dataset.installMode === "samsung-help") {
             window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
@@ -257,17 +270,22 @@
         deferredPrompt = null;
 
         if (choice?.outcome === "accepted") {
+          trackPwa("pwa_native_accept");
           window.localStorage.setItem("buscaSaltoInstalled", "1");
           hideInstallBanner();
+        } else if (choice?.outcome === "dismissed") {
+          trackPwa("pwa_native_dismiss");
         }
       });
 
       dismissButton?.addEventListener("click", () => {
+        if (!banner?.hidden) trackPwa("pwa_prompt_dismiss", { modo: banner.dataset.installMode || "manual" });
         window.sessionStorage.setItem("buscaSaltoInstallDismissedSession", "1");
         hideInstallBanner();
       });
 
       window.addEventListener("appinstalled", () => {
+        trackPwa("pwa_installed");
         window.localStorage.setItem("buscaSaltoInstalled", "1");
         window.sessionStorage.removeItem("buscaSaltoInstallDismissedSession");
         hideInstallBanner();

@@ -2,12 +2,15 @@
   const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
   const LAST_ACTIVITY_KEY = "buscaSaltoMetricsLastActivity";
   let fallbackLastActivity = 0;
+  let startedVisitOnPage = false;
 
   function send(event, payload = {}) {
+    const body = JSON.stringify({ event, payload, path: location.pathname });
     try {
-      navigator.sendBeacon?.("/api/metricas", new Blob([
-        JSON.stringify({ event, payload, path: location.pathname }),
-      ], { type: "application/json" }));
+      if (navigator.sendBeacon?.("/api/metricas", new Blob([body], { type: "application/json" }))) return;
+    } catch (error) {}
+    try {
+      fetch("/api/metricas", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
     } catch (error) {}
   }
 
@@ -20,11 +23,14 @@
     } catch (error) {
       fallbackLastActivity = now;
     }
-    if (!lastActivity || now - lastActivity >= SESSION_TIMEOUT_MS || lastActivity > now) {
+    const newVisit = !lastActivity || now - lastActivity >= SESSION_TIMEOUT_MS || lastActivity > now;
+    if (newVisit) {
+      startedVisitOnPage = true;
       send("visit");
     }
     send(event, payload);
+    return newVisit;
   }
 
-  window.BuscaSaltoMetrics = { track };
+  window.BuscaSaltoMetrics = { track, startedVisitOnPage: () => startedVisitOnPage };
 })();

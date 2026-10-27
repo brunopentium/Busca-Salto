@@ -58,6 +58,9 @@ async function main() {
     if (pathname === "/" || pathname === "/index.html") {
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.end(html);
+    } else if (pathname === "/metrics-client.js") {
+      res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+      res.end(fs.readFileSync(path.join(root, "metrics-client.js")));
     } else if (pathname === "/api/patrocinadores") {
       await wait(800);
       res.setHeader("Content-Type", "application/json");

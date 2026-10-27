@@ -25,6 +25,12 @@ const rows = Array.from({ length: 60 }, (_, index) => [
   JSON.stringify(index % 3 === 0 ? { busca: "Pastelaria", categoria: "Alimentação" } : {}),
   "127.0.0.0", "browser",
 ]);
+for (const [event, payload] of [
+  ["pwa_prompt_shown", { modo: "prompt" }], ["pwa_install_click", { modo: "prompt" }],
+  ["pwa_prompt_dismiss", { modo: "manual" }], ["pwa_native_accept", {}],
+  ["pwa_native_dismiss", {}], ["pwa_installed", {}],
+  ["pwa_visit_no_notice", { motivo: "standalone" }],
+]) rows.push(["2026-10-06T13:00:00-03:00", "2026-10-06", event, "/", JSON.stringify(payload), "", ""]);
 
 async function main() {
   const server = http.createServer((req, res) => {
@@ -93,7 +99,9 @@ async function main() {
     await until(() => evaluate("document.querySelector('#adminPanel')?.classList.contains('active')"));
     await evaluate("switchAdminTab('indicadores')");
     await until(() => evaluate("document.querySelector('.metric-svg') && document.querySelector('#metricRecords')"));
-    assert.equal(await evaluate("document.querySelector('.metric-value').textContent"), "60");
+    assert.equal(await evaluate("document.querySelector('.metric-value').textContent"), "67");
+    assert.equal(await evaluate("document.querySelectorAll('.metric-pwa .metric-value').length"), 6);
+    assert.equal(await evaluate("[...document.querySelectorAll('.metric-pwa .metric-value')].every((item) => item.textContent === '1')"), true);
     for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [320, 700]]) {
       await call("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 600 });
       await wait(250);
@@ -113,6 +121,8 @@ async function main() {
       assert.ok(Math.abs(layout.field.inputWidth - layout.field.labelWidth) <= 1, `${width}px field width: ${JSON.stringify(layout.field)}`);
       await evaluate("document.querySelector('#metricsView').scrollIntoView({block:'start'})");
       await screenshot(`${width}-top`);
+      await evaluate("document.querySelector('.metric-pwa').scrollIntoView({block:'start'})");
+      await screenshot(`${width}-pwa`);
       await evaluate("document.querySelector('.metric-chart').scrollIntoView({block:'start'})");
       await screenshot(`${width}-chart`);
     }
@@ -120,7 +130,7 @@ async function main() {
     await until(() => evaluate("document.querySelector('.metric-value')?.textContent === '20'"));
     assert.equal(await evaluate("document.querySelectorAll('.metric-record-table tbody tr').length"), 20);
     await evaluate("metricsEvent.value = 'all'; metricsField.value = 'all'; metricsQuery.value = ''; metricsFilters.requestSubmit()");
-    await until(() => evaluate("document.querySelector('.metric-value')?.textContent === '60'"));
+    await until(() => evaluate("document.querySelector('.metric-value')?.textContent === '67'"));
     await evaluate("document.querySelector('[data-metrics-page=\"2\"]').click()");
     await until(() => evaluate("document.querySelector('.metric-records-head span')?.textContent.includes('pagina 2')"));
     await evaluate("metricsGranularity.value = 'hour_of_day'; metricsFilters.requestSubmit()");
@@ -135,7 +145,7 @@ async function main() {
     await until(() => evaluate("document.querySelector('.metric-value')?.textContent === '0'"));
     assert.equal(await evaluate("document.querySelector('.metric-plot').textContent.includes('Sem eventos neste recorte.')"), true);
     await evaluate("resetMetricsButton.click()");
-    await until(() => evaluate("document.querySelector('.metric-value')?.textContent === '60'"));
+    await until(() => evaluate("document.querySelector('.metric-value')?.textContent === '67'"));
     assert.equal(await evaluate("metricsDays.value"), "30");
     console.log("Metrics UI: responsive layout, filters, records, pagination and chart grouping passed.");
   } finally {

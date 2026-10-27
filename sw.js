@@ -1,4 +1,4 @@
-const CACHE_NAME = "busca-salto-pwa-v12";
+const CACHE_NAME = "busca-salto-pwa-v13";
 
 const STATIC_ASSETS = [
   "/",
@@ -113,6 +113,7 @@ async function prepareResponse(request, response) {
           button.textContent = "Entendi";
           banner.dataset.installMode = "android-help";
           banner.hidden = false;
+          window.BuscaSaltoMetrics?.track("pwa_prompt_shown", { modo: "android-help" });
         }, 3000);
         document.addEventListener("click", (event) => {
           const button = event.target.closest("#installButton");

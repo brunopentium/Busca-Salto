@@ -291,6 +291,10 @@
     .metrics-panel .metric-card:nth-child(3n){border-right:0}
     .metrics-panel .metric-card:nth-child(n+4){border-top:1px solid var(--borda)}
     .metrics-panel .metric-value{font-size:1.6rem;margin-top:3px}
+    .metric-pwa{border-bottom:1px solid var(--borda);padding-bottom:14px;margin-bottom:18px}
+    .metric-pwa h3{margin:0;color:var(--azul);font-size:1rem}
+    .metric-pwa .metric-cards{margin:10px 0;border-top:1px solid var(--borda)}
+    .metric-pwa-note{margin:0;color:var(--muted);font-size:.8rem;line-height:1.45}
     .metrics-panel .metric-chart{border:0;border-bottom:1px solid var(--borda);border-radius:0;margin-bottom:18px}
     .metrics-panel .metric-chart-head{padding:0 0 8px;background:transparent;border:0}
     .metrics-panel .metric-chart-head h3{font-size:1rem}
@@ -422,6 +426,13 @@
               <option value="sponsor_click">Cliques em publicidade</option>
               <option value="category_select">Categorias selecionadas</option>
               <option value="plan_click">Cliques em planos</option>
+              <option value="pwa_prompt_shown">Avisos de instalacao exibidos</option>
+              <option value="pwa_install_click">Cliques em Instalar</option>
+              <option value="pwa_prompt_dismiss">Cliques em Agora nao</option>
+              <option value="pwa_native_accept">Aceites no navegador</option>
+              <option value="pwa_native_dismiss">Recusas no navegador</option>
+              <option value="pwa_installed">Instalacoes confirmadas</option>
+              <option value="pwa_visit_no_notice">Visitas sem aviso</option>
             </select>
             </label>
             <label>Campo
@@ -433,6 +444,8 @@
                 <option value="bairro">Bairro</option>
                 <option value="comercio">Comercio</option>
                 <option value="patrocinador">Patrocinador</option>
+                <option value="modo">Modo do aviso</option>
+                <option value="motivo">Motivo sem aviso</option>
               </select>
             </label>
             <label class="metrics-query">Contem<input id="metricsQuery" type="search" maxlength="120" placeholder="Buscar nos registros" autocomplete="off" /></label>
@@ -977,6 +990,13 @@
         sponsor_click: "Cliques em publicidade",
         category_select: "Categorias selecionadas",
         plan_click: "Cliques em planos",
+        pwa_prompt_shown: "Avisos de instalacao exibidos",
+        pwa_install_click: "Cliques em Instalar",
+        pwa_prompt_dismiss: "Cliques em Agora nao",
+        pwa_native_accept: "Aceites no navegador",
+        pwa_native_dismiss: "Recusas no navegador",
+        pwa_installed: "Instalacoes confirmadas",
+        pwa_visit_no_notice: "Visitas sem aviso",
       }[event] || event || "Eventos";
     }
 
@@ -1069,6 +1089,7 @@
       const searches = metrics.searches || {};
       const contacts = metrics.contacts || {};
       const records = metrics.records || { total: 0, page: 1, pageCount: 1, items: [] };
+      const pwa = summaryData.pwa || {};
       const displayDate = (key) => String(key || "").split("-").reverse().join("/");
       metricsPeriodLabel.textContent = `${displayDate(metrics.period?.start)} a ${displayDate(metrics.period?.end)} · horario de Salto/SP`;
       if (metricsDays.value === "all" && metrics.period) {
@@ -1081,16 +1102,28 @@
         ["Cliques em contato", (summaryData.events || []).find((item) => item.label === "contact_click")?.count],
         ["Cliques em publicidade", (summaryData.events || []).find((item) => item.label === "sponsor_click")?.count],
       ];
+      const pwaCards = [
+        ["Avisos exibidos", pwa.promptShown], ["Cliques em Instalar", pwa.installClicks],
+        ["Cliques em Agora nao", pwa.promptDismissed], ["Visitas sem aviso", pwa.visitsWithoutNotice],
+        ["Aceites no navegador", pwa.nativeAccepted], ["Instalacoes confirmadas", pwa.installed],
+      ];
+      const noNoticeLabels = {
+        standalone: "Aberto como aplicativo",
+        installed: "Aceite ou instalacao reconhecida",
+        dismissed_this_session: "Aviso dispensado nesta sessao",
+      };
       const breakdowns = [
         ["Tipos de evento", (summaryData.events || []).map((item) => ({ ...item, label: metricEventLabel(item.label) }))],
         ["Paginas mais vistas", metrics.pages], ["Termos pesquisados", searches.terms],
         ["Categorias e filtros", searches.categories], ["Bairros filtrados", searches.bairros],
         ["Cliques por tipo de contato", contacts.types], ["Comercios com mais cliques", contacts.businesses],
         ["Patrocinadores clicados", metrics.sponsors],
+        ["Visitas sem aviso: motivos", (metrics.pwaNoNoticeReasons || []).map((item) => ({ ...item, label: noNoticeLabels[item.label] || item.label }))],
       ];
       const availableBreakdowns = breakdowns.filter(([, items]) => items?.length);
       metricsContent.innerHTML = `
         <div class="metric-cards">${cards.map(([label, value]) => `<div class="metric-card"><span class="metric-label">${escapeHtml(label)}</span><span class="metric-value">${escapeHtml(Number(value || 0).toLocaleString("pt-BR"))}</span></div>`).join("")}</div>
+        <section class="metric-pwa"><h3>Instalacao do aplicativo</h3><div class="metric-cards">${pwaCards.map(([label, value]) => `<div class="metric-card"><span class="metric-label">${escapeHtml(label)}</span><span class="metric-value">${escapeHtml(Number(value || 0).toLocaleString("pt-BR"))}</span></div>`).join("")}</div><p class="metric-pwa-note">Clique e aceite nao confirmam instalacao. A confirmacao depende de um evento do navegador, que pode nao ocorrer na instalacao manual. Visitas sem aviso contam novas visitas iniciadas na pagina inicial sem o aviso; isso nao comprova retorno ao site. Dados anteriores a esta medicao nao incluem esses eventos.</p></section>
         ${metricChart(metrics)}
         <div class="metric-breakdowns">${availableBreakdowns.map(([title, items]) => `<section class="metric-section"><h3>${escapeHtml(title)}</h3>${metricRankRows(items)}</section>`).join("")}</div>
         <section id="metricRecords" class="metric-records"><div class="metric-records-head"><h3>Registros</h3><span>${escapeHtml(records.total || 0)} encontrados · pagina ${escapeHtml(records.page || 1)} de ${escapeHtml(records.pageCount || 1)}</span></div>

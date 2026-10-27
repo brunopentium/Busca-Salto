@@ -58,4 +58,22 @@ assert.equal(historical.summary.total, 7);
 assert.equal(historical.period.start, "2026-01-02");
 assert.equal(historical.timeline.granularity, "month");
 
-console.log("Metrics report: filters, timelines, pagination, history and privacy passed.");
+const pwaRows = [
+  row("2026-10-06T12:01:00-03:00", "pwa_prompt_shown", "/", { modo: "prompt" }),
+  row("2026-10-06T12:02:00-03:00", "pwa_install_click", "/", { modo: "prompt" }),
+  row("2026-10-06T12:03:00-03:00", "pwa_native_accept"),
+  row("2026-10-06T12:04:00-03:00", "pwa_installed"),
+  row("2026-10-06T12:05:00-03:00", "pwa_prompt_dismiss", "/", { modo: "manual" }),
+  row("2026-10-06T12:06:00-03:00", "pwa_native_dismiss"),
+  row("2026-10-06T12:07:00-03:00", "pwa_visit_no_notice", "/", { motivo: "standalone" }),
+];
+const pwa = aggregateMetrics(pwaRows, { start: "2026-10-06", end: "2026-10-06", granularity: "day" });
+assert.deepEqual(pwa.summary.pwa, {
+  promptShown: 1, installClicks: 1, promptDismissed: 1,
+  nativeAccepted: 1, nativeDismissed: 1, installed: 1, visitsWithoutNotice: 1,
+});
+assert.equal(pwa.pwaNoNoticeReasons[0].label, "standalone");
+assert.equal(aggregateMetrics(pwaRows, { start: "2026-10-06", end: "2026-10-06", event: "pwa_install_click", field: "modo", query: "prompt" }).summary.total, 1);
+assert.equal(aggregateMetrics(pwaRows, { start: "2026-10-06", end: "2026-10-06", field: "motivo", query: "standalone" }).summary.pwa.visitsWithoutNotice, 1);
+
+console.log("Metrics report: filters, timelines, pagination, PWA events, history and privacy passed.");
